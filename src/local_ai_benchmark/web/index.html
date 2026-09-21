@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Local AI Benchmark</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">L</span><span>Local AI Benchmark</span></div>
+    <div class="connection"><span class="pulse"></span><span id="connection-label">Checking local runtime</span></div>
+  </header>
+  <main class="shell">
+    <section class="intro">
+      <div>
+        <p class="eyebrow">LOCAL DECISION SYSTEM / 01</p>
+        <h1>Know which model<br><em>fits your machine.</em></h1>
+        <p class="lede">Measured on your hardware, scored against your work. No cloud data, no synthetic leaderboard.</p>
+      </div>
+      <div class="intro-note"><span>Current lens</span><strong>Evidence over assumptions</strong><small>Results are read from the local Ollama runtime.</small></div>
+    </section>
+
+    <section class="stat-grid" id="hardware-cards">
+      <article class="stat-card"><span class="label">GPU</span><strong id="gpu-name">--</strong><small id="gpu-memory">Waiting for profile</small></article>
+      <article class="stat-card"><span class="label">MEMORY</span><strong id="ram-total">--</strong><small id="ram-used">-- used</small></article>
+      <article class="stat-card"><span class="label">PROCESSOR</span><strong id="cpu-name">--</strong><small id="cpu-threads">-- threads</small></article>
+      <article class="stat-card accent-card"><span class="label">LOCAL MODELS</span><strong id="model-count">--</strong><small id="model-status">Discovering Ollama</small></article>
+    </section>
+
+    <section class="hardware-profile">
+      <div class="profile-heading"><div><p class="eyebrow">EXECUTION PROFILE</p><h2>This benchmark runs on</h2></div><span class="section-number">01</span></div>
+      <div class="profile-grid">
+        <div><span class="profile-label">Operating system</span><strong id="profile-os">--</strong></div>
+        <div><span class="profile-label">Architecture</span><strong id="profile-architecture">--</strong></div>
+        <div><span class="profile-label">CPU</span><strong id="profile-cpu">--</strong><small id="profile-cpu-spec">--</small></div>
+        <div><span class="profile-label">Memory</span><strong id="profile-memory">--</strong><small id="profile-memory-spec">--</small></div>
+        <div><span class="profile-label">GPU</span><strong id="profile-gpu">--</strong><small id="profile-gpu-spec">--</small></div>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <div class="panel runner-panel">
+        <div class="panel-heading"><div><p class="eyebrow">RUN A STUDY</p><h2>Benchmark a workload</h2></div><span class="section-number">02</span></div>
+        <label>Model<select id="model-select"><option>Discovering models...</option></select></label>
+        <label>Task category<select id="category-select"><option value="">Full MVP suite</option><option value="math">Math</option><option value="coding">Coding</option><option value="json">JSON</option><option value="general">General</option><option value="spanish">Spanish</option></select></label>
+        <button id="run-button" class="run-button"><span>Run local benchmark</span><span class="arrow">&#8594;</span></button>
+        <p class="form-note" id="run-status">Choose a model discovered from your local Ollama instance.</p>
+      </div>
+      <div class="panel result-panel">
+        <div class="panel-heading"><div><p class="eyebrow">LATEST EVIDENCE</p><h2>Measured output</h2></div><span class="section-number">03</span></div>
+        <div id="results-empty" class="empty-state"><span class="empty-icon">+</span><p>No benchmark results yet.</p><small>Run a study to see throughput, latency and validation here.</small></div>
+        <div id="results-content" class="hidden">
+          <div id="results-summary" class="results-summary"></div>
+          <div id="results-table" class="results-table"></div>
+        </div>
+      </div>
+    </section>
+    <footer><span>OFFLINE-FIRST / NO TELEMETRY</span><span>Local AI Benchmark <b>0.1</b></span></footer>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>
