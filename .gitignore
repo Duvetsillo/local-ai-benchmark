@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.venv/
+venv/
+
+# Local benchmark data: may contain hardware details and model responses
+results/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

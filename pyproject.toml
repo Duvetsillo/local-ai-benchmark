@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Hardware-aware, task-aware benchmarking for local language models"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
 authors = [{ name = "Local AI Benchmark contributors" }]
 dependencies = []
 
