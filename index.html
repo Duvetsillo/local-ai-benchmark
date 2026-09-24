@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Local AI Benchmark Report</title>
+    <style>
+        body { background: #020202; color: #fff; font-family: 'Inter', sans-serif; padding: 40px; }
+        .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+        h1 { color: #00d2ff; text-align: center; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { color: #00d2ff; }
+    </style>
+</head>
+<body>
+    <h1 style="color:#00d2ff">REAL-TIME HARDWARE BENCHMARK</h1>
+    <div class="card">
+        <h2 style="color:#00d2ff">Detected System Profile</h2>
+        <p>CPU: AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD | RAM: 15 GB | OS: Windows 11</p>
+    </div>
+    <div class="card">
+        <h2 style="color:#00d2ff">Execution Results</h2>
+        <table>
+            <tr><th>Model</th><th>TTFT</th><th>Tokens/s</th><th>Total Tokens</th><th>VRAM Used</th><th>GPU Util</th><th>Status</th></tr>
+            <tr><td>qwen2:0.5b</td><td>0.06s</td><td>227.22</td><td>23</td><td>N/A</td><td>N/A</td><td>OK</td></tr>
+        </table>
+    </div>
+</body>
+</html>
