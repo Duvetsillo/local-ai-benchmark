@@ -54,17 +54,24 @@ the benchmark still runs and reports unavailable resource fields as `null`.
 
 ```powershell
 py -m pip install -e ".[dev,system]"
+
+# Preferred when the script directory is not on PATH
+python -m local_ai_benchmark system
+python -m local_ai_benchmark discover
+python -m local_ai_benchmark run --model qwen3:4b
+python -m local_ai_benchmark run --category math --model qwen3:4b
+python -m local_ai_benchmark dashboard --port 8765
+
+# This also works in a normal activated venv when PATH is configured
 local-ai system
-local-ai discover
-local-ai run --model qwen3:4b
-local-ai run --category math --model qwen3:4b
-local-ai discover
-local-ai run --model qwen3:4b
-local-ai run --category math --model qwen3:4b
-local-ai dashboard --port 8765
+```
 
 Open `http://127.0.0.1:8765` for the local dashboard. For development and CI,
 install `.[dev,system]` to include pytest.
+
+If `local-ai` is not recognized, use the module form above. That invocation is
+more reliable in Windows, VS Code terminals, and fresh virtual environments.
+
 On Windows, Ollama's application and `ollama.exe` use a local API at
 `http://127.0.0.1:11434`; this is the local Ollama instance, not a cloud
 server. Start or test it from PowerShell:
