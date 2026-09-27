@@ -1,7 +1,6 @@
 {
   "version": 2,
   "name": "nexabench-static",
-  "public": true,
   "builds": [
     {
       "src": "**/*",
