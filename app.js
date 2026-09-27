@@ -18,6 +18,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  document.querySelectorAll('.download-cta').forEach((link) => {
+    link.addEventListener('click', () => {
+      link.classList.remove('is-animating');
+      void link.offsetWidth;
+      link.classList.add('is-animating');
+      window.setTimeout(() => link.classList.remove('is-animating'), 760);
+    });
+  });
+
   const resetBenchmarkBtn = document.getElementById('resetBenchmarkBtn');
   resetBenchmarkBtn?.addEventListener('click', () => {
     localStorage.removeItem(benchmarkKey);
@@ -55,7 +64,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const name = document.getElementById('fullName');
     const email = document.getElementById('email');
+    const modelInterest = document.getElementById('modelInterest');
+    const useCase = document.getElementById('useCase');
+    const message = document.getElementById('message');
     const consent = document.getElementById('consent');
+    const recipient = 'dayvermoreta21@gmail.com';
 
     if (!name.value.trim() || !email.value.trim()) {
       formStatus.textContent = 'Please complete your name and email before sending your request.';
@@ -72,7 +85,21 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    formStatus.textContent = 'Your request is ready to be sent. Connect this form to your preferred email or backend in production.';
+    const subject = encodeURIComponent(`AETHERION inquiry - ${name.value.trim()}`);
+    const body = encodeURIComponent(
+      [
+        `Name: ${name.value.trim()}`,
+        `Email: ${email.value.trim()}`,
+        `Model of interest: ${modelInterest.value.trim() || 'Not specified'}`,
+        `Use case: ${useCase.value || 'Not specified'}`,
+        '',
+        'Project details:',
+        message.value.trim() || 'No additional details provided.'
+      ].join('\n')
+    );
+
+    window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`;
+    formStatus.textContent = 'Your request is being prepared in your email client.';
     contactForm.reset();
   });
 });
