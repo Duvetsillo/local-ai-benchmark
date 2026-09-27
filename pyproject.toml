@@ -25,3 +25,6 @@ testpaths = ["tests"]
 
 [tool.setuptools.package-data]
 local_ai_benchmark = ["web/*"]
+
+[tool.vercel]
+entrypoint = "index.html"
