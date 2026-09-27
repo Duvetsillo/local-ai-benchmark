@@ -188,21 +188,29 @@
 
           <div class="results-box benchmark-empty-state" id="benchmarkState">
             <div class="benchmark-empty-copy">
-              <p class="eyebrow dark">CLIENT READY</p>
-              <h3>No local benchmark has been run yet.</h3>
+              <p class="eyebrow dark">NO BROWSER EXECUTION</p>
+              <h3>Start from your local environment.</h3>
               <p>
-                This page is intentionally reset on refresh so every run starts clean. Download the local client,
-                execute it on your hardware, and generate fresh results for your exact setup.
+                The benchmark is intentionally designed to run on your hardware, not inside the browser. That keeps
+                the results accurate, private, and representative of your real setup.
               </p>
+
+              <ol class="local-steps">
+                <li>Download the local client.</li>
+                <li>Run it on your machine.</li>
+                <li>Compare fresh results for your hardware.</li>
+              </ol>
+
               <div class="hero-actions stacked-actions">
                 <a class="primary" href="downloads/aetherion-client.zip" download>Download client</a>
+                <a class="secondary" href="README.md" target="_blank" rel="noreferrer">Setup guide</a>
                 <button type="button" class="secondary ghost-button" id="resetBenchmarkBtn">Reset benchmark state</button>
               </div>
             </div>
             <div class="benchmark-metrics">
               <div class="mini-metric">
-                <span>Client</span>
-                <strong>Local</strong>
+                <span>Execution</span>
+                <strong>Local-only</strong>
               </div>
               <div class="mini-metric">
                 <span>Runtime</span>
@@ -210,7 +218,7 @@
               </div>
               <div class="mini-metric">
                 <span>Output</span>
-                <strong>Fresh only</strong>
+                <strong>Fresh results</strong>
               </div>
             </div>
           </div>

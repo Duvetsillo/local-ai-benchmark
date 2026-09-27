@@ -1,13 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="NexaBench favicon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AETHERION favicon">
   <defs>
-    <linearGradient id="g" x1="0%" x2="100%" y1="0%" y2="100%">
-      <stop offset="0%" stop-color="#9fe9ff"/>
-      <stop offset="50%" stop-color="#79d6ff"/>
-      <stop offset="100%" stop-color="#8ef0c6"/>
+    <linearGradient id="aetherionFavicon" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#A9C7FF"/>
+      <stop offset="55%" stop-color="#6EA8FF"/>
+      <stop offset="100%" stop-color="#F4F7FB"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="18" fill="#081521"/>
-  <path d="M32 8c-11.6 0-21 9.4-21 21 0 11.6 9.4 21 21 21 5.7 0 10.9-2.2 14.7-5.8L32 32l14.7-14.2C42.9 10.2 37.7 8 32 8Z" fill="none" stroke="url(#g)" stroke-width="4" opacity="0.95"/>
-  <path d="M20 17.5L32 32 44 17.5" fill="none" stroke="url(#g)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="32" cy="32" r="6" fill="url(#g)"/>
+  <rect width="64" height="64" rx="18" fill="#07090D"/>
+  <circle cx="32" cy="32" r="21" fill="none" stroke="url(#aetherionFavicon)" stroke-width="2.5" opacity="0.9"/>
+  <path d="M32 11C19.3 11 9 21.3 9 34c0 12.7 10.3 23 23 23 6.2 0 11.9-2.5 16.1-6.5L32 34l16.1-16.5C43.9 13.5 38.2 11 32 11Z" fill="none" stroke="url(#aetherionFavicon)" stroke-width="2.5" opacity="0.8"/>
+  <circle cx="32" cy="32" r="5.5" fill="url(#aetherionFavicon)"/>
+  <path d="M32 18v28M18 32h28" stroke="rgba(244,247,251,0.22)" stroke-width="1.6" stroke-linecap="round"/>
 </svg>
