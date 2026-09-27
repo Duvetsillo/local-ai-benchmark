@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "name": "local-ai-benchmark",
+  "public": true,
+  "builds": [
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

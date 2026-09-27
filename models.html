@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="NexaBench model recommendations and local AI model fit information." />
+    <title>Models | NexaBench</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="subpage-shell">
+      <header class="topbar">
+        <div class="brand" aria-label="NexaBench home">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64" role="img" aria-label="NexaBench logo">
+              <defs>
+                <linearGradient id="brandGradient3" x1="0%" x2="100%" y1="0%" y2="100%">
+                  <stop offset="0%" stop-color="#9fe9ff" />
+                  <stop offset="50%" stop-color="#79d6ff" />
+                  <stop offset="100%" stop-color="#8ef0c6" />
+                </linearGradient>
+              </defs>
+              <path d="M32 8c-11.6 0-21 9.4-21 21 0 11.6 9.4 21 21 21 5.7 0 10.9-2.2 14.7-5.8L32 32l14.7-14.2C42.9 10.2 37.7 8 32 8Z" fill="none" stroke="url(#brandGradient3)" stroke-width="4" opacity="0.9"/>
+              <path d="M20 17.5L32 32 44 17.5" fill="none" stroke="url(#brandGradient3)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="32" cy="32" r="6" fill="url(#brandGradient3)"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-name">NexaBench</span>
+            <small>Local AI Benchmark</small>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Main navigation">
+          <a href="index.html">Home</a>
+          <a href="overview.html">Overview</a>
+          <a href="models.html">Models</a>
+          <a href="compare.html">Compare</a>
+          <a href="resources.html">Resources</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="subpage-hero" aria-labelledby="models-heading">
+          <p class="eyebrow">MODEL STACK</p>
+          <h1 id="models-heading">Choose the right local model by workload.</h1>
+          <p class="lead">Different tasks benefit from different balances between speed, memory use, and reasoning quality. NexaBench helps compare them on the same machine.</p>
+        </section>
+
+        <section class="resource-grid" aria-label="Model recommendations">
+          <article class="resource-card">
+            <p class="eyebrow">CODING</p>
+            <strong>qwen2.5-coder:3b</strong>
+            <p>Great balance for programming, structured reasoning, and fast local iteration.</p>
+          </article>
+          <article class="resource-card">
+            <p class="eyebrow">LIGHTWEIGHT</p>
+            <strong>gemma3:1b</strong>
+            <p>Ideal for low-memory systems and simple assistant-style interactions.</p>
+          </article>
+          <article class="resource-card">
+            <p class="eyebrow">GENERAL USE</p>
+            <strong>llama3.2:3b</strong>
+            <p>Strong general-purpose local option with a balanced use profile.</p>
+          </article>
+        </section>
+
+        <div class="tag-list" aria-label="Model tags">
+          <span>Low latency</span>
+          <span>Memory aware</span>
+          <span>Local-only</span>
+          <span>Practical fit</span>
+          <span>Quick comparisons</span>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

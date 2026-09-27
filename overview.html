@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Overview of NexaBench and the local benchmark workflow." />
+    <title>Overview | NexaBench</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="subpage-shell">
+      <header class="topbar">
+        <div class="brand" aria-label="NexaBench home">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64" role="img" aria-label="NexaBench logo">
+              <defs>
+                <linearGradient id="brandGradient2" x1="0%" x2="100%" y1="0%" y2="100%">
+                  <stop offset="0%" stop-color="#9fe9ff" />
+                  <stop offset="50%" stop-color="#79d6ff" />
+                  <stop offset="100%" stop-color="#8ef0c6" />
+                </linearGradient>
+              </defs>
+              <path d="M32 8c-11.6 0-21 9.4-21 21 0 11.6 9.4 21 21 21 5.7 0 10.9-2.2 14.7-5.8L32 32l14.7-14.2C42.9 10.2 37.7 8 32 8Z" fill="none" stroke="url(#brandGradient2)" stroke-width="4" opacity="0.9"/>
+              <path d="M20 17.5L32 32 44 17.5" fill="none" stroke="url(#brandGradient2)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="32" cy="32" r="6" fill="url(#brandGradient2)"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-name">NexaBench</span>
+            <small>Local AI Benchmark</small>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Main navigation">
+          <a href="index.html">Home</a>
+          <a href="overview.html">Overview</a>
+          <a href="models.html">Models</a>
+          <a href="compare.html">Compare</a>
+          <a href="resources.html">Resources</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="subpage-hero" aria-labelledby="overview-heading">
+          <p class="eyebrow">SYSTEM OVERVIEW</p>
+          <h1 id="overview-heading">Benchmark the right model for the right machine.</h1>
+          <p class="lead">NexaBench helps you measure local AI performance without guesswork. It combines hardware detection, model discovery, and reproducible validation tasks to make comparisons useful and honest.</p>
+        </section>
+
+        <section class="subpage-grid" aria-label="Overview metrics">
+          <article class="metric-card">
+            <p class="eyebrow">LOCAL FIRST</p>
+            <strong>100%</strong>
+            <small>Runs on your machine, no cloud dependency.</small>
+          </article>
+          <article class="metric-card">
+            <p class="eyebrow">HARDWARE AWARE</p>
+            <strong>5+</strong>
+            <small>Signal points measured across CPU, GPU, and RAM.</small>
+          </article>
+          <article class="metric-card">
+            <p class="eyebrow">REAL OUTPUT</p>
+            <strong>Reliable</strong>
+            <small>Benchmarks focus on practical local performance.</small>
+          </article>
+        </section>
+
+        <section class="timeline" aria-label="Benchmark process">
+          <article class="timeline-step">
+            <span>01</span>
+            <div>
+              <h2>Profile hardware</h2>
+              <p>Detects memory, CPU, GPU, and the local environment so the benchmark reflects the machine you actually use.</p>
+            </div>
+          </article>
+          <article class="timeline-step">
+            <span>02</span>
+            <div>
+              <h2>Discover models</h2>
+              <p>Connects to the local Ollama runtime and maps which models are available for comparison.</p>
+            </div>
+          </article>
+          <article class="timeline-step">
+            <span>03</span>
+            <div>
+              <h2>Run validation tasks</h2>
+              <p>Evaluates coverage, speed, and response quality under a repeatable local workload.</p>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

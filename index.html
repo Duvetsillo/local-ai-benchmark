@@ -1,29 +1,286 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Local AI Benchmark Report</title>
-    <style>
-        body { background: #020202; color: #fff; font-family: 'Inter', sans-serif; padding: 40px; }
-        .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
-        h1 { color: #00d2ff; text-align: center; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        th { color: #00d2ff; }
-    </style>
-</head>
-<body>
-    <h1 style="color:#00d2ff">REAL-TIME HARDWARE BENCHMARK</h1>
-    <div class="card">
-        <h2 style="color:#00d2ff">Detected System Profile</h2>
-        <p>CPU: AMD64 Family 25 Model 80 Stepping 0, AuthenticAMD | RAM: 15 GB | OS: Windows 11</p>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>NexaBench | Local AI Benchmark</title>
+    <meta
+      name="description"
+      content="NexaBench helps you compare local models on real hardware using Ollama and reproducible benchmark tasks."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <div class="cookie-banner" id="cookieBanner" aria-live="polite">
+      <div class="cookie-content">
+        <div>
+          <h2>Cookie preferences</h2>
+          <p>
+            This site uses browser storage only to remember your consent choice. We do not run third-party analytics or ad trackers.
+          </p>
+        </div>
+        <div class="cookie-actions">
+          <button type="button" class="button button-secondary" id="rejectCookies">Reject optional cookies</button>
+          <button type="button" class="button button-primary" id="acceptCookies">Accept optional cookies</button>
+        </div>
+      </div>
     </div>
-    <div class="card">
-        <h2 style="color:#00d2ff">Execution Results</h2>
-        <table>
-            <tr><th>Model</th><th>TTFT</th><th>Tokens/s</th><th>Total Tokens</th><th>VRAM Used</th><th>GPU Util</th><th>Status</th></tr>
-            <tr><td>qwen2:0.5b</td><td>0.06s</td><td>227.22</td><td>23</td><td>N/A</td><td>N/A</td><td>OK</td></tr>
-        </table>
+
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand" aria-label="NexaBench home">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64" role="img" aria-label="NexaBench logo">
+              <defs>
+                <linearGradient id="brandGradient" x1="0%" x2="100%" y1="0%" y2="100%">
+                  <stop offset="0%" stop-color="#9fe9ff" />
+                  <stop offset="50%" stop-color="#79d6ff" />
+                  <stop offset="100%" stop-color="#8ef0c6" />
+                </linearGradient>
+              </defs>
+              <path d="M32 8c-11.6 0-21 9.4-21 21 0 11.6 9.4 21 21 21 5.7 0 10.9-2.2 14.7-5.8L32 32l14.7-14.2C42.9 10.2 37.7 8 32 8Z" fill="none" stroke="url(#brandGradient)" stroke-width="4" opacity="0.9"/>
+              <path d="M20 17.5L32 32 44 17.5" fill="none" stroke="url(#brandGradient)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="32" cy="32" r="6" fill="url(#brandGradient)"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-name">NexaBench</span>
+            <small>Local AI Benchmark</small>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Main navigation">
+          <a href="overview.html">Overview</a>
+          <a href="models.html">Models</a>
+          <a href="compare.html">Compare</a>
+          <a href="#contact">Contact</a>
+          <a href="resources.html">Resources</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="terms.html">Terms</a>
+          <a href="cookies.html">Cookies</a>
+        </nav>
+      </header>
+
+      <main id="main-content">
+        <section class="hero" id="overview">
+          <div class="hero-copy">
+            <p class="eyebrow">OFFLINE-FIRST / LOCAL DECISION SYSTEM</p>
+            <h1>Know which local model fits your hardware.</h1>
+            <p class="lead">
+              Benchmark local inference on your machine, compare available Ollama models,
+              and make evidence-based decisions without sending prompts to the cloud.
+            </p>
+            <div class="hero-actions">
+              <a class="primary" href="#models">View model fit</a>
+              <a class="secondary" href="#workflow">How it works</a>
+            </div>
+            <ul class="hero-points">
+              <li>Hardware-aware profiling</li>
+              <li>Ollama model discovery</li>
+              <li>Deterministic task validation</li>
+            </ul>
+          </div>
+
+          <div class="hero-panel">
+            <div class="panel-header">
+              <span>Current lens</span>
+              <strong>Evidence over assumptions</strong>
+            </div>
+            <div class="stats-grid">
+              <article>
+                <span>GPU</span>
+                <strong>NVIDIA RTX 2060</strong>
+                <small>6 GB VRAM</small>
+              </article>
+              <article>
+                <span>MEMORY</span>
+                <strong>15.87 GB</strong>
+                <small>13.02 GB used</small>
+              </article>
+              <article>
+                <span>PROCESSOR</span>
+                <strong>AMD64</strong>
+                <small>12 threads</small>
+              </article>
+              <article>
+                <span>MODELS</span>
+                <strong>5</strong>
+                <small>Ready to benchmark</small>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="summary" id="workflow">
+          <div class="section-head">
+            <p>EXECUTION PROFILE</p>
+            <h2>This benchmark runs on</h2>
+          </div>
+
+          <div class="profile-grid">
+            <div class="profile-row"><span>Operating system</span><strong>Windows 11</strong></div>
+            <div class="profile-row"><span>Architecture</span><strong>AMD64</strong></div>
+            <div class="profile-row"><span>CPU</span><strong>AMD64 Family 25 Model 80</strong><small>6 cores / 12 threads</small></div>
+            <div class="profile-row"><span>Memory</span><strong>15.87 GB</strong><small>2.86 GB available</small></div>
+            <div class="profile-row"><span>GPU</span><strong>NVIDIA GeForce RTX 2060</strong><small>6 GB VRAM / 45 C</small></div>
+          </div>
+        </section>
+
+        <section class="models" id="models">
+          <div class="section-head">
+            <p>LOCAL MODELS</p>
+            <h2>Best fit by workload</h2>
+          </div>
+
+          <div class="model-list">
+            <article class="model-card selected" tabindex="0" aria-label="Qwen 2.5 coder model best for coding workloads">
+              <div class="model-top">
+                <span class="tag">BEST FOR CODING</span>
+                <span class="status">high fit</span>
+              </div>
+              <h3>qwen2.5-coder:3b</h3>
+              <p>Balanced speed and response quality for local coding and reasoning tasks.</p>
+              <ul>
+                <li>3.1B params</li>
+                <li>Q4_K_M</li>
+                <li>Suitable for local dev workflows</li>
+              </ul>
+            </article>
+
+            <article class="model-card" tabindex="0" aria-label="Gemma model for lightweight workloads">
+              <div class="model-top">
+                <span class="tag">LIGHTWEIGHT</span>
+                <span class="status">compact</span>
+              </div>
+              <h3>gemma3:1b</h3>
+              <p>Fastest option for lightweight local interaction and low-memory environments.</p>
+              <ul>
+                <li>1B params</li>
+                <li>Low resource usage</li>
+                <li>Good for quick tasks</li>
+              </ul>
+            </article>
+
+            <article class="model-card" tabindex="0" aria-label="Llama model for general-purpose workloads">
+              <div class="model-top">
+                <span class="tag">GENERAL USE</span>
+                <span class="status">reliable</span>
+              </div>
+              <h3>llama3.2:3b</h3>
+              <p>Strong general-purpose local option for typical assistant-style workloads.</p>
+              <ul>
+                <li>3.2B params</li>
+                <li>Broad compatibility</li>
+                <li>Good balance of capability and size</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="benchmarks">
+          <div class="section-head">
+            <p>LATEST EVIDENCE</p>
+            <h2>Measured output</h2>
+          </div>
+
+          <div class="results-box">
+            <div class="metric-line">
+              <div><span>Avg speed</span><strong>54.89 tokens/s</strong></div>
+              <div><span>Avg TTFT</span><strong>12.552s</strong></div>
+              <div><span>Validation</span><strong>0%</strong></div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Task</th>
+                  <th scope="col">Speed</th>
+                  <th scope="col">TTFT</th>
+                  <th scope="col">Quality</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>deterministic_math</td>
+                  <td>54.89 tokens/s</td>
+                  <td>12.552s</td>
+                  <td class="fail">FAIL</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="contact" id="contact" aria-labelledby="contact-title">
+          <div class="section-head">
+            <p>CONTACT</p>
+            <h2 id="contact-title">Request a local benchmark review</h2>
+          </div>
+
+          <form class="contact-form" id="contactForm" novalidate>
+            <div class="form-row">
+              <div class="field-group">
+                <label for="fullName">Full name</label>
+                <input id="fullName" name="fullName" type="text" autocomplete="name" required />
+              </div>
+              <div class="field-group">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" autocomplete="email" required />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field-group">
+                <label for="modelInterest">Model of interest</label>
+                <input id="modelInterest" name="modelInterest" type="text" placeholder="e.g. qwen3:4b" />
+              </div>
+              <div class="field-group">
+                <label for="useCase">Use case</label>
+                <select id="useCase" name="useCase">
+                  <option value="">Select</option>
+                  <option>Development</option>
+                  <option>Research</option>
+                  <option>Business workflow</option>
+                  <option>Personal use</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="message">Project details</label>
+              <textarea id="message" name="message" rows="5" placeholder="Tell us about your hardware and your workload."></textarea>
+            </div>
+
+            <div class="consent-box">
+              <label class="checkbox-wrap" for="consent">
+                <input id="consent" name="consent" type="checkbox" required />
+                <span>I agree to the <a href="privacy.html">Privacy Policy</a>, <a href="terms.html">Terms</a>, and <a href="cookies.html">Cookie Policy</a>. I understand this form is for inquiry only and no data is sent to third-party analytics providers.</span>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="button button-primary">Send request</button>
+            </div>
+            <p class="form-status" id="formStatus" aria-live="polite"></p>
+          </form>
+        </section>
+      </main>
+
+      <footer>
+        <div>
+          <p>OFFLINE-FIRST / NO TELEMETRY</p>
+          <span>Local AI Benchmark 0.1</span>
+        </div>
+        <div class="business-info" aria-label="Business information">
+          <span>Local AI Benchmark</span>
+          <span>hello@localaibenchmark.com</span>
+          <span>Business contact and support</span>
+        </div>
+      </footer>
     </div>
-</body>
+
+    <script src="app.js"></script>
+  </body>
 </html>

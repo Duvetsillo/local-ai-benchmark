@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Compare local AI models with NexaBench and measure practical fit." />
+    <title>Compare | NexaBench</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="subpage-shell">
+      <header class="topbar">
+        <div class="brand" aria-label="NexaBench home">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64" role="img" aria-label="NexaBench logo">
+              <defs>
+                <linearGradient id="brandGradient4" x1="0%" x2="100%" y1="0%" y2="100%">
+                  <stop offset="0%" stop-color="#9fe9ff" />
+                  <stop offset="50%" stop-color="#79d6ff" />
+                  <stop offset="100%" stop-color="#8ef0c6" />
+                </linearGradient>
+              </defs>
+              <path d="M32 8c-11.6 0-21 9.4-21 21 0 11.6 9.4 21 21 21 5.7 0 10.9-2.2 14.7-5.8L32 32l14.7-14.2C42.9 10.2 37.7 8 32 8Z" fill="none" stroke="url(#brandGradient4)" stroke-width="4" opacity="0.9"/>
+              <path d="M20 17.5L32 32 44 17.5" fill="none" stroke="url(#brandGradient4)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="32" cy="32" r="6" fill="url(#brandGradient4)"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-name">NexaBench</span>
+            <small>Local AI Benchmark</small>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Main navigation">
+          <a href="index.html">Home</a>
+          <a href="overview.html">Overview</a>
+          <a href="models.html">Models</a>
+          <a href="compare.html">Compare</a>
+          <a href="resources.html">Resources</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="subpage-hero" aria-labelledby="compare-heading">
+          <p class="eyebrow">MODEL COMPARISON</p>
+          <h1 id="compare-heading">Compare trade-offs before deployment.</h1>
+          <p class="lead">A good local model is one that fits your constraints: fast enough for your tasks, light on memory, and strong enough to be useful.</p>
+        </section>
+
+        <article class="compare-card">
+          <table class="compare-table" aria-label="Comparison table">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Speed</th>
+                <th>Memory</th>
+                <th>Best fit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>qwen2.5-coder:3b</td>
+                <td>High</td>
+                <td>Medium</td>
+                <td>Coding</td>
+              </tr>
+              <tr>
+                <td>gemma3:1b</td>
+                <td>Very High</td>
+                <td>Low</td>
+                <td>Lightweight tasks</td>
+              </tr>
+              <tr>
+                <td>llama3.2:3b</td>
+                <td>Medium</td>
+                <td>Medium</td>
+                <td>General use</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </main>
+    </div>
+  </body>
+</html>
