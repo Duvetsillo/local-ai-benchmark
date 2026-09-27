@@ -15,9 +15,11 @@ dependencies = []
 [project.optional-dependencies]
 system = ["psutil>=5.9"]
 dev = ["pytest>=8"]
+installer = ["pyinstaller>=6.12"]
 
 [project.scripts]
 local-ai = "local_ai_benchmark.cli:main"
+aetherion-client = "local_ai_benchmark.client.desktop:launch_desktop_app"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

@@ -12,8 +12,33 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="intro-active">
     <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <div class="intro-overlay" aria-live="polite" aria-label="AETHERION initializing">
+      <div class="intro-badge" aria-hidden="true">
+        <span class="intro-trail" aria-hidden="true"></span>
+        <svg class="intro-logo" viewBox="0 0 64 64" role="img" aria-label="AETHERION logo">
+          <defs>
+            <linearGradient id="introBrandGradient" x1="0%" x2="100%" y1="0%" y2="100%">
+              <stop offset="0%" stop-color="#A9C7FF" />
+              <stop offset="55%" stop-color="#6EA8FF" />
+              <stop offset="100%" stop-color="#F4F7FB" />
+            </linearGradient>
+          </defs>
+          <circle class="ring" cx="32" cy="32" r="22" fill="none" stroke="url(#introBrandGradient)" stroke-width="2.5" opacity="0.9" />
+          <path class="ring" d="M32 11 C20 11 11 21 11 32 C11 45 20 54 32 54 C44 54 53 45 53 32 C53 21 44 11 32 11 Z" fill="none" stroke="url(#introBrandGradient)" stroke-width="1.8" opacity="0.8" />
+          <path class="cross" d="M32 13 V51 M13 32 H51" stroke="rgba(244,247,251,0.22)" stroke-width="1.5" stroke-linecap="round" />
+          <path class="core" d="M32 18 L36 28 L46 32 L36 36 L32 46 L28 36 L18 32 L28 28 Z" fill="none" stroke="url(#introBrandGradient)" stroke-width="2.1" stroke-linejoin="round" />
+          <circle class="core" cx="32" cy="32" r="5.5" fill="url(#introBrandGradient)" />
+        </svg>
+      </div>
+      <div class="intro-wordmark" aria-hidden="true">
+        <span class="intro-name" id="introName"></span>
+        <span class="intro-cursor" aria-hidden="true"></span>
+      </div>
+      <div class="intro-tagline" id="introTagline">BEYOND THE KNOWN.</div>
+    </div>
 
     <div class="cookie-banner" id="cookieBanner" aria-live="polite">
       <div class="cookie-content">
@@ -79,6 +104,11 @@
               <a class="primary" href="#models">Explore systems</a>
               <a class="secondary" href="#workflow">See the process</a>
             </div>
+            <div class="hero-meta" aria-label="AETHERION capabilities">
+              <span>Local-first</span>
+              <span>Hardware-aware</span>
+              <span>Results-driven</span>
+            </div>
             <ul class="hero-points">
               <li>Hardware-aware intelligence</li>
               <li>Future-ready model analysis</li>
@@ -86,30 +116,30 @@
             </ul>
           </div>
 
-          <div class="hero-panel">
+          <div class="hero-panel spotlight-card">
             <div class="panel-header">
               <span>Current lens</span>
-              <strong>Evidence over assumptions</strong>
+              <strong>Local hardware, measured at runtime</strong>
             </div>
             <div class="stats-grid">
               <article>
                 <span>GPU</span>
-                <strong>NVIDIA RTX 2060</strong>
-                <small>6 GB VRAM</small>
+                <strong>Local GPU</strong>
+                <small>Detected on your device</small>
               </article>
               <article>
                 <span>MEMORY</span>
-                <strong>15.87 GB</strong>
-                <small>13.02 GB used</small>
+                <strong>System RAM</strong>
+                <small>Measured live</small>
               </article>
               <article>
                 <span>PROCESSOR</span>
-                <strong>AMD64</strong>
-                <small>12 threads</small>
+                <strong>CPU profile</strong>
+                <small>Runtime data</small>
               </article>
               <article>
                 <span>MODELS</span>
-                <strong>5</strong>
+                <strong>Available</strong>
                 <small>Ready to benchmark</small>
               </article>
             </div>
@@ -123,11 +153,11 @@
           </div>
 
           <div class="profile-grid">
-            <div class="profile-row"><span>Operating system</span><strong>Windows 11</strong></div>
-            <div class="profile-row"><span>Architecture</span><strong>AMD64</strong></div>
-            <div class="profile-row"><span>CPU</span><strong>AMD64 Family 25 Model 80</strong><small>6 cores / 12 threads</small></div>
-            <div class="profile-row"><span>Memory</span><strong>15.87 GB</strong><small>2.86 GB available</small></div>
-            <div class="profile-row"><span>GPU</span><strong>NVIDIA GeForce RTX 2060</strong><small>6 GB VRAM / 45 C</small></div>
+            <div class="profile-row"><span>Operating system</span><strong>Your OS</strong></div>
+            <div class="profile-row"><span>Architecture</span><strong>Runtime architecture</strong></div>
+            <div class="profile-row"><span>CPU</span><strong>Detected local CPU</strong><small>Measured at launch</small></div>
+            <div class="profile-row"><span>Memory</span><strong>Available RAM</strong><small>Read from the device</small></div>
+            <div class="profile-row"><span>GPU</span><strong>Local accelerated stack</strong><small>Visible only on your machine</small></div>
           </div>
         </section>
 
@@ -138,45 +168,45 @@
           </div>
 
           <div class="model-list">
-            <article class="model-card selected" tabindex="0" aria-label="Qwen 2.5 coder model best for coding workloads">
+            <article class="model-card spotlight-card selected" tabindex="0" aria-label="Balanced local model card">
               <div class="model-top">
-                <span class="tag">BEST FOR CODING</span>
+                <span class="tag">BALANCED</span>
                 <span class="status">high fit</span>
               </div>
-              <h3>qwen2.5-coder:3b</h3>
-              <p>Balanced speed and response quality for local coding and reasoning tasks.</p>
+              <h3>Local model profile</h3>
+              <p>Ideal for general-purpose local work when the best fit is determined by your hardware.</p>
               <ul>
-                <li>3.1B params</li>
-                <li>Q4_K_M</li>
-                <li>Suitable for local dev workflows</li>
+                <li>Measured locally</li>
+                <li>Selected by workload</li>
+                <li>Compared with evidence</li>
               </ul>
             </article>
 
-            <article class="model-card" tabindex="0" aria-label="Gemma model for lightweight workloads">
+            <article class="model-card spotlight-card" tabindex="0" aria-label="Lightweight local model card">
               <div class="model-top">
                 <span class="tag">LIGHTWEIGHT</span>
                 <span class="status">compact</span>
               </div>
-              <h3>gemma3:1b</h3>
-              <p>Fastest option for lightweight local interaction and low-memory environments.</p>
+              <h3>Lean profile</h3>
+              <p>Best for low-memory environments or quick local interactions.</p>
               <ul>
-                <li>1B params</li>
                 <li>Low resource usage</li>
-                <li>Good for quick tasks</li>
+                <li>Fast startup</li>
+                <li>Minimal overhead</li>
               </ul>
             </article>
 
-            <article class="model-card" tabindex="0" aria-label="Llama model for general-purpose workloads">
+            <article class="model-card spotlight-card" tabindex="0" aria-label="General model card">
               <div class="model-top">
                 <span class="tag">GENERAL USE</span>
                 <span class="status">reliable</span>
               </div>
-              <h3>llama3.2:3b</h3>
-              <p>Strong general-purpose local option for typical assistant-style workloads.</p>
+              <h3>General-purpose profile</h3>
+              <p>Well suited for assistant-style tasks that need a stable local baseline.</p>
               <ul>
-                <li>3.2B params</li>
                 <li>Broad compatibility</li>
-                <li>Good balance of capability and size</li>
+                <li>Task-aware fit</li>
+                <li>Balanced performance</li>
               </ul>
             </article>
           </div>
@@ -188,7 +218,7 @@
             <h2>Run the benchmark on your machine</h2>
           </div>
 
-          <div class="results-box benchmark-empty-state" id="benchmarkState">
+          <div class="results-box benchmark-empty-state spotlight-card" id="benchmarkState">
             <div class="benchmark-empty-copy">
               <p class="eyebrow dark">NO BROWSER EXECUTION</p>
               <h3>Start from your local environment.</h3>
@@ -204,9 +234,9 @@
               </ol>
 
               <div class="hero-actions stacked-actions">
-                <a class="primary download-cta" href="downloads/aetherion-client.zip" download>
+                <a class="primary download-cta" href="downloads/Aetherion-Client.exe" download>
                   <span class="download-icon" aria-hidden="true">✦</span>
-                  <span>Download client</span>
+                  <span>Download Windows client</span>
                 </a>
                 <a class="secondary" href="README.md" target="_blank" rel="noreferrer">Setup guide</a>
                 <button type="button" class="secondary ghost-button" id="resetBenchmarkBtn">Reset benchmark state</button>
@@ -236,17 +266,17 @@
           </div>
 
           <div class="feature-grid">
-            <article class="feature-card">
+            <article class="feature-card spotlight-card">
               <span class="feature-number">01</span>
               <h3>Measure the real setup</h3>
               <p>Benchmark the hardware you actually own, not a generic reference box.</p>
             </article>
-            <article class="feature-card">
+            <article class="feature-card spotlight-card">
               <span class="feature-number">02</span>
               <h3>Compare models fairly</h3>
               <p>Evaluate quality, speed, and fit against the same tasks and constraints.</p>
             </article>
-            <article class="feature-card">
+            <article class="feature-card spotlight-card">
               <span class="feature-number">03</span>
               <h3>Deploy with confidence</h3>
               <p>Use the evidence to select the model that fits the workload and the hardware.</p>
@@ -254,14 +284,14 @@
           </div>
         </section>
 
-        <section class="download-panel">
+        <section class="download-panel spotlight-card">
           <div class="download-copy">
             <p class="eyebrow">CLIENT DOWNLOAD</p>
             <h2>Run AETHERION locally</h2>
             <p>Download the benchmark client and execute it on your local environment to generate fresh results.</p>
           </div>
           <div class="download-actions">
-            <a class="primary download-cta" href="downloads/aetherion-client.zip" download>
+            <a class="primary download-cta" href="downloads/Aetherion-Client.exe" download>
               <span class="download-icon" aria-hidden="true">✦</span>
               <span>Download AETHERION client</span>
             </a>
