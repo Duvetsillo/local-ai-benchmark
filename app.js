@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const benchmarkKey = 'aetherion-benchmark-cache';
+  localStorage.removeItem(benchmarkKey);
+
   const cards = document.querySelectorAll('.model-card');
   cards.forEach((card) => {
     card.addEventListener('click', () => {
@@ -13,6 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
         card.classList.add('selected');
       }
     });
+  });
+
+  const resetBenchmarkBtn = document.getElementById('resetBenchmarkBtn');
+  resetBenchmarkBtn?.addEventListener('click', () => {
+    localStorage.removeItem(benchmarkKey);
+    const state = document.getElementById('benchmarkState');
+    state?.classList.add('benchmark-empty-state');
   });
 
   const cookieBanner = document.getElementById('cookieBanner');

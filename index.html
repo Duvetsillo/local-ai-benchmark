@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark light" />
-    <title>NexaBench | Local AI Benchmark</title>
+    <title>AETHERION | BEYOND THE KNOWN.</title>
     <meta
       name="description"
-      content="NexaBench helps you compare local models on real hardware using Ollama and reproducible benchmark tasks."
+      content="AETHERION builds technology that extends what is possible, from local AI systems to future-ready infrastructure and engineering."
     />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="stylesheet" href="styles.css" />
@@ -32,24 +32,24 @@
 
     <div class="page-shell">
       <header class="topbar">
-        <div class="brand" aria-label="NexaBench home">
+        <div class="brand" aria-label="AETHERION home">
           <div class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 64 64" role="img" aria-label="NexaBench logo">
+            <svg viewBox="0 0 64 64" role="img" aria-label="AETHERION logo">
               <defs>
                 <linearGradient id="brandGradient" x1="0%" x2="100%" y1="0%" y2="100%">
-                  <stop offset="0%" stop-color="#9fe9ff" />
-                  <stop offset="50%" stop-color="#79d6ff" />
-                  <stop offset="100%" stop-color="#8ef0c6" />
+                  <stop offset="0%" stop-color="#D6B36A" />
+                  <stop offset="50%" stop-color="#F2F4F7" />
+                  <stop offset="100%" stop-color="#7BA7FF" />
                 </linearGradient>
               </defs>
-              <path d="M32 8c-11.6 0-21 9.4-21 21 0 11.6 9.4 21 21 21 5.7 0 10.9-2.2 14.7-5.8L32 32l14.7-14.2C42.9 10.2 37.7 8 32 8Z" fill="none" stroke="url(#brandGradient)" stroke-width="4" opacity="0.9"/>
-              <path d="M20 17.5L32 32 44 17.5" fill="none" stroke="url(#brandGradient)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="32" cy="32" r="22" fill="none" stroke="url(#brandGradient)" stroke-width="3.5" opacity="0.9"/>
+              <path d="M32 12 L38 28 L54 32 L38 36 L32 52 L26 36 L10 32 L26 28 Z" fill="none" stroke="url(#brandGradient)" stroke-width="2.8" stroke-linejoin="round"/>
               <circle cx="32" cy="32" r="6" fill="url(#brandGradient)"/>
             </svg>
           </div>
           <div class="brand-text">
-            <span class="brand-name">NexaBench</span>
-            <small>Local AI Benchmark</small>
+            <span class="brand-name">AETHERION</span>
+            <small>BEYOND THE KNOWN.</small>
           </div>
         </div>
         <nav class="nav" aria-label="Main navigation">
@@ -67,20 +67,20 @@
       <main id="main-content">
         <section class="hero" id="overview">
           <div class="hero-copy">
-            <p class="eyebrow">OFFLINE-FIRST / LOCAL DECISION SYSTEM</p>
-            <h1>Know which local model fits your hardware.</h1>
+            <p class="eyebrow">ENGINEERING THE UNKNOWN.</p>
+            <h1>Build what comes next.</h1>
             <p class="lead">
-              Benchmark local inference on your machine, compare available Ollama models,
-              and make evidence-based decisions without sending prompts to the cloud.
+              AETHERION turns raw local intelligence into clarity. We measure hardware, compare capable models,
+              and help teams move from uncertainty to practical, evidence-based decisions.
             </p>
             <div class="hero-actions">
-              <a class="primary" href="#models">View model fit</a>
-              <a class="secondary" href="#workflow">How it works</a>
+              <a class="primary" href="#models">Explore systems</a>
+              <a class="secondary" href="#workflow">See the process</a>
             </div>
             <ul class="hero-points">
-              <li>Hardware-aware profiling</li>
-              <li>Ollama model discovery</li>
-              <li>Deterministic task validation</li>
+              <li>Hardware-aware intelligence</li>
+              <li>Future-ready model analysis</li>
+              <li>Design for real-world systems</li>
             </ul>
           </div>
 
@@ -180,37 +180,76 @@
           </div>
         </section>
 
-        <section class="benchmarks">
+        <section class="benchmarks" id="benchmarkSection">
           <div class="section-head">
-            <p>LATEST EVIDENCE</p>
-            <h2>Measured output</h2>
+            <p>LOCAL EXECUTION</p>
+            <h2>Run the benchmark on your machine</h2>
           </div>
 
-          <div class="results-box">
-            <div class="metric-line">
-              <div><span>Avg speed</span><strong>54.89 tokens/s</strong></div>
-              <div><span>Avg TTFT</span><strong>12.552s</strong></div>
-              <div><span>Validation</span><strong>0%</strong></div>
+          <div class="results-box benchmark-empty-state" id="benchmarkState">
+            <div class="benchmark-empty-copy">
+              <p class="eyebrow dark">CLIENT READY</p>
+              <h3>No local benchmark has been run yet.</h3>
+              <p>
+                This page is intentionally reset on refresh so every run starts clean. Download the local client,
+                execute it on your hardware, and generate fresh results for your exact setup.
+              </p>
+              <div class="hero-actions stacked-actions">
+                <a class="primary" href="downloads/aetherion-client.zip" download>Download client</a>
+                <button type="button" class="secondary ghost-button" id="resetBenchmarkBtn">Reset benchmark state</button>
+              </div>
             </div>
+            <div class="benchmark-metrics">
+              <div class="mini-metric">
+                <span>Client</span>
+                <strong>Local</strong>
+              </div>
+              <div class="mini-metric">
+                <span>Runtime</span>
+                <strong>Windows / Python</strong>
+              </div>
+              <div class="mini-metric">
+                <span>Output</span>
+                <strong>Fresh only</strong>
+              </div>
+            </div>
+          </div>
+        </section>
 
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Task</th>
-                  <th scope="col">Speed</th>
-                  <th scope="col">TTFT</th>
-                  <th scope="col">Quality</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>deterministic_math</td>
-                  <td>54.89 tokens/s</td>
-                  <td>12.552s</td>
-                  <td class="fail">FAIL</td>
-                </tr>
-              </tbody>
-            </table>
+        <section class="feature-showcase">
+          <div class="section-head">
+            <p>WHY IT MATTERS</p>
+            <h2>From curiosity to practical system decisions</h2>
+          </div>
+
+          <div class="feature-grid">
+            <article class="feature-card">
+              <span class="feature-number">01</span>
+              <h3>Measure the real setup</h3>
+              <p>Benchmark the hardware you actually own, not a generic reference box.</p>
+            </article>
+            <article class="feature-card">
+              <span class="feature-number">02</span>
+              <h3>Compare models fairly</h3>
+              <p>Evaluate quality, speed, and fit against the same tasks and constraints.</p>
+            </article>
+            <article class="feature-card">
+              <span class="feature-number">03</span>
+              <h3>Deploy with confidence</h3>
+              <p>Use the evidence to select the model that fits the workload and the hardware.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="download-panel">
+          <div class="download-copy">
+            <p class="eyebrow">CLIENT DOWNLOAD</p>
+            <h2>Run AETHERION locally</h2>
+            <p>Download the benchmark client and execute it on your local environment to generate fresh results.</p>
+          </div>
+          <div class="download-actions">
+            <a class="primary" href="downloads/aetherion-client.zip" download>Download AETHERION client</a>
+            <a class="secondary" href="README.md" target="_blank" rel="noreferrer">View setup guide</a>
           </div>
         </section>
 
