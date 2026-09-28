@@ -2043,3 +2043,64 @@ footer p {
 .project-credit span {
   color: rgba(220, 220, 220, 0.72);
 }
+
+body::before,
+body::after,
+.hero::before,
+.intro-overlay::before {
+  display: none;
+}
+
+body {
+  background: linear-gradient(180deg, #050505 0%, #0d0d0d 100%);
+}
+
+.hero-panel,
+.model-card,
+.results-box,
+.contact-form,
+.glass-card,
+.subpage-hero,
+.analysis-card,
+.metric-card,
+.compare-card,
+.timeline-step,
+.resource-card,
+.download-panel {
+  background: #101010;
+  border-color: rgba(235, 235, 235, 0.12);
+  box-shadow: none !important;
+  animation: none;
+}
+
+.hero-panel {
+  background: #101010;
+}
+
+.hero-panel::before,
+.model-card::before,
+.contact-form::before,
+.results-box::before,
+.download-panel::before,
+.spotlight-card::before {
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.model-card:hover,
+.feature-card:hover,
+.resource-card:hover,
+.compare-card:hover,
+.timeline-step:hover,
+.model-card.selected {
+  border-color: rgba(235, 235, 235, 0.34);
+  box-shadow: 0 0 0 1px rgba(235, 235, 235, 0.08);
+}
+
+.stats-grid article,
+.profile-grid,
+.profile-row,
+.hero-meta span,
+.hero-points li {
+  background: #151515;
+  border-color: rgba(235, 235, 235, 0.1);
+}
