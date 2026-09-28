@@ -16,28 +16,35 @@
     <a class="skip-link" href="#main-content">Skip to main content</a>
 
     <div class="intro-overlay" aria-live="polite" aria-label="AETHERION initializing">
-      <div class="intro-badge" aria-hidden="true">
-        <span class="intro-trail" aria-hidden="true"></span>
-        <svg class="intro-logo" viewBox="0 0 64 64" role="img" aria-label="AETHERION logo">
-          <defs>
-            <linearGradient id="introBrandGradient" x1="0%" x2="100%" y1="0%" y2="100%">
-              <stop offset="0%" stop-color="#A9C7FF" />
-              <stop offset="55%" stop-color="#6EA8FF" />
-              <stop offset="100%" stop-color="#F4F7FB" />
-            </linearGradient>
-          </defs>
-          <circle class="ring" cx="32" cy="32" r="22" fill="none" stroke="url(#introBrandGradient)" stroke-width="2.5" opacity="0.9" />
-          <path class="ring" d="M32 11 C20 11 11 21 11 32 C11 45 20 54 32 54 C44 54 53 45 53 32 C53 21 44 11 32 11 Z" fill="none" stroke="url(#introBrandGradient)" stroke-width="1.8" opacity="0.8" />
-          <path class="cross" d="M32 13 V51 M13 32 H51" stroke="rgba(244,247,251,0.22)" stroke-width="1.5" stroke-linecap="round" />
-          <path class="core" d="M32 18 L36 28 L46 32 L36 36 L32 46 L28 36 L18 32 L28 28 Z" fill="none" stroke="url(#introBrandGradient)" stroke-width="2.1" stroke-linejoin="round" />
-          <circle class="core" cx="32" cy="32" r="5.5" fill="url(#introBrandGradient)" />
-        </svg>
+      <div class="intro-stage">
+        <div class="intro-kicker">LOCAL INTELLIGENCE / SYSTEM READY</div>
+        <div class="intro-badge" aria-hidden="true">
+          <span class="intro-trail" aria-hidden="true"></span>
+          <svg class="intro-logo" viewBox="0 0 64 64" role="img" aria-label="AETHERION logo">
+            <defs>
+              <linearGradient id="introBrandGradient" x1="0%" x2="100%" y1="0%" y2="100%">
+                <stop offset="0%" stop-color="#A9C7FF" />
+                <stop offset="55%" stop-color="#6EA8FF" />
+                <stop offset="100%" stop-color="#F4F7FB" />
+              </linearGradient>
+            </defs>
+            <circle class="ring ring-primary" cx="32" cy="32" r="22" fill="none" stroke="url(#introBrandGradient)" stroke-width="2.5" opacity="0.9" />
+            <path class="ring ring-secondary" d="M32 11 C20 11 11 21 11 32 C11 45 20 54 32 54 C44 54 53 45 53 32 C53 21 44 11 32 11 Z" fill="none" stroke="url(#introBrandGradient)" stroke-width="1.8" opacity="0.8" />
+            <path class="cross" d="M32 13 V51 M13 32 H51" stroke="rgba(244,247,251,0.22)" stroke-width="1.5" stroke-linecap="round" />
+            <path class="core-shape" d="M32 18 L36 28 L46 32 L36 36 L32 46 L28 36 L18 32 L28 28 Z" fill="none" stroke="url(#introBrandGradient)" stroke-width="2.1" stroke-linejoin="round" />
+            <circle class="core-halo" cx="32" cy="32" r="8.5" fill="none" stroke="rgba(169,199,255,0.32)" stroke-width="1" />
+            <circle class="core-dot" cx="32" cy="32" r="5.5" fill="url(#introBrandGradient)" />
+          </svg>
+        </div>
+        <div class="intro-lockup">
+          <div class="intro-wordmark" aria-hidden="true">
+            <span class="intro-name" id="introName"></span>
+            <span class="intro-cursor" aria-hidden="true"></span>
+          </div>
+          <div class="intro-tagline" id="introTagline">BEYOND THE KNOWN.</div>
+        </div>
+        <div class="intro-progress" aria-hidden="true"><span></span></div>
       </div>
-      <div class="intro-wordmark" aria-hidden="true">
-        <span class="intro-name" id="introName"></span>
-        <span class="intro-cursor" aria-hidden="true"></span>
-      </div>
-      <div class="intro-tagline" id="introTagline">BEYOND THE KNOWN.</div>
     </div>
 
     <div class="cookie-banner" id="cookieBanner" aria-live="polite">
@@ -117,6 +124,27 @@
           </div>
 
           <div class="hero-panel spotlight-card">
+            <div class="hero-identity" aria-label="AETHERION local intelligence">
+              <div class="hero-identity-mark" aria-hidden="true">
+                <svg viewBox="0 0 64 64" role="img" aria-label="AETHERION emblem">
+                  <defs>
+                    <linearGradient id="heroBrandGradient" x1="0%" x2="100%" y1="0%" y2="100%">
+                      <stop offset="0%" stop-color="#F0C980" />
+                      <stop offset="48%" stop-color="#A9C7FF" />
+                      <stop offset="100%" stop-color="#F4F7FB" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="32" cy="32" r="23" fill="none" stroke="url(#heroBrandGradient)" stroke-width="1.4" opacity="0.55" />
+                  <circle cx="32" cy="32" r="16" fill="none" stroke="url(#heroBrandGradient)" stroke-width="1.2" stroke-dasharray="2 4" opacity="0.7" />
+                  <path d="M32 16 L36 28 L48 32 L36 36 L32 48 L28 36 L16 32 L28 28 Z" fill="rgba(169,199,255,0.08)" stroke="url(#heroBrandGradient)" stroke-width="2" stroke-linejoin="round" />
+                  <circle cx="32" cy="32" r="5" fill="#F0C980" />
+                </svg>
+              </div>
+              <div>
+                <span class="hero-identity-kicker">AETHERION / 01</span>
+                <strong>Local intelligence, made visible.</strong>
+              </div>
+            </div>
             <div class="panel-header">
               <span>Current lens</span>
               <strong>Local hardware, measured at runtime</strong>
@@ -363,6 +391,10 @@
           <span>AETHERION</span>
           <span>Business contact and support</span>
           <span>Private inquiry routing</span>
+        </div>
+        <div class="project-credit">
+          <span>AN INDEPENDENT LOCAL AI PROJECT</span>
+          <strong>Created by Dayver Moreta</strong>
         </div>
       </footer>
     </div>

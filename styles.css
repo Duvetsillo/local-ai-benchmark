@@ -14,6 +14,7 @@
   --warn: #fca5a5;
   --button-dark: #0a131a;
   --link: #cfe0ff;
+  --signal: #f0c980;
   --shadow: 0 22px 52px rgba(2, 6, 13, 0.42);
   --glow: rgba(183, 206, 232, 0.12);
 }
@@ -65,7 +66,7 @@ body::after {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  padding: 2rem;
   background:
     radial-gradient(circle at 50% 28%, rgba(183, 206, 232, 0.09), transparent 26%),
     linear-gradient(180deg, rgba(5, 7, 10, 0.98), rgba(8, 12, 18, 0.96));
@@ -73,6 +74,25 @@ body::after {
   transition: opacity 0.7s ease, visibility 0.7s ease, backdrop-filter 0.7s ease;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+.intro-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 620px);
+  text-align: center;
+}
+
+.intro-kicker {
+  margin-bottom: 1.25rem;
+  color: rgba(169, 199, 255, 0.72);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  opacity: 0;
+  animation: introKickerReveal 0.7s ease 0.2s forwards;
 }
 
 .intro-overlay::before {
@@ -91,15 +111,27 @@ body::after {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: clamp(132px, 16vw, 162px);
-  height: clamp(132px, 16vw, 162px);
+  width: clamp(154px, 19vw, 188px);
+  height: clamp(154px, 19vw, 188px);
   border-radius: 50%;
   background: radial-gradient(circle at 38% 28%, rgba(170, 205, 255, 0.32), rgba(10, 15, 22, 0.9) 60%);
   border: 1px solid rgba(170, 205, 255, 0.28);
-  box-shadow: 0 0 28px rgba(110, 168, 255, 0.24), inset 0 0 18px rgba(170, 205, 255, 0.14);
+  box-shadow: 0 0 28px rgba(110, 168, 255, 0.24), 0 0 0 1px rgba(169, 199, 255, 0.08), inset 0 0 18px rgba(170, 205, 255, 0.14);
   opacity: 0;
   animation: introBadgeArrive 1.05s cubic-bezier(0.2, 1.25, 0.35, 1) 0.05s both;
   overflow: visible;
+}
+
+.intro-badge::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border: 1px solid rgba(169, 199, 255, 0.16);
+  border-left-color: rgba(169, 199, 255, 0.7);
+  border-radius: 50%;
+  transform: rotate(-28deg) scale(0.76);
+  opacity: 0;
+  animation: introOrbitReveal 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.45s forwards, introOrbitSpin 12s linear 1.7s infinite;
 }
 
 .intro-badge::before {
@@ -142,9 +174,14 @@ body::after {
   animation: introStarReveal 1.15s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards, introLogoFloat 3s ease-in-out 1.5s infinite;
 }
 
-.intro-logo .core {
+.intro-logo .core-dot {
   transform-origin: center;
   animation: introCorePulse 2.2s ease-in-out infinite;
+}
+
+.intro-logo .core-halo {
+  transform-origin: center;
+  animation: introCoreHalo 2.2s ease-in-out infinite;
 }
 
 .intro-logo .ring,
@@ -156,12 +193,17 @@ body::after {
   animation: introRingSpin 8s linear infinite;
 }
 
+.intro-logo .ring-secondary {
+  animation-direction: reverse;
+  animation-duration: 11s;
+}
+
 .intro-wordmark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 1.3em;
-  font-size: clamp(2.4rem, 5vw, 5rem);
+  font-size: clamp(2.25rem, 5vw, 4.7rem);
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -170,6 +212,13 @@ body::after {
   opacity: 0;
   transform: translateY(18px) scale(0.96);
   animation: introTextDrop 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+}
+
+.intro-lockup {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  margin-top: 1.75rem;
 }
 
 .intro-name {
@@ -200,6 +249,28 @@ body::after {
   text-transform: uppercase;
   color: rgba(232, 241, 247, 0.82);
   transition: opacity 0.6s ease, transform 0.6s ease, filter 0.6s ease;
+}
+
+.intro-progress {
+  position: relative;
+  width: min(220px, 60vw);
+  height: 2px;
+  margin-top: 2.2rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(169, 199, 255, 0.14);
+  opacity: 0;
+  animation: introProgressReveal 0.6s ease 0.7s forwards;
+}
+
+.intro-progress span {
+  display: block;
+  width: 38%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, #a9c7ff, #f4f7fb, transparent);
+  box-shadow: 0 0 12px rgba(169, 199, 255, 0.8);
+  animation: introProgressSweep 1.9s ease-in-out 0.8s infinite;
 }
 
 body.intro-complete .intro-overlay {
@@ -282,6 +353,35 @@ body.intro-active .page-shell {
   }
 }
 
+@keyframes introKickerReveal {
+  from { opacity: 0; transform: translateY(8px); letter-spacing: 0.42em; }
+  to { opacity: 1; transform: translateY(0); letter-spacing: 0.28em; }
+}
+
+@keyframes introOrbitReveal {
+  from { opacity: 0; transform: rotate(-70deg) scale(0.76); }
+  to { opacity: 1; transform: rotate(-28deg) scale(1); }
+}
+
+@keyframes introOrbitSpin {
+  to { transform: rotate(332deg) scale(1); }
+}
+
+@keyframes introCoreHalo {
+  0%, 100% { opacity: 0.35; transform: scale(0.9); }
+  50% { opacity: 0.9; transform: scale(1.18); }
+}
+
+@keyframes introProgressReveal {
+  from { opacity: 0; transform: scaleX(0.4); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes introProgressSweep {
+  0% { transform: translateX(-150%); }
+  55%, 100% { transform: translateX(420%); }
+}
+
 @keyframes introStarReveal {
   0% {
     opacity: 0;
@@ -337,6 +437,11 @@ body.intro-active .page-shell {
   100% {
     transform: rotate(360deg);
   }
+}
+
+@keyframes heroMarkFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(3deg); }
 }
 
 @keyframes pageEnter {
@@ -458,19 +563,16 @@ body.intro-complete .page-shell,
 }
 
 .topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
+  position: relative;
+  z-index: 2;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 0 18px;
-  margin-top: 8px;
-  border-bottom: none;
-  box-shadow: none;
-  background: rgba(5, 8, 22, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  padding: 18px 0 12px;
+  margin-top: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   animation: fadeSlideIn 0.9s ease both;
 }
 
@@ -510,8 +612,8 @@ header.topbar,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
-  background: rgba(10, 15, 22, 0.96);
+  border-radius: 50%;
+  background: rgba(10, 15, 22, 0.72);
   border: 1px solid rgba(110, 168, 255, 0.28);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(110, 168, 255, 0.08), 0 12px 24px rgba(18, 31, 47, 0.38);
   animation: pulseGlow 4s ease-in-out infinite;
@@ -547,6 +649,7 @@ header.topbar,
   align-items: center;
   flex-wrap: wrap;
   font-size: 0.9rem;
+  padding-right: 2px;
 }
 
 .nav a {
@@ -599,8 +702,9 @@ header.topbar,
 .hero {
   display: grid;
   grid-template-columns: 1.18fr 0.82fr;
-  gap: 32px;
-  padding: 54px 0 30px;
+  gap: clamp(36px, 6vw, 86px);
+  min-height: min(720px, calc(100svh - 100px));
+  padding: 76px 0 88px;
   align-items: center;
   animation: fadeUp 0.8s ease both;
   position: relative;
@@ -612,7 +716,7 @@ header.topbar,
   inset: 0 auto auto 0;
   width: 540px;
   height: 540px;
-  background: radial-gradient(circle, rgba(139, 189, 255, 0.18), transparent 60%);
+  background: radial-gradient(circle, rgba(139, 189, 255, 0.14), transparent 60%);
   filter: blur(40px);
   pointer-events: none;
   z-index: -1;
@@ -641,7 +745,8 @@ footer p {
 
 .hero h1 {
   margin: 0;
-  font-size: clamp(3rem, 5vw, 5.7rem);
+  max-width: 760px;
+  font-size: clamp(3.25rem, 6.8vw, 6.8rem);
   line-height: 0.96;
   letter-spacing: -0.065em;
   text-transform: uppercase;
@@ -649,7 +754,7 @@ footer p {
 }
 
 .lead {
-  max-width: 620px;
+  max-width: 570px;
   color: var(--muted);
   font-size: 1.08rem;
   line-height: 1.7;
@@ -836,6 +941,64 @@ footer p {
   transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
 }
 
+.hero-panel {
+  min-height: 430px;
+  padding: clamp(22px, 3vw, 34px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background:
+    linear-gradient(rgba(169, 199, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(169, 199, 255, 0.045) 1px, transparent 1px),
+    radial-gradient(circle at 72% 20%, rgba(240, 201, 128, 0.13), transparent 28%),
+    linear-gradient(180deg, rgba(16, 21, 28, 0.82), rgba(9, 13, 18, 0.92));
+  background-size: 34px 34px, 34px 34px, auto, auto;
+}
+
+.hero-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid rgba(240, 201, 128, 0.2);
+}
+
+.hero-identity-mark {
+  display: grid;
+  place-items: center;
+  width: 82px;
+  height: 82px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(240, 201, 128, 0.28);
+  border-radius: 50%;
+  background: rgba(7, 12, 18, 0.76);
+  box-shadow: 0 0 30px rgba(240, 201, 128, 0.1), inset 0 0 22px rgba(169, 199, 255, 0.08);
+  animation: heroMarkFloat 5s ease-in-out infinite;
+}
+
+.hero-identity-mark svg {
+  width: 62px;
+  height: 62px;
+}
+
+.hero-identity-kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--signal);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.hero-identity strong {
+  display: block;
+  max-width: 180px;
+  color: var(--text);
+  font-size: 1.25rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
 .hero-panel::before,
 .model-card::before,
 .contact-form::before,
@@ -952,11 +1115,25 @@ footer p {
 .summary,
 .models,
 .benchmarks {
-  padding-top: 30px;
+  padding-top: 72px;
 }
 
 .section-head {
+  position: relative;
   margin-bottom: 18px;
+  padding-left: 18px;
+}
+
+.section-head::before {
+  content: "";
+  position: absolute;
+  top: 0.12rem;
+  bottom: 0.18rem;
+  left: 0;
+  width: 2px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--signal), rgba(169, 199, 255, 0.2));
+  box-shadow: 0 0 14px rgba(240, 201, 128, 0.24);
 }
 
 .section-head h2 {
@@ -1292,13 +1469,42 @@ footer {
   justify-content: space-between;
   align-items: center;
   gap: 20px;
-  padding-top: 30px;
+  padding: 42px 0 12px;
   border-top: 1px solid var(--line);
   margin-top: 30px;
   color: var(--muted);
   font-size: 0.8rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+footer > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+footer p {
+  margin: 0;
+}
+
+.project-credit {
+  align-items: flex-end;
+  text-align: right;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.project-credit span {
+  color: rgba(240, 201, 128, 0.7);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+}
+
+.project-credit strong {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .business-info {
@@ -1592,11 +1798,21 @@ textarea { resize: vertical; min-height: 120px; }
 @media (prefers-reduced-motion: reduce) {
   .intro-badge,
   .intro-badge::before,
+  .intro-badge::after,
   .intro-trail,
   .intro-logo,
-  .intro-logo .core,
+  .intro-logo .core-shape,
+  .intro-logo .core-halo,
+  .intro-logo .core-dot,
   .intro-logo .ring,
-  .intro-wordmark {
+  .intro-wordmark,
+  .intro-kicker,
+  .intro-progress,
+  .intro-progress span {
+    animation: none;
+  }
+
+  .hero-identity-mark {
     animation: none;
   }
 
@@ -1606,7 +1822,15 @@ textarea { resize: vertical; min-height: 120px; }
   }
 
   .intro-logo,
-  .intro-wordmark {
+  .intro-wordmark,
+  .intro-kicker,
+  .intro-progress {
+    opacity: 1;
+    transform: none;
+  }
+
+  .intro-badge::after,
+  .intro-progress span {
     opacity: 1;
     transform: none;
   }
@@ -1648,6 +1872,15 @@ textarea { resize: vertical; min-height: 120px; }
     width: 100%;
   }
 
+  .hero {
+    min-height: auto;
+    padding: 56px 0 64px;
+  }
+
+  .hero-panel {
+    min-height: 360px;
+  }
+
   .feature-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1673,6 +1906,11 @@ textarea { resize: vertical; min-height: 120px; }
   footer {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .project-credit {
+    align-items: flex-start;
+    text-align: left;
   }
 
   .business-info {
