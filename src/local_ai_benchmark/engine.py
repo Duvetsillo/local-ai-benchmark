@@ -1,6 +1,7 @@
 import datetime as dt
 import json
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 from .hardware import profile_hardware
@@ -28,12 +29,15 @@ class BenchmarkEngine:
     def __init__(self, provider: OllamaProvider, results_dir: str | Path = "results"):
         self.provider = provider
         self.results_dir = Path(results_dir)
+        self.last_result_path: Path | None = None
 
     def run(self, model: str, category: str | None = None, temperature: float = 0.0,
-            context: int = 4096) -> list[BenchmarkResult]:
+            context: int = 4096,
+            progress_callback: Callable[[int, int, BenchmarkResult], None] | None = None) -> list[BenchmarkResult]:
         hardware = profile_hardware().to_dict()
         results: list[BenchmarkResult] = []
-        for task in tasks_for(category):
+        tasks = tasks_for(category)
+        for index, task in enumerate(tasks, start=1):
             started = time.perf_counter()
             resources_before = _resource_snapshot()
             try:
@@ -59,17 +63,20 @@ class BenchmarkEngine:
                                       if hardware["gpus"] else None),
                     "telemetry_note": "Provider/runtime telemetry only; unavailable fields are null",
                 }
-                results.append(BenchmarkResult(model, self.provider.name, task.name, task.category,
-                                               task.prompt, temperature, context, generation.text,
-                                               validate(task, generation.text), None, hardware, metrics,
-                                               generation.usage))
+                result = BenchmarkResult(model, self.provider.name, task.name, task.category,
+                                         task.prompt, temperature, context, generation.text,
+                                         validate(task, generation.text), None, hardware, metrics,
+                                         generation.usage)
             except ProviderError as exc:
-                results.append(BenchmarkResult(model, self.provider.name, task.name, task.category,
-                                               task.prompt, temperature, context, "", None, str(exc),
-                                               hardware, {"wall_time_seconds": round(time.perf_counter() - started, 6),
-                                                          "cpu_percent": resources_before["cpu_percent"],
-                                                          "ram_used_bytes": resources_before["ram_used_bytes"]}, {}))
-        self._write(results, hardware)
+                result = BenchmarkResult(model, self.provider.name, task.name, task.category,
+                                         task.prompt, temperature, context, "", None, str(exc),
+                                         hardware, {"wall_time_seconds": round(time.perf_counter() - started, 6),
+                                                    "cpu_percent": resources_before["cpu_percent"],
+                                                    "ram_used_bytes": resources_before["ram_used_bytes"]}, {})
+            results.append(result)
+            if progress_callback is not None:
+                progress_callback(index, len(tasks), result)
+        self.last_result_path = self._write(results, hardware)
         return results
 
     def _write(self, results: list[BenchmarkResult], hardware: dict) -> Path:

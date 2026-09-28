@@ -3,7 +3,7 @@
 
 a = Analysis(
     ['src/local_ai_benchmark/client/desktop.py'],
-    pathex=[],
+    pathex=['src'],
     binaries=[],
     datas=[],
     hiddenimports=[],

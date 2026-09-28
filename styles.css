@@ -29,7 +29,6 @@ body {
     linear-gradient(180deg, var(--bg) 0%, #0a0f15 100%);
   color: var(--text);
   overflow-x: hidden;
-  animation: pageEnter 1.1s ease both;
 }
 
 body::before {
@@ -92,13 +91,14 @@ body::after {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: clamp(86px, 11vw, 122px);
-  height: clamp(86px, 11vw, 122px);
+  width: clamp(132px, 16vw, 162px);
+  height: clamp(132px, 16vw, 162px);
   border-radius: 50%;
   background: radial-gradient(circle at 38% 28%, rgba(170, 205, 255, 0.32), rgba(10, 15, 22, 0.9) 60%);
   border: 1px solid rgba(170, 205, 255, 0.28);
   box-shadow: 0 0 28px rgba(110, 168, 255, 0.24), inset 0 0 18px rgba(170, 205, 255, 0.14);
-  animation: introBadgeBob 2.8s ease-in-out infinite;
+  opacity: 0;
+  animation: introBadgeArrive 1.05s cubic-bezier(0.2, 1.25, 0.35, 1) 0.05s both;
   overflow: visible;
 }
 
@@ -132,12 +132,11 @@ body::after {
 
 .intro-logo {
   position: relative;
-  width: 64%;
-  height: 64%;
+  width: 82%;
+  height: 82%;
   display: block;
   filter: drop-shadow(0 0 12px rgba(160, 202, 255, 0.44));
   transform-origin: center;
-  animation: introLogoFloat 3s ease-in-out infinite;
   opacity: 0;
   transform: scale(0.72) rotate(-18deg);
   animation: introStarReveal 1.15s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards, introLogoFloat 3s ease-in-out 1.5s infinite;
@@ -234,6 +233,24 @@ body.intro-active .page-shell {
   }
   50% {
     transform: translateY(-6px) scale(1.04);
+  }
+}
+
+@keyframes introBadgeArrive {
+  0% {
+    opacity: 0;
+    transform: translate3d(-min(34vw, 260px), -20vh, 0) scale(0.32) rotate(-38deg);
+  }
+  62% {
+    opacity: 1;
+    transform: translate3d(0, 8px, 0) scale(1.12) rotate(8deg);
+  }
+  80% {
+    transform: translate3d(0, -3px, 0) scale(0.96) rotate(-3deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
   }
 }
 
@@ -1581,6 +1598,11 @@ textarea { resize: vertical; min-height: 120px; }
   .intro-logo .ring,
   .intro-wordmark {
     animation: none;
+  }
+
+  .intro-badge {
+    opacity: 1;
+    transform: none;
   }
 
   .intro-logo,

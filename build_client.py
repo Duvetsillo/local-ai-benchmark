@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import os
 import subprocess
 import sys
+from shutil import copy2
 from pathlib import Path
 
 
@@ -12,31 +12,26 @@ DIST.mkdir(exist_ok=True)
 
 
 def build_installer() -> str:
-    spec = ROOT / "aetherion_client.spec"
     command = [
         sys.executable,
         "-m",
         "PyInstaller",
-        "--name",
-        "Aetherion-Client",
-        "--onefile",
-        "--windowed",
+        "--noconfirm",
+        "--clean",
         "--distpath",
         str(DIST),
         "--workpath",
         str(ROOT / "build" / "pyinstaller"),
-        "--specpath",
-        str(ROOT),
-        "--add-data",
-        str(ROOT / "src" / "local_ai_benchmark" / "web" / "index.html"),
-        ".",
-        str(ROOT / "src" / "local_ai_benchmark" / "client" / "desktop.py"),
+        str(ROOT / "Aetherion-Client.spec"),
     ]
-    subprocess.run(command, check=False)
+    subprocess.run(command, check=True, cwd=ROOT)
     exe_file = DIST / "Aetherion-Client.exe"
-    if exe_file.exists():
-        return str(exe_file)
-    raise FileNotFoundError("Aetherion installer was not generated. The PyInstaller tool is required.")
+    if not exe_file.is_file():
+        raise FileNotFoundError("Aetherion client was not generated. Install PyInstaller and retry.")
+    download_dir = ROOT / "downloads"
+    download_dir.mkdir(exist_ok=True)
+    copy2(exe_file, download_dir / exe_file.name)
+    return str(exe_file)
 
 
 if __name__ == "__main__":

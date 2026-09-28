@@ -36,6 +36,15 @@ This is not a chatbot, and it is not a cloud evaluation platform. It is a local 
 
 ## Quick start
 
+### Desktop client (Windows)
+
+1. Install and start [Ollama](https://ollama.com/download).
+2. Download and open `downloads/Aetherion-Client.exe`.
+3. Select an installed model and task suite, then choose **Run Benchmark**.
+4. Open the results folder from the client to review the saved JSON files.
+
+If Ollama has no models yet, run `ollama pull <model>` in PowerShell and refresh the model list. The client stores results under `%LOCALAPPDATA%\Aetherion\results` and does not upload them.
+
 ### 1) Create and activate a virtual environment
 
 #### Windows PowerShell
