@@ -3,10 +3,13 @@ from __future__ import annotations
 import importlib.util
 import os
 import queue
+import shutil
 import subprocess
 import sys
 import threading
 import tkinter as tk
+import webbrowser
+from urllib.request import urlretrieve
 from dataclasses import dataclass
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -31,6 +34,16 @@ else:
     from ..models import BenchmarkResult, ModelInfo
     from ..providers import LlamaCppProvider, OllamaProvider, ProviderRouter
     from ..tasks import TASKS
+
+
+TASK_SUITE_DESCRIPTIONS = {
+    "All tasks": "Runs general, coding, math, JSON, and Spanish-language checks.",
+    "general": "Checks concise factual explanation and instruction following.",
+    "coding": "Checks whether the model returns valid Python code for a concrete task.",
+    "math": "Checks exact arithmetic and resistance to unnecessary explanation.",
+    "json": "Checks strict JSON formatting and schema compliance.",
+    "spanish": "Checks Spanish comprehension and concise instruction following.",
+}
 
 
 @dataclass
@@ -72,6 +85,7 @@ class AetherionDesktopClient:
         self.session = DesktopSession.create(base_dir)
         self.events: queue.Queue[tuple[str, Any]] = queue.Queue()
         self.models: dict[str, ModelInfo] = {}
+        self.recommended_model_name: str | None = None
         self.busy = False
         self.closing = False
         self.brand_phase = 0
@@ -79,6 +93,7 @@ class AetherionDesktopClient:
         self.root.protocol("WM_DELETE_WINDOW", self.close)
         self.root.after(100, self.process_events)
         self.animate_brand_mark()
+        self.root.after(200, self.refresh_dependency_status)
         self.refresh_models()
 
     def build_ui(self) -> None:
@@ -238,11 +253,54 @@ class AetherionDesktopClient:
             cursor="hand2",
         ).pack(side="right", padx=(7, 0), ipady=5)
 
+        self.requirements_label = tk.Label(
+            controls,
+            text="Checking requirements...",
+            bg="#141414",
+            fg="#8C8C8C",
+            justify="left",
+            anchor="w",
+            wraplength=270,
+            font=("Consolas", 8),
+            padx=1,
+        )
+        self.requirements_label.pack(anchor="w", fill="x", pady=(0, 8))
+        self.install_requirements_button = tk.Button(
+            controls,
+            text="DOWNLOAD MISSING INSTALLERS",
+            command=self.download_missing_dependencies,
+            bg="#242424",
+            fg="#D8D8D8",
+            activebackground="#363636",
+            activeforeground="#FFFFFF",
+            relief="flat",
+            highlightbackground="#3A3A3A",
+            highlightthickness=1,
+            font=("Segoe UI", 8, "bold"),
+            padx=10,
+            pady=8,
+            cursor="hand2",
+        )
+        self.install_requirements_button.pack(fill="x", pady=(0, 18))
+
         tk.Label(controls, text="TASK SUITE", bg="#141414", fg="#A0A0A0", font=("Segoe UI", 8, "bold")).pack(anchor="w")
         self.category_var = tk.StringVar(value="All tasks")
         categories = list(dict.fromkeys(task.category for task in TASKS))
         self.category_menu = ttk.Combobox(controls, textvariable=self.category_var, values=["All tasks", *categories], state="readonly", style="Aetherion.TCombobox")
         self.category_menu.pack(fill="x", pady=(7, 22))
+        self.category_menu.bind("<<ComboboxSelected>>", lambda _event: self.update_suite_details())
+        self.suite_details = tk.Label(
+            controls,
+            text=TASK_SUITE_DESCRIPTIONS["All tasks"],
+            bg="#141414",
+            fg="#777777",
+            justify="left",
+            anchor="w",
+            wraplength=270,
+            font=("Segoe UI", 8),
+            padx=1,
+        )
+        self.suite_details.pack(anchor="w", fill="x", pady=(0, 14))
 
         self.refresh_button = tk.Button(controls, text="REFRESH MODEL LIST", command=self.refresh_models, bg="#202020", fg="#D8D8D8", activebackground="#303030", activeforeground="#FFFFFF", font=("Segoe UI", 9, "bold"), relief="flat", highlightbackground="#424242", highlightthickness=1, padx=12, pady=11, cursor="hand2")
         self.refresh_button.pack(fill="x")
@@ -309,33 +367,53 @@ class AetherionDesktopClient:
         quantization = details.get("quantization_level") or details.get("format") or "Precision unavailable"
         digest = details.get("digest")
         digest_text = f" · {digest[:12]}" if digest else ""
+        recommendation = "RECOMMENDED FOR THIS HARDWARE" if model.name == self.recommended_model_name else "ALTERNATIVE MODEL"
         runability = self.assess_model(model)
         self.model_details.configure(
-            text=f"{model.provider.upper()}  ·  {size}\n{quantization}{digest_text}\n{runability}",
+            text=f"{model.provider.upper()}  ·  {size}\n{quantization}{digest_text}\n{recommendation}\n{runability}",
             fg="#A8A8A8",
         )
 
+    def update_suite_details(self) -> None:
+        suite = self.category_var.get()
+        self.suite_details.configure(text=TASK_SUITE_DESCRIPTIONS.get(suite, "Runs the selected local validation tasks."))
+
+    def model_recommendation_key(self, model: ModelInfo) -> tuple[int, int]:
+        assessment = self.assess_model(model)
+        if assessment.startswith("DIRECT RUN: YES · GPU"):
+            priority = 0
+        elif assessment.startswith("DIRECT RUN: YES"):
+            priority = 1
+        else:
+            priority = 2
+        return priority, model.size_bytes or 0
+
     def assess_model(self, model: ModelInfo) -> str:
-        if model.provider == "ollama":
-            return "DIRECT RUN: YES · Ollama service"
-        if importlib.util.find_spec("llama_cpp") is None:
-            return "DIRECT RUN: NO · Install llama-cpp-python"
+        runtime_ready = model.provider == "ollama" or importlib.util.find_spec("llama_cpp") is not None
+        if not runtime_ready:
+            return "DIRECT RUN: NO · Install llama-cpp-python for GGUF"
+
         if model.size_bytes is None:
             return "DIRECT RUN: UNKNOWN · Model size unavailable"
 
-        required_gb = max(model.size_bytes / (1024 ** 3) * 1.25, 1.0)
+        model_gb = model.size_bytes / (1024 ** 3)
+        required_gb = max(model_gb * 1.25, 1.0)
         available_gb = self.session.hardware.get("memory", {}).get("available_gb")
-        if isinstance(available_gb, (int, float)) and available_gb < required_gb:
-            return f"DIRECT RUN: NO · Needs ~{required_gb:.1f} GB RAM"
-
         gpus = self.session.hardware.get("gpu", [])
         vram_gb = next(
             (gpu.get("vram_gb") for gpu in gpus if isinstance(gpu.get("vram_gb"), (int, float))),
             None,
         )
-        if isinstance(vram_gb, (int, float)) and model.size_bytes / (1024 ** 3) <= vram_gb * 0.9:
-            return f"DIRECT RUN: YES · GPU memory fit ({vram_gb:.1f} GB VRAM)"
-        return f"DIRECT RUN: YES · CPU fallback (~{required_gb:.1f} GB RAM)"
+        vram_text = f"{vram_gb:.1f} GB VRAM" if isinstance(vram_gb, (int, float)) else "VRAM unavailable"
+
+        if isinstance(available_gb, (int, float)) and available_gb < required_gb:
+            return f"DIRECT RUN: NO\nRAM: {available_gb:.1f} GB available / ~{required_gb:.1f} GB needed\nVRAM: {vram_text}"
+
+        if isinstance(vram_gb, (int, float)) and model_gb <= vram_gb * 0.9:
+            return f"DIRECT RUN: YES · GPU\nRAM: ~{required_gb:.1f} GB needed\nVRAM: {vram_text} · sufficient"
+        if isinstance(vram_gb, (int, float)):
+            return f"DIRECT RUN: YES · CPU fallback\nRAM: ~{required_gb:.1f} GB needed\nVRAM: {vram_text} · insufficient for full load"
+        return f"DIRECT RUN: YES · CPU\nRAM: ~{required_gb:.1f} GB needed\nVRAM: unavailable"
 
     def browse_model_folder(self) -> None:
         current_path = Path(self.model_path_var.get())
@@ -346,6 +424,65 @@ class AetherionDesktopClient:
         self.session.gguf_provider.set_models_dir(selected)
         self.model_path_var.set(selected)
         self.refresh_models()
+
+    def dependency_status(self) -> tuple[str, list[str]]:
+        ollama_status = "READY" if shutil.which("ollama") else "NOT FOUND"
+        llama_status = "READY" if importlib.util.find_spec("llama_cpp") else "NOT FOUND"
+        psutil_status = "READY" if importlib.util.find_spec("psutil") else "OPTIONAL"
+        missing = []
+        if not shutil.which("ollama"):
+            missing.append("Ollama")
+        if importlib.util.find_spec("llama_cpp") is None:
+            missing.append("llama-cpp-python")
+        text = f"REQUIREMENTS\nOLLAMA       {ollama_status}\nGGUF RUNTIME {llama_status}\nTELEMETRY    {psutil_status}"
+        return text, missing
+
+    def refresh_dependency_status(self) -> None:
+        text, missing = self.dependency_status()
+        self.requirements_label.configure(text=text, fg="#C8C8C8" if not missing else "#A8A8A8")
+        self.install_requirements_button.configure(state="normal" if missing else "disabled")
+
+    def download_missing_dependencies(self) -> None:
+        _, missing = self.dependency_status()
+        if not missing:
+            self.refresh_dependency_status()
+            return
+        if "Ollama" in missing:
+            installer_url = "https://ollama.com/download/OllamaSetup.exe" if sys.platform == "win32" else "https://ollama.com/download"
+            installer_dir = Path.home() / "Downloads" / "Aetherion-Installers"
+            installer_dir.mkdir(parents=True, exist_ok=True)
+            installer_path = installer_dir / "OllamaSetup.exe"
+            if sys.platform == "win32":
+                self.install_requirements_button.configure(state="disabled")
+                self.requirements_label.configure(text="Downloading Ollama installer...", fg="#B8B8B8")
+
+                def download() -> None:
+                    try:
+                        urlretrieve(installer_url, installer_path)
+                        self.events.put(("installer_downloaded", str(installer_path)))
+                    except OSError as exc:
+                        self.events.put(("installer_download_error", str(exc)))
+
+                threading.Thread(target=download, daemon=True).start()
+            else:
+                webbrowser.open(installer_url)
+        if "llama-cpp-python" in missing and not getattr(sys, "frozen", False):
+            self.install_requirements_button.configure(state="disabled")
+            self.requirements_label.configure(text="Installing llama-cpp-python...", fg="#B8B8B8")
+
+            def install() -> None:
+                try:
+                    subprocess.run([sys.executable, "-m", "pip", "install", "llama-cpp-python"], check=True)
+                    self.events.put(("dependencies", "llama-cpp-python installed. Restart the client to load it."))
+                except (OSError, subprocess.CalledProcessError) as exc:
+                    self.events.put(("dependencies_error", str(exc)))
+
+            threading.Thread(target=install, daemon=True).start()
+        elif "llama-cpp-python" in missing:
+            self.requirements_label.configure(
+                text="GGUF runtime is not bundled in this desktop build.\nInstall the matching runtime package before using GGUF models.",
+                fg="#B8B8B8",
+            )
 
     def append_output(self, text: str, tag: str | None = None) -> None:
         self.output.configure(state="normal")
@@ -377,6 +514,12 @@ class AetherionDesktopClient:
         model_name = self.model_var.get()
         model = self.models.get(model_name)
         if model is None or self.busy:
+            return
+        assessment = self.assess_model(model)
+        if assessment.startswith("DIRECT RUN: NO"):
+            self.status_var.set("MODEL NOT READY")
+            self.result_status.configure(text=assessment, fg="#FF9D9D")
+            self.append_output(f"\nModel cannot run on this machine:\n{assessment}\n", "bad")
             return
         category = None if self.category_var.get() == "All tasks" else self.category_var.get()
         self.busy = True
@@ -439,8 +582,10 @@ class AetherionDesktopClient:
                 break
             if event == "models":
                 models, error = payload
+                models.sort(key=self.model_recommendation_key)
                 self.models = {model.name: model for model in models}
                 names = list(self.models)
+                self.recommended_model_name = names[0] if names else None
                 self.model_menu.configure(values=names, state="readonly" if names else "disabled")
                 if names:
                     self.model_var.set(names[0])
@@ -508,6 +653,33 @@ class AetherionDesktopClient:
                 self.model_menu.configure(state="readonly" if self.models else "disabled")
                 self.category_menu.configure(state="readonly")
                 self.run_button.configure(state="normal" if self.models else "disabled")
+            elif event == "dependencies":
+                self.requirements_label.configure(text=str(payload), fg="#91E2B2")
+                self.refresh_dependency_status()
+            elif event == "dependencies_error":
+                self.requirements_label.configure(text=f"Runtime installation failed\n{payload}", fg="#FF9D9D")
+                self.install_requirements_button.configure(state="normal")
+            elif event == "installer_downloaded":
+                installer_path = Path(str(payload))
+                self.requirements_label.configure(
+                    text=f"Ollama installer downloaded\n{installer_path}",
+                    fg="#91E2B2",
+                )
+                self.install_requirements_button.configure(state="normal", text="DOWNLOAD AGAIN")
+                self.append_output(f"\nInstaller ready: {installer_path}\nRun it to install Ollama.\n", "good")
+                if messagebox.askyesno(
+                    "Install Ollama",
+                    "Ollama installer downloaded. Launch it now to install Ollama?",
+                    parent=self.root,
+                ):
+                    try:
+                        subprocess.Popen([str(installer_path)], shell=False)
+                        self.requirements_label.configure(text=f"Ollama installer launched\n{installer_path}", fg="#91E2B2")
+                    except OSError as exc:
+                        self.requirements_label.configure(text=f"Could not launch installer\n{exc}", fg="#FF9D9D")
+            elif event == "installer_download_error":
+                self.requirements_label.configure(text=f"Installer download failed\n{payload}", fg="#FF9D9D")
+                self.install_requirements_button.configure(state="normal", text="RETRY DOWNLOAD")
         self.root.after(100, self.process_events)
 
     def show_task_result(self, index: int, total: int, result: BenchmarkResult) -> None:
