@@ -192,6 +192,19 @@ class AetherionDesktopClient:
         self.model_var = tk.StringVar()
         self.model_menu = ttk.Combobox(controls, textvariable=self.model_var, state="disabled", style="Aetherion.TCombobox")
         self.model_menu.pack(fill="x", pady=(7, 18))
+        self.model_menu.bind("<<ComboboxSelected>>", lambda _event: self.update_model_details())
+        self.model_details = tk.Label(
+            controls,
+            text="No model selected",
+            bg="#141414",
+            fg="#777777",
+            justify="left",
+            anchor="w",
+            wraplength=270,
+            font=("Segoe UI", 8),
+            padx=1,
+        )
+        self.model_details.pack(anchor="w", fill="x", pady=(-12, 16))
 
         tk.Label(controls, text="TASK SUITE", bg="#141414", fg="#A0A0A0", font=("Segoe UI", 8, "bold")).pack(anchor="w")
         self.category_var = tk.StringVar(value="All tasks")
@@ -209,6 +222,19 @@ class AetherionDesktopClient:
         self.progress.pack(fill="x", pady=(0, 5))
         self.progress_text = tk.Label(controls, text="Ready to benchmark", bg="#141414", fg="#777777", anchor="w", font=("Segoe UI", 8))
         self.progress_text.pack(anchor="w", fill="x", pady=(0, 12))
+        self.run_metrics = tk.Label(
+            controls,
+            text="NO RUN YET\nComplete a benchmark to see its summary.",
+            bg="#141414",
+            fg="#8C8C8C",
+            justify="left",
+            anchor="w",
+            wraplength=270,
+            font=("Consolas", 8),
+            padx=1,
+            pady=8,
+        )
+        self.run_metrics.pack(anchor="w", fill="x", pady=(0, 10))
         tk.Frame(controls, bg="#2C3944", height=1).pack(fill="x", pady=(2, 13))
         self.open_results_button = tk.Button(controls, text="OPEN RESULTS FOLDER", command=self.open_results_folder, bg="#171717", fg="#C8C8C8", activebackground="#2A2A2A", activeforeground="#FFFFFF", font=("Segoe UI", 8, "bold"), relief="flat", highlightbackground="#3A3A3A", highlightthickness=1, padx=12, pady=10, cursor="hand2")
         self.open_results_button.pack(fill="x", side="bottom")
@@ -240,6 +266,21 @@ class AetherionDesktopClient:
             f"GPU      {gpu.get('name', 'Not detected') if gpu else 'Not detected'}",
         ]
         return "\n".join(lines)
+
+    def update_model_details(self) -> None:
+        model = self.models.get(self.model_var.get())
+        if model is None:
+            self.model_details.configure(text="No model selected")
+            return
+        size = f"{model.size_bytes / (1024 ** 3):.2f} GB" if model.size_bytes else "Size unavailable"
+        details = model.details
+        quantization = details.get("quantization_level") or details.get("format") or "Precision unavailable"
+        digest = details.get("digest")
+        digest_text = f" · {digest[:12]}" if digest else ""
+        self.model_details.configure(
+            text=f"{model.provider.upper()}  ·  {size}\n{quantization}{digest_text}",
+            fg="#A8A8A8",
+        )
 
     def append_output(self, text: str, tag: str | None = None) -> None:
         self.output.configure(state="normal")
@@ -338,7 +379,9 @@ class AetherionDesktopClient:
                 self.model_menu.configure(values=names, state="readonly" if names else "disabled")
                 if names:
                     self.model_var.set(names[0])
-                    self.status_var.set(f"LOCAL RUNTIMES READY · {len(names)} MODEL(S)")
+                    self.update_model_details()
+                    runtimes = ", ".join(sorted({model.provider.upper() for model in models}))
+                    self.status_var.set(f"{runtimes} READY · {len(names)} MODEL(S)")
                     self.result_status.configure(text="Model list refreshed. Select a task suite and run it.", fg="#91E2B2")
                     self.progress_text.configure(text=f"{len(names)} local model(s) ready")
                     self.run_button.configure(state="normal")
@@ -368,6 +411,18 @@ class AetherionDesktopClient:
                 self.result_status.configure(text=f"{summary['passed_checks']} passed · {summary['failed_checks']} failed · {summary['errors']} errors\nSaved locally: {record_path}", fg=color)
                 self.progress.configure(value=100)
                 self.progress_text.configure(text="Benchmark complete")
+                average = summary["average_tokens_per_second"]
+                average_text = f"{average:.2f} tokens/s" if average is not None else "Unavailable"
+                self.run_metrics.configure(
+                    text=(
+                        f"TASKS       {summary['task_count']}\n"
+                        f"PASSED      {summary['passed_checks']}\n"
+                        f"FAILED      {summary['failed_checks']}\n"
+                        f"ERRORS      {summary['errors']}\n"
+                        f"AVG SPEED   {average_text}"
+                    ),
+                    fg="#C8C8C8" if status == "complete" else "#A8A8A8",
+                )
                 self.append_output(f"\nSummary: {summary['passed_checks']} passed, {summary['failed_checks']} failed, {summary['errors']} errors.\n", "good" if status == "complete" else "bad" if status == "failed" else "muted")
                 self.append_output(f"Run record: {record_path}\n")
                 if result_path:
@@ -381,6 +436,7 @@ class AetherionDesktopClient:
                 self.status_var.set("RUN FAILED")
                 self.result_status.configure(text=str(payload), fg="#FF9D9D")
                 self.progress_text.configure(text="Benchmark stopped with an error")
+                self.run_metrics.configure(text="RUN FAILED\nReview the benchmark trace for details.", fg="#FF9D9D")
                 self.append_output(f"\nBenchmark could not finish: {payload}\n", "bad")
                 self.busy = False
                 self.refresh_button.configure(state="normal")
