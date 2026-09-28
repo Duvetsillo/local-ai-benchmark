@@ -78,67 +78,135 @@ class AetherionDesktopClient:
     def build_ui(self) -> None:
         style = ttk.Style(self.root)
         style.theme_use("clam")
-        style.configure("Aetherion.TCombobox", fieldbackground="#101923", background="#101923", foreground="#EAF4FF", arrowcolor="#D6B36A")
-        style.map("Aetherion.TCombobox", fieldbackground=[("readonly", "#101923")], foreground=[("readonly", "#EAF4FF")])
+        style.configure(
+            "Aetherion.TCombobox",
+            fieldbackground="#111B26",
+            background="#111B26",
+            foreground="#EDF3FB",
+            arrowcolor="#D6B36A",
+            bordercolor="#30404E",
+            lightcolor="#30404E",
+            darkcolor="#30404E",
+            padding=(10, 9),
+        )
+        style.map(
+            "Aetherion.TCombobox",
+            fieldbackground=[("readonly", "#111B26"), ("disabled", "#0B1118")],
+            foreground=[("readonly", "#EDF3FB"), ("disabled", "#788694")],
+            selectbackground=[("readonly", "#263746")],
+        )
+        style.configure("Aetherion.Vertical.TScrollbar", background="#1A2733", troughcolor="#0A1017", bordercolor="#0A1017", arrowcolor="#A8B7C3")
 
-        self.container = tk.Frame(self.root, bg="#071018")
-        self.container.pack(fill="both", expand=True, padx=24, pady=22)
+        self.root.configure(bg="#06090D")
+        self.container = tk.Frame(self.root, bg="#080D13")
+        self.container.pack(fill="both", expand=True, padx=26, pady=22)
 
-        header = tk.Frame(self.container, bg="#071018")
+        header = tk.Frame(self.container, bg="#080D13")
         header.pack(fill="x", pady=(0, 20))
-        tk.Label(header, text="AETHERION", bg="#071018", fg="#F2F4F7", font=("Segoe UI", 25, "bold")).pack(anchor="w")
-        tk.Label(header, text="LOCAL MODEL BENCHMARK", bg="#071018", fg="#D6B36A", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(2, 0))
+        self.brand_mark = tk.Canvas(header, width=58, height=58, bg="#080D13", bd=0, highlightthickness=0)
+        self.brand_mark.pack(side="left", padx=(0, 14))
+        self.brand_mark.create_oval(5, 5, 53, 53, outline="#8FA5B7", width=1)
+        self.brand_mark.create_oval(10, 10, 48, 48, outline="#344654", width=1)
+        self.brand_mark.create_line(29, 10, 29, 48, fill="#506273", width=1)
+        self.brand_mark.create_line(10, 29, 48, 29, fill="#506273", width=1)
+        self.brand_mark.create_polygon(
+            29, 14, 33, 25, 44, 29, 33, 33, 29, 44, 25, 33, 14, 29, 25, 25,
+            fill="#D6B36A",
+            outline="#F2D89A",
+            width=1,
+        )
+        self.brand_mark.create_oval(26, 26, 32, 32, fill="#F2F4F7", outline="")
+
+        brand_copy = tk.Frame(header, bg="#080D13")
+        brand_copy.pack(side="left", anchor="center")
+        tk.Label(brand_copy, text="AETHERION", bg="#080D13", fg="#EDF3FB", font=("Segoe UI", 24, "bold")).pack(anchor="w")
+        tk.Label(brand_copy, text="LOCAL MODEL BENCHMARK  /  PRIVATE BY DESIGN", bg="#080D13", fg="#AAB8C4", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(2, 0))
         self.status_var = tk.StringVar(value="CONNECTING TO OLLAMA")
-        self.status = tk.Label(header, textvariable=self.status_var, bg="#101923", fg="#D6B36A", font=("Segoe UI", 10, "bold"), padx=12, pady=7)
-        self.status.pack(anchor="e", side="right", pady=(0, 8))
+        self.status = tk.Label(
+            header,
+            textvariable=self.status_var,
+            bg="#101A24",
+            fg="#D6B36A",
+            font=("Segoe UI", 9, "bold"),
+            padx=13,
+            pady=8,
+            highlightbackground="#344553",
+            highlightthickness=1,
+        )
+        self.status.pack(anchor="center", side="right")
 
-        content = tk.Frame(self.container, bg="#0B1420", highlightbackground="#263443", highlightthickness=1)
+        content = tk.Frame(self.container, bg="#080D13")
         content.pack(fill="both", expand=True)
-        self.left = tk.Frame(content, bg="#0B1420")
-        self.left.pack(side="left", fill="both", expand=True, padx=20, pady=20)
-        self.right = tk.Frame(content, bg="#0B1420", width=300)
-        self.right.pack(side="right", fill="y", padx=(0, 20), pady=20)
-        self.right.pack_propagate(False)
+        content.grid_columnconfigure(0, weight=1)
+        content.grid_columnconfigure(1, minsize=310)
+        content.grid_rowconfigure(0, weight=1)
+        self.left = tk.Frame(content, bg="#080D13")
+        self.left.grid(row=0, column=0, sticky="nsew", padx=(0, 16))
+        self.right = tk.Frame(content, bg="#101821", highlightbackground="#354653", highlightthickness=1, width=310)
+        self.right.grid(row=0, column=1, sticky="nsew")
+        self.right.grid_propagate(False)
+        tk.Frame(self.right, bg="#D6B36A", height=2).pack(fill="x")
+        controls = tk.Frame(self.right, bg="#101821")
+        controls.pack(fill="both", expand=True, padx=20, pady=20)
 
-        tk.Label(self.left, text="YOUR SYSTEM", bg="#0B1420", fg="#D6B36A", font=("Segoe UI", 10, "bold")).pack(anchor="w")
-        self.hardware_text = tk.Text(self.left, height=6, bg="#071018", fg="#EAF4FF", bd=0, wrap="word", padx=12, pady=10, font=("Consolas", 10))
-        self.hardware_text.pack(fill="x", pady=(8, 18))
+        hardware_panel = self.create_glass_panel(self.left)
+        hardware_panel.pack(fill="x", pady=(0, 16))
+        hardware_content = tk.Frame(hardware_panel, bg="#0E1720")
+        hardware_content.pack(fill="x", padx=16, pady=15)
+        tk.Label(hardware_content, text="LIVE SYSTEM PROFILE", bg="#0E1720", fg="#D6B36A", font=("Segoe UI", 9, "bold")).pack(anchor="w")
+        tk.Label(hardware_content, text="Measured on this device", bg="#0E1720", fg="#8293A1", font=("Segoe UI", 9)).pack(anchor="w", pady=(3, 7))
+        self.hardware_text = tk.Text(hardware_content, height=4, bg="#0E1720", fg="#DCE6EE", bd=0, wrap="word", padx=0, pady=4, font=("Consolas", 9), selectbackground="#293A49")
+        self.hardware_text.pack(fill="x")
         self.hardware_text.insert("end", self.format_hardware(self.session.hardware))
         self.hardware_text.configure(state="disabled")
 
-        tk.Label(self.left, text="RUN OUTPUT", bg="#0B1420", fg="#D6B36A", font=("Segoe UI", 10, "bold")).pack(anchor="w")
-        output_frame = tk.Frame(self.left, bg="#071018")
-        output_frame.pack(fill="both", expand=True, pady=(8, 0))
-        self.output = tk.Text(output_frame, bg="#071018", fg="#EAF4FF", insertbackground="#EAF4FF", bd=0, wrap="word", padx=12, pady=10, font=("Consolas", 9), state="disabled")
-        scrollbar = ttk.Scrollbar(output_frame, orient="vertical", command=self.output.yview)
+        output_panel = self.create_glass_panel(self.left)
+        output_panel.pack(fill="both", expand=True)
+        output_content = tk.Frame(output_panel, bg="#0E1720")
+        output_content.pack(fill="both", expand=True, padx=16, pady=15)
+        output_header = tk.Frame(output_content, bg="#0E1720")
+        output_header.pack(fill="x", pady=(0, 10))
+        tk.Label(output_header, text="BENCHMARK TRACE", bg="#0E1720", fg="#D6B36A", font=("Segoe UI", 9, "bold")).pack(side="left")
+        tk.Label(output_header, text="LOCAL RESULTS", bg="#0E1720", fg="#8293A1", font=("Segoe UI", 8, "bold")).pack(side="right")
+        output_frame = tk.Frame(output_content, bg="#080D13", highlightbackground="#273744", highlightthickness=1)
+        output_frame.pack(fill="both", expand=True)
+        self.output = tk.Text(output_frame, bg="#080D13", fg="#DCE6EE", insertbackground="#EDF3FB", bd=0, wrap="word", padx=13, pady=12, font=("Consolas", 9), state="disabled", selectbackground="#293A49")
+        scrollbar = ttk.Scrollbar(output_frame, orient="vertical", command=self.output.yview, style="Aetherion.Vertical.TScrollbar")
         self.output.configure(yscrollcommand=scrollbar.set)
         self.output.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
-        self.output.tag_configure("good", foreground="#91E2B2")
+        self.output.tag_configure("good", foreground="#9AE4BA")
         self.output.tag_configure("bad", foreground="#FF9D9D")
-        self.output.tag_configure("muted", foreground="#95A5B5")
-        self.append_output("Choose an installed Ollama model and run a benchmark. Results are saved locally.\n", "muted")
+        self.output.tag_configure("muted", foreground="#91A1AF")
+        self.append_output("Choose an installed Ollama model and run a benchmark. Results stay on this device.\n", "muted")
 
-        tk.Label(self.right, text="BENCHMARK SETUP", bg="#0B1420", fg="#D6B36A", font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(0, 14))
-        tk.Label(self.right, text="Installed model", bg="#0B1420", fg="#EAF4FF", font=("Segoe UI", 10)).pack(anchor="w")
+        tk.Label(controls, text="RUN CONFIGURATION", bg="#101821", fg="#D6B36A", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 20))
+        tk.Label(controls, text="MODEL", bg="#101821", fg="#AAB8C4", font=("Segoe UI", 8, "bold")).pack(anchor="w")
         self.model_var = tk.StringVar()
-        self.model_menu = ttk.Combobox(self.right, textvariable=self.model_var, state="disabled", style="Aetherion.TCombobox")
-        self.model_menu.pack(fill="x", pady=(6, 14))
+        self.model_menu = ttk.Combobox(controls, textvariable=self.model_var, state="disabled", style="Aetherion.TCombobox")
+        self.model_menu.pack(fill="x", pady=(7, 18))
 
-        tk.Label(self.right, text="Task suite", bg="#0B1420", fg="#EAF4FF", font=("Segoe UI", 10)).pack(anchor="w")
+        tk.Label(controls, text="TASK SUITE", bg="#101821", fg="#AAB8C4", font=("Segoe UI", 8, "bold")).pack(anchor="w")
         self.category_var = tk.StringVar(value="All tasks")
         categories = list(dict.fromkeys(task.category for task in TASKS))
-        self.category_menu = ttk.Combobox(self.right, textvariable=self.category_var, values=["All tasks", *categories], state="readonly", style="Aetherion.TCombobox")
-        self.category_menu.pack(fill="x", pady=(6, 18))
+        self.category_menu = ttk.Combobox(controls, textvariable=self.category_var, values=["All tasks", *categories], state="readonly", style="Aetherion.TCombobox")
+        self.category_menu.pack(fill="x", pady=(7, 22))
 
-        self.refresh_button = tk.Button(self.right, text="REFRESH MODELS", command=self.refresh_models, bg="#172432", fg="#EAF4FF", activebackground="#26394A", activeforeground="#FFFFFF", font=("Segoe UI", 10, "bold"), relief="flat", padx=12, pady=10)
+        self.refresh_button = tk.Button(controls, text="REFRESH MODEL LIST", command=self.refresh_models, bg="#17232E", fg="#DCE6EE", activebackground="#243543", activeforeground="#FFFFFF", font=("Segoe UI", 9, "bold"), relief="flat", highlightbackground="#3B4A56", highlightthickness=1, padx=12, pady=11, cursor="hand2")
         self.refresh_button.pack(fill="x")
-        self.run_button = tk.Button(self.right, text="RUN BENCHMARK", command=self.run_selected_benchmark, bg="#D6B36A", fg="#101923", activebackground="#E5C989", activeforeground="#101923", font=("Segoe UI", 11, "bold"), relief="flat", padx=12, pady=12, state="disabled")
+        self.run_button = tk.Button(controls, text="RUN BENCHMARK", command=self.run_selected_benchmark, bg="#D6B36A", fg="#111820", activebackground="#E4C885", activeforeground="#111820", font=("Segoe UI", 10, "bold"), relief="flat", padx=12, pady=13, cursor="hand2", state="disabled")
         self.run_button.pack(fill="x", pady=(10, 0))
-        self.result_status = tk.Label(self.right, text="Waiting for Ollama", bg="#0B1420", fg="#95A5B5", justify="left", anchor="w", wraplength=280)
-        self.result_status.pack(anchor="w", fill="x", pady=(18, 14))
-        self.open_results_button = tk.Button(self.right, text="OPEN RESULTS FOLDER", command=self.open_results_folder, bg="#172432", fg="#EAF4FF", activebackground="#26394A", activeforeground="#FFFFFF", font=("Segoe UI", 9, "bold"), relief="flat", padx=12, pady=9)
+        self.result_status = tk.Label(controls, text="Waiting for Ollama", bg="#101821", fg="#91A1AF", justify="left", anchor="w", wraplength=270, font=("Segoe UI", 9), padx=1, pady=8)
+        self.result_status.pack(anchor="w", fill="x", pady=(14, 10))
+        tk.Frame(controls, bg="#2C3944", height=1).pack(fill="x", pady=(2, 13))
+        self.open_results_button = tk.Button(controls, text="OPEN RESULTS FOLDER", command=self.open_results_folder, bg="#111B26", fg="#C5D2DC", activebackground="#202E3A", activeforeground="#FFFFFF", font=("Segoe UI", 8, "bold"), relief="flat", highlightbackground="#354653", highlightthickness=1, padx=12, pady=10, cursor="hand2")
         self.open_results_button.pack(fill="x", side="bottom")
+
+    @staticmethod
+    def create_glass_panel(parent: tk.Widget) -> tk.Frame:
+        panel = tk.Frame(parent, bg="#0E1720", highlightbackground="#334452", highlightthickness=1, bd=0)
+        tk.Frame(panel, bg="#82909A", height=1).pack(fill="x")
+        return panel
 
     @staticmethod
     def format_hardware(hardware: dict[str, Any]) -> str:
