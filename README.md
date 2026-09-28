@@ -45,6 +45,10 @@ This is not a chatbot, and it is not a cloud evaluation platform. It is a local 
 
 If Ollama has no models yet, run `ollama pull <model>` in PowerShell and refresh the model list. The client stores results under `%LOCALAPPDATA%\Aetherion\results` and does not upload them.
 
+Windows may show a SmartScreen warning for locally built executables that are not code-signed. The release build disables UPX compression and includes Windows version metadata to reduce heuristic false positives, but a trusted publisher signature is still required to remove the warning reliably. Release builds should be signed with an Authenticode certificate before distribution.
+
+To sign a release automatically, set `AETHERION_CERTIFICATE` to the certificate file before running `python build_client.py`. Set `AETHERION_SIGNTOOL` when `signtool.exe` is not on `PATH`; use `AETHERION_CERTIFICATE_PASSWORD` only as a temporary environment variable when the certificate requires a password. Never commit certificate files or passwords.
+
 ### Run without Ollama
 
 Ollama is optional. Install the GGUF runtime extra with `python -m pip install -e ".[llama]"`, then place `.gguf` models in `%LOCALAPPDATA%\Aetherion\results\models`. The desktop client discovers Ollama and GGUF models together and uses the available local runtime. GPU acceleration depends on the installed `llama-cpp-python` build; CPU execution remains available as a fallback.
