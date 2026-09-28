@@ -7,6 +7,7 @@ const initializePage = () => {
     const introTagline = document.getElementById('introTagline');
     const introOverlay = document.querySelector('.intro-overlay');
     const body = document.body;
+    const sequence = 'AETHERION';
     const finishIntro = () => {
         body.classList.remove('intro-active');
         body.classList.add('intro-complete');
@@ -16,9 +17,9 @@ const initializePage = () => {
             introTagline.style.filter = 'blur(0)';
         }
     };
-    if (prefersReducedMotion || !introName || !introTagline || !introOverlay) {
+    if (!introName || !introTagline || !introOverlay) {
         if (introName) {
-            introName.textContent = 'AETHERION';
+            introName.textContent = sequence;
         }
         if (introTagline) {
             introTagline.style.opacity = '1';
@@ -26,36 +27,41 @@ const initializePage = () => {
             introTagline.style.filter = 'blur(0)';
         }
         finishIntro();
-        return;
     }
-    const sequence = 'AETHERION';
-    let index = 0;
-    const charDelay = 90;
-    const tick = () => {
-        if (index <= sequence.length) {
-            introName.textContent = sequence.slice(0, index);
-            index += 1;
+    else if (prefersReducedMotion) {
+        introName.textContent = sequence;
+        introTagline.style.opacity = '1';
+        introTagline.style.transform = 'translateY(0)';
+        introTagline.style.filter = 'blur(0)';
+        window.setTimeout(finishIntro, 1100);
+    }
+    else {
+        let index = 0;
+        const charDelay = 90;
+        const tick = () => {
             if (index <= sequence.length) {
-                window.setTimeout(tick, charDelay);
+                introName.textContent = sequence.slice(0, index);
+                index += 1;
+                if (index <= sequence.length) {
+                    window.setTimeout(tick, charDelay);
+                }
+                else {
+                    window.setTimeout(() => {
+                        introTagline.style.opacity = '1';
+                        introTagline.style.transform = 'translateY(0)';
+                        introTagline.style.filter = 'blur(0)';
+                        window.setTimeout(finishIntro, 420);
+                    }, 420);
+                }
             }
-            else {
-                window.setTimeout(() => {
-                    if (!introTagline)
-                        return;
-                    introTagline.style.opacity = '1';
-                    introTagline.style.transform = 'translateY(0)';
-                    introTagline.style.filter = 'blur(0)';
-                    window.setTimeout(finishIntro, 420);
-                }, 420);
+        };
+        window.setTimeout(tick, 120);
+        window.setTimeout(() => {
+            if (!body.classList.contains('intro-complete')) {
+                finishIntro();
             }
-        }
-    };
-    window.setTimeout(tick, 120);
-    window.setTimeout(() => {
-        if (!body.classList.contains('intro-complete')) {
-            finishIntro();
-        }
-    }, 2600);
+        }, 2600);
+    }
     document.querySelectorAll('.spotlight-card').forEach((card) => {
         card.addEventListener('pointermove', (event) => {
             const rect = card.getBoundingClientRect();

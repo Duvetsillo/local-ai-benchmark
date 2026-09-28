@@ -1573,6 +1573,22 @@ textarea { resize: vertical; min-height: 120px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .intro-badge,
+  .intro-badge::before,
+  .intro-trail,
+  .intro-logo,
+  .intro-logo .core,
+  .intro-logo .ring,
+  .intro-wordmark {
+    animation: none;
+  }
+
+  .intro-logo,
+  .intro-wordmark {
+    opacity: 1;
+    transform: none;
+  }
+
   .intro-cursor {
     animation: none;
     opacity: 0;
@@ -1592,12 +1608,36 @@ textarea { resize: vertical; min-height: 120px; }
 }
 
 @media (max-width: 900px) {
+  body::before,
+  body::after,
+  .download-panel::after {
+    display: none;
+  }
+
   .hero,
   .model-list,
   .form-row,
   .subpage-grid,
   .resource-grid {
     grid-template-columns: 1fr;
+  }
+
+  .hero::before {
+    width: 100%;
+  }
+
+  .feature-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .download-panel {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .download-copy,
+  .download-actions {
+    width: 100%;
   }
 
   .profile-row {
