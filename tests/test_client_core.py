@@ -27,6 +27,7 @@ def test_local_result_store_persists_record(tmp_path):
     saved = store.list()
     assert len(saved) == 1
     assert saved[0]["run_id"] == "AET-TEST-0001"
+    assert list(tmp_path.rglob("*.tmp")) == []
 
 
 def test_default_benchmark_catalog_has_models():

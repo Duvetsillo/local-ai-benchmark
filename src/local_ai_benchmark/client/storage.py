@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +18,28 @@ class LocalResultStore:
         target_dir = self.base_dir / record.run_id[:8]
         target_dir.mkdir(parents=True, exist_ok=True)
         file_path = target_dir / f"{record.run_id}.json"
-        file_path.write_text(json.dumps(record.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8")
+        payload = json.dumps(record.to_dict(), indent=2, ensure_ascii=False)
+        temporary_path: str | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                dir=target_dir,
+                prefix=f".{record.run_id}.",
+                suffix=".tmp",
+                delete=False,
+            ) as temporary_file:
+                temporary_path = temporary_file.name
+                temporary_file.write(payload)
+                temporary_file.flush()
+                os.fsync(temporary_file.fileno())
+            os.replace(temporary_path, file_path)
+        finally:
+            if temporary_path:
+                try:
+                    os.unlink(temporary_path)
+                except FileNotFoundError:
+                    pass
         return file_path
 
     def list(self) -> list[dict[str, Any]]:
