@@ -20,7 +20,7 @@ if __package__ in {None, ""}:
     from local_ai_benchmark.client.storage import LocalResultStore
     from local_ai_benchmark.engine import BenchmarkEngine
     from local_ai_benchmark.models import BenchmarkResult, ModelInfo
-    from local_ai_benchmark.providers import OllamaProvider
+    from local_ai_benchmark.providers import LlamaCppProvider, OllamaProvider, ProviderRouter
     from local_ai_benchmark.tasks import TASKS
 else:
     from .core import ClientRunRecord, generate_run_id
@@ -28,7 +28,7 @@ else:
     from .storage import LocalResultStore
     from ..engine import BenchmarkEngine
     from ..models import BenchmarkResult, ModelInfo
-    from ..providers import OllamaProvider
+    from ..providers import LlamaCppProvider, OllamaProvider, ProviderRouter
     from ..tasks import TASKS
 
 
@@ -36,7 +36,7 @@ else:
 class DesktopSession:
     hardware: dict[str, Any]
     store: LocalResultStore
-    provider: OllamaProvider
+    provider: ProviderRouter
     engine: BenchmarkEngine
     results_dir: Path
 
@@ -46,7 +46,10 @@ class DesktopSession:
             data_root = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "Aetherion" / "results"
         else:
             data_root = Path(base_dir)
-        provider = OllamaProvider(timeout=120)
+        provider = ProviderRouter([
+            OllamaProvider(timeout=120),
+            LlamaCppProvider(data_root / "models"),
+        ])
         return cls(
             hardware=detect_hardware(),
             store=LocalResultStore(data_root / "client"),
@@ -96,6 +99,7 @@ class AetherionDesktopClient:
             selectbackground=[("readonly", "#263746")],
         )
         style.configure("Aetherion.Vertical.TScrollbar", background="#1A2733", troughcolor="#0A1017", bordercolor="#0A1017", arrowcolor="#A8B7C3")
+        style.configure("Aetherion.Horizontal.TProgressbar", troughcolor="#182531", background="#D6B36A", bordercolor="#182531", lightcolor="#D6B36A", darkcolor="#D6B36A")
 
         self.root.configure(bg="#06090D")
         self.container = tk.Frame(self.root, bg="#080D13")
@@ -198,6 +202,10 @@ class AetherionDesktopClient:
         self.run_button.pack(fill="x", pady=(10, 0))
         self.result_status = tk.Label(controls, text="Waiting for Ollama", bg="#101821", fg="#91A1AF", justify="left", anchor="w", wraplength=270, font=("Segoe UI", 9), padx=1, pady=8)
         self.result_status.pack(anchor="w", fill="x", pady=(14, 10))
+        self.progress = ttk.Progressbar(controls, mode="determinate", maximum=100, value=0, style="Aetherion.Horizontal.TProgressbar")
+        self.progress.pack(fill="x", pady=(0, 5))
+        self.progress_text = tk.Label(controls, text="Ready to benchmark", bg="#101821", fg="#71818D", anchor="w", font=("Segoe UI", 8))
+        self.progress_text.pack(anchor="w", fill="x", pady=(0, 12))
         tk.Frame(controls, bg="#2C3944", height=1).pack(fill="x", pady=(2, 13))
         self.open_results_button = tk.Button(controls, text="OPEN RESULTS FOLDER", command=self.open_results_folder, bg="#111B26", fg="#C5D2DC", activebackground="#202E3A", activeforeground="#FFFFFF", font=("Segoe UI", 8, "bold"), relief="flat", highlightbackground="#354653", highlightthickness=1, padx=12, pady=10, cursor="hand2")
         self.open_results_button.pack(fill="x", side="bottom")
@@ -237,7 +245,9 @@ class AetherionDesktopClient:
         self.run_button.configure(state="disabled")
         self.model_menu.configure(state="disabled")
         self.status_var.set("LOOKING FOR LOCAL MODELS")
-        self.result_status.configure(text="Checking the Ollama service on this computer…", fg="#D6B36A")
+        self.result_status.configure(text="Checking local model runtimes on this computer…", fg="#D6B36A")
+        self.progress.configure(value=0)
+        self.progress_text.configure(text="Connecting to local Ollama service")
 
         def load_models() -> None:
             try:
@@ -260,6 +270,8 @@ class AetherionDesktopClient:
         self.category_menu.configure(state="disabled")
         self.status_var.set("BENCHMARK RUNNING")
         self.result_status.configure(text=f"Running {category or 'all'} tasks on {model_name}…", fg="#D6B36A")
+        self.progress.configure(value=0)
+        self.progress_text.configure(text="Preparing benchmark tasks")
         self.output.configure(state="normal")
         self.output.delete("1.0", "end")
         self.output.configure(state="disabled")
@@ -316,29 +328,36 @@ class AetherionDesktopClient:
                 self.model_menu.configure(values=names, state="readonly" if names else "disabled")
                 if names:
                     self.model_var.set(names[0])
-                    self.status_var.set(f"OLLAMA READY · {len(names)} MODEL(S)")
+                    self.status_var.set(f"LOCAL RUNTIMES READY · {len(names)} MODEL(S)")
                     self.result_status.configure(text="Model list refreshed. Select a task suite and run it.", fg="#91E2B2")
+                    self.progress_text.configure(text=f"{len(names)} local model(s) ready")
                     self.run_button.configure(state="normal")
                 elif error:
                     self.model_var.set("")
-                    self.status_var.set("OLLAMA NOT CONNECTED")
-                    self.result_status.configure(text="Ollama is not responding. Start the Ollama app, then press Refresh Models. " + error, fg="#FF9D9D")
+                    self.status_var.set("LOCAL RUNTIMES UNAVAILABLE")
+                    self.result_status.configure(text="No local model runtime is responding. Check Ollama or the GGUF runtime. " + error, fg="#FF9D9D")
+                    self.progress_text.configure(text="Connection unavailable")
                     self.append_output("Could not reach Ollama at http://127.0.0.1:11434.\n" + error + "\n", "bad")
                 else:
                     self.model_var.set("")
-                    self.status_var.set("NO MODELS INSTALLED")
-                    self.result_status.configure(text="Ollama is running, but no models are installed. Run `ollama pull <model>` and refresh.", fg="#D6B36A")
+                    self.status_var.set("NO LOCAL MODELS")
+                    self.result_status.configure(text="No local models were found. Install an Ollama model or place a GGUF model in the local models folder.", fg="#D6B36A")
+                    self.progress_text.configure(text="No local models detected")
                 self.category_menu.configure(state="readonly")
                 self.refresh_button.configure(state="normal")
                 self.busy = False
             elif event == "progress":
                 index, total, result = payload
+                self.progress.configure(value=(index / total) * 100 if total else 0)
+                self.progress_text.configure(text=f"Task {index} of {total} complete")
                 self.show_task_result(index, total, result)
             elif event == "complete":
                 summary, status, record_path, result_path = payload
                 color = "#91E2B2" if status == "complete" else "#FF9D9D" if status == "failed" else "#D6B36A"
                 self.status_var.set(f"RUN {status.upper()}")
                 self.result_status.configure(text=f"{summary['passed_checks']} passed · {summary['failed_checks']} failed · {summary['errors']} errors\nSaved locally: {record_path}", fg=color)
+                self.progress.configure(value=100)
+                self.progress_text.configure(text="Benchmark complete")
                 self.append_output(f"\nSummary: {summary['passed_checks']} passed, {summary['failed_checks']} failed, {summary['errors']} errors.\n", "good" if status == "complete" else "bad" if status == "failed" else "muted")
                 self.append_output(f"Run record: {record_path}\n")
                 if result_path:
@@ -351,6 +370,7 @@ class AetherionDesktopClient:
             elif event == "run_error":
                 self.status_var.set("RUN FAILED")
                 self.result_status.configure(text=str(payload), fg="#FF9D9D")
+                self.progress_text.configure(text="Benchmark stopped with an error")
                 self.append_output(f"\nBenchmark could not finish: {payload}\n", "bad")
                 self.busy = False
                 self.refresh_button.configure(state="normal")

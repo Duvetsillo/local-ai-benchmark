@@ -2,7 +2,8 @@ import json
 
 from local_ai_benchmark.engine import BenchmarkEngine
 from local_ai_benchmark.models import HardwareProfile
-from local_ai_benchmark.providers import Generation
+from local_ai_benchmark.models import ModelInfo
+from local_ai_benchmark.providers import Generation, ProviderRouter
 
 
 class FakeProvider:
@@ -15,6 +16,27 @@ class FakeProvider:
             total_seconds=1.0,
             usage={"eval_count": 3, "eval_duration": 1_000_000_000},
         )
+
+    def discover(self):
+        return [ModelInfo("fake-model", self.name)]
+
+
+class LocalProvider:
+    name = "local"
+
+    def discover(self):
+        return [ModelInfo("local-model", self.name)]
+
+
+def test_provider_router_discovers_models_from_multiple_runtimes():
+    router = ProviderRouter([FakeProvider(), LocalProvider()])
+
+    models = router.discover()
+
+    assert [(model.name, model.provider) for model in models] == [
+        ("fake-model", "ollama"),
+        ("local-model", "local"),
+    ]
 
 
 def test_engine_reports_progress_and_persists_real_results(tmp_path, monkeypatch):

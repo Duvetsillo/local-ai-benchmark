@@ -45,6 +45,10 @@ This is not a chatbot, and it is not a cloud evaluation platform. It is a local 
 
 If Ollama has no models yet, run `ollama pull <model>` in PowerShell and refresh the model list. The client stores results under `%LOCALAPPDATA%\Aetherion\results` and does not upload them.
 
+### Run without Ollama
+
+Ollama is optional. Install the GGUF runtime extra with `python -m pip install -e ".[llama]"`, then place `.gguf` models in `%LOCALAPPDATA%\Aetherion\results\models`. The desktop client discovers Ollama and GGUF models together and uses the available local runtime. GPU acceleration depends on the installed `llama-cpp-python` build; CPU execution remains available as a fallback.
+
 ### 1) Create and activate a virtual environment
 
 #### Windows PowerShell

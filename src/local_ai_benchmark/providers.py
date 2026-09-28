@@ -1,6 +1,8 @@
 import json
 import time
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Protocol
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
@@ -13,6 +15,13 @@ class Generation:
     first_token_seconds: float | None
     total_seconds: float
     usage: dict
+
+
+class ModelProvider(Protocol):
+    name: str
+
+    def generate(self, model: str, prompt: str, temperature: float = 0.0,
+                 context: int = 4096) -> Generation: ...
 
 
 class ProviderError(RuntimeError):
@@ -66,3 +75,120 @@ class OllamaProvider:
         except (OSError, URLError, json.JSONDecodeError) as exc:
             raise ProviderError(f"Ollama generation failed: {exc}") from exc
         return Generation("".join(chunks), first_token, time.perf_counter() - started, usage)
+
+
+class LlamaCppProvider:
+    """Optional in-process provider for local GGUF models.
+
+    The llama-cpp-python dependency is loaded only when generation is requested,
+    so installations that use Ollama do not need to install it.
+    """
+
+    name = "llama.cpp"
+
+    def __init__(self, models_dir: str | Path, n_gpu_layers: int = -1):
+        self.models_dir = Path(models_dir)
+        self.n_gpu_layers = n_gpu_layers
+        self._models: dict[str, Any] = {}
+
+    def discover(self) -> list[ModelInfo]:
+        if not self.models_dir.exists():
+            return []
+        return [
+            ModelInfo(
+                name=path.name,
+                provider=self.name,
+                size_bytes=path.stat().st_size,
+                details={"path": str(path), "format": "GGUF"},
+            )
+            for path in sorted(self.models_dir.glob("*.gguf"))
+            if path.is_file()
+        ]
+
+    def _load_model(self, model: str) -> Any:
+        if model not in self._models:
+            try:
+                from llama_cpp import Llama
+            except ImportError as exc:
+                raise ProviderError(
+                    "llama-cpp-python is not installed. Install the optional llama runtime to use GGUF models."
+                ) from exc
+            model_path = self.models_dir / model
+            if not model_path.is_file():
+                raise ProviderError(f"GGUF model not found: {model_path}")
+            try:
+                self._models[model] = Llama(
+                    model_path=str(model_path),
+                    n_ctx=4096,
+                    n_gpu_layers=self.n_gpu_layers,
+                    verbose=False,
+                )
+            except Exception as exc:
+                raise ProviderError(f"Could not load GGUF model {model}: {exc}") from exc
+        return self._models[model]
+
+    def generate(self, model: str, prompt: str, temperature: float = 0.0,
+                 context: int = 4096) -> Generation:
+        model_instance = self._load_model(model)
+        started = time.perf_counter()
+        first_token = None
+        chunks: list[str] = []
+        usage: dict[str, Any] = {}
+        try:
+            stream = model_instance.create_completion(
+                prompt=prompt,
+                temperature=temperature,
+                max_tokens=-1,
+                stream=True,
+            )
+            for item in stream:
+                text = item.get("choices", [{}])[0].get("text", "")
+                if text and first_token is None:
+                    first_token = time.perf_counter() - started
+                chunks.append(text)
+                item_usage = item.get("usage") or {}
+                if item_usage:
+                    usage.update(item_usage)
+        except Exception as exc:
+            raise ProviderError(f"GGUF generation failed: {exc}") from exc
+        if "completion_tokens" in usage:
+            usage["eval_count"] = usage["completion_tokens"]
+        if "prompt_tokens" in usage:
+            usage["prompt_eval_count"] = usage["prompt_tokens"]
+        return Generation("".join(chunks), first_token, time.perf_counter() - started, usage)
+
+
+class ProviderRouter:
+    """Combines available runtimes while keeping model selection explicit."""
+
+    name = "local-runtime"
+
+    def __init__(self, providers: list[ModelProvider]):
+        self.providers = providers
+        self._model_providers: dict[str, ModelProvider] = {}
+
+    def discover(self) -> list[ModelInfo]:
+        models: list[ModelInfo] = []
+        self._model_providers.clear()
+        for provider in self.providers:
+            try:
+                discovered = provider.discover()
+            except ProviderError:
+                continue
+            for model in discovered:
+                name = model.name
+                if name in self._model_providers:
+                    name = f"{model.provider}/{name}"
+                    model = ModelInfo(name=name, provider=model.provider,
+                                      size_bytes=model.size_bytes, details=model.details)
+                self._model_providers[name] = provider
+                models.append(model)
+        return models
+
+    def generate(self, model: str, prompt: str, temperature: float = 0.0,
+                 context: int = 4096) -> Generation:
+        provider = self._model_providers.get(model)
+        if provider is None:
+            raise ProviderError("Model list is outdated. Refresh the available local models and try again.")
+        actual_model = model.split("/", 1)[1] if "/" in model else model
+        return provider.generate(actual_model, prompt, temperature, context)

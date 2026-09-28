@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .hardware import profile_hardware
 from .models import BenchmarkResult
-from .providers import OllamaProvider, ProviderError
+from .providers import ModelProvider, ProviderError
 from .tasks import tasks_for, validate
 
 
@@ -26,7 +26,7 @@ def _resource_snapshot() -> dict[str, float | int | None]:
 
 
 class BenchmarkEngine:
-    def __init__(self, provider: OllamaProvider, results_dir: str | Path = "results"):
+    def __init__(self, provider: ModelProvider, results_dir: str | Path = "results"):
         self.provider = provider
         self.results_dir = Path(results_dir)
         self.last_result_path: Path | None = None
