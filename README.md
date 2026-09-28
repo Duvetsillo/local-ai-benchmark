@@ -53,6 +53,8 @@ To sign a release automatically, set `AETHERION_CERTIFICATE` to the certificate 
 
 Ollama is optional. Install the GGUF runtime extra with `python -m pip install -e ".[llama]"`, then place `.gguf` models in `%LOCALAPPDATA%\Aetherion\results\models`. The desktop client discovers Ollama and GGUF models together and uses the available local runtime. GPU acceleration depends on the installed `llama-cpp-python` build; CPU execution remains available as a fallback.
 
+The desktop client also lets users choose a custom GGUF folder. After selecting a model, it reports whether the current machine can run it directly, whether it will use GPU or CPU fallback, and which runtime dependency is missing when direct execution is unavailable.
+
 ### 1) Create and activate a virtual environment
 
 #### Windows PowerShell

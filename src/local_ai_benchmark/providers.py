@@ -91,6 +91,10 @@ class LlamaCppProvider:
         self.n_gpu_layers = n_gpu_layers
         self._models: dict[str, Any] = {}
 
+    def set_models_dir(self, models_dir: str | Path) -> None:
+        self.models_dir = Path(models_dir)
+        self._models.clear()
+
     def discover(self) -> list[ModelInfo]:
         if not self.models_dir.exists():
             return []

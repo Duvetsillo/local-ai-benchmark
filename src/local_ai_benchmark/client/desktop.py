@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import os
 import queue
 import subprocess
@@ -8,7 +9,7 @@ import threading
 import tkinter as tk
 from dataclasses import dataclass
 from pathlib import Path
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 from typing import Any
 
 if __package__ in {None, ""}:
@@ -36,6 +37,7 @@ else:
 class DesktopSession:
     hardware: dict[str, Any]
     store: LocalResultStore
+    gguf_provider: LlamaCppProvider
     provider: ProviderRouter
     engine: BenchmarkEngine
     results_dir: Path
@@ -46,13 +48,12 @@ class DesktopSession:
             data_root = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "Aetherion" / "results"
         else:
             data_root = Path(base_dir)
-        provider = ProviderRouter([
-            OllamaProvider(timeout=120),
-            LlamaCppProvider(data_root / "models"),
-        ])
+        gguf_provider = LlamaCppProvider(data_root / "models")
+        provider = ProviderRouter([OllamaProvider(timeout=120), gguf_provider])
         return cls(
             hardware=detect_hardware(),
             store=LocalResultStore(data_root / "client"),
+            gguf_provider=gguf_provider,
             provider=provider,
             engine=BenchmarkEngine(provider, data_root),
             results_dir=data_root,
@@ -204,7 +205,38 @@ class AetherionDesktopClient:
             font=("Segoe UI", 8),
             padx=1,
         )
-        self.model_details.pack(anchor="w", fill="x", pady=(-12, 16))
+        self.model_details.pack(anchor="w", fill="x", pady=(0, 16))
+
+        tk.Label(controls, text="GGUF MODEL FOLDER", bg="#141414", fg="#A0A0A0", font=("Segoe UI", 8, "bold")).pack(anchor="w")
+        model_path_frame = tk.Frame(controls, bg="#141414")
+        model_path_frame.pack(fill="x", pady=(7, 18))
+        self.model_path_var = tk.StringVar(value=str(self.session.gguf_provider.models_dir))
+        self.model_path_entry = tk.Entry(
+            model_path_frame,
+            textvariable=self.model_path_var,
+            bg="#111111",
+            fg="#D8D8D8",
+            insertbackground="#F0F0F0",
+            relief="flat",
+            highlightbackground="#3A3A3A",
+            highlightthickness=1,
+            font=("Segoe UI", 8),
+        )
+        self.model_path_entry.pack(side="left", fill="x", expand=True, ipady=7)
+        tk.Button(
+            model_path_frame,
+            text="...",
+            command=self.browse_model_folder,
+            bg="#242424",
+            fg="#D8D8D8",
+            activebackground="#363636",
+            activeforeground="#FFFFFF",
+            relief="flat",
+            highlightbackground="#3A3A3A",
+            highlightthickness=1,
+            width=3,
+            cursor="hand2",
+        ).pack(side="right", padx=(7, 0), ipady=5)
 
         tk.Label(controls, text="TASK SUITE", bg="#141414", fg="#A0A0A0", font=("Segoe UI", 8, "bold")).pack(anchor="w")
         self.category_var = tk.StringVar(value="All tasks")
@@ -277,10 +309,43 @@ class AetherionDesktopClient:
         quantization = details.get("quantization_level") or details.get("format") or "Precision unavailable"
         digest = details.get("digest")
         digest_text = f" · {digest[:12]}" if digest else ""
+        runability = self.assess_model(model)
         self.model_details.configure(
-            text=f"{model.provider.upper()}  ·  {size}\n{quantization}{digest_text}",
+            text=f"{model.provider.upper()}  ·  {size}\n{quantization}{digest_text}\n{runability}",
             fg="#A8A8A8",
         )
+
+    def assess_model(self, model: ModelInfo) -> str:
+        if model.provider == "ollama":
+            return "DIRECT RUN: YES · Ollama service"
+        if importlib.util.find_spec("llama_cpp") is None:
+            return "DIRECT RUN: NO · Install llama-cpp-python"
+        if model.size_bytes is None:
+            return "DIRECT RUN: UNKNOWN · Model size unavailable"
+
+        required_gb = max(model.size_bytes / (1024 ** 3) * 1.25, 1.0)
+        available_gb = self.session.hardware.get("memory", {}).get("available_gb")
+        if isinstance(available_gb, (int, float)) and available_gb < required_gb:
+            return f"DIRECT RUN: NO · Needs ~{required_gb:.1f} GB RAM"
+
+        gpus = self.session.hardware.get("gpu", [])
+        vram_gb = next(
+            (gpu.get("vram_gb") for gpu in gpus if isinstance(gpu.get("vram_gb"), (int, float))),
+            None,
+        )
+        if isinstance(vram_gb, (int, float)) and model.size_bytes / (1024 ** 3) <= vram_gb * 0.9:
+            return f"DIRECT RUN: YES · GPU memory fit ({vram_gb:.1f} GB VRAM)"
+        return f"DIRECT RUN: YES · CPU fallback (~{required_gb:.1f} GB RAM)"
+
+    def browse_model_folder(self) -> None:
+        current_path = Path(self.model_path_var.get())
+        initial_dir = current_path if current_path.is_dir() else Path.home()
+        selected = filedialog.askdirectory(parent=self.root, initialdir=str(initial_dir), title="Choose GGUF model folder")
+        if not selected:
+            return
+        self.session.gguf_provider.set_models_dir(selected)
+        self.model_path_var.set(selected)
+        self.refresh_models()
 
     def append_output(self, text: str, tag: str | None = None) -> None:
         self.output.configure(state="normal")
