@@ -2225,3 +2225,83 @@ body {
   outline: 2px solid #D8D8D8;
   outline-offset: 4px;
 }
+
+.detail-breakdown {
+  position: relative;
+  margin-top: 18px;
+  padding-top: 84px;
+  border-top: 1px solid rgba(235, 235, 235, 0.1);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.detail-card {
+  min-height: 100%;
+  padding: 24px;
+  background: #101010;
+  border: 1px solid rgba(235, 235, 235, 0.12);
+  border-radius: 10px;
+}
+
+.detail-index {
+  color: #929292;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.detail-card h3 {
+  margin: 20px 0 10px;
+  color: #EEEEEE;
+  font-size: 1.35rem;
+  line-height: 1.12;
+}
+
+.detail-card > p {
+  min-height: 84px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.detail-card dl {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid rgba(235, 235, 235, 0.1);
+}
+
+.detail-card dl div {
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  gap: 12px;
+}
+
+.detail-card dt {
+  color: #D8D8D8;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.detail-card dd {
+  margin: 0;
+  color: #8C8C8C;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-card > p {
+    min-height: auto;
+  }
+}

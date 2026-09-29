@@ -10,7 +10,7 @@
       content="AETHERION builds technology that extends what is possible, from local AI systems to future-ready infrastructure and engineering."
     />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <link rel="stylesheet" href="styles.css?v=20260928-3" />
+    <link rel="stylesheet" href="styles.css?v=20260928-4" />
   </head>
   <body class="intro-active">
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -89,6 +89,7 @@
         <nav class="nav" aria-label="Main navigation">
           <a href="overview.html">Overview</a>
           <a href="models.html">Models</a>
+          <a href="#details">Details</a>
           <a href="compare.html">Compare</a>
           <a href="#contact">Contact</a>
           <a href="resources.html">Resources</a>
@@ -186,6 +187,43 @@
             <div class="profile-row"><span>CPU</span><strong>Detected local CPU</strong><small>Measured at launch</small></div>
             <div class="profile-row"><span>Memory</span><strong>Available RAM</strong><small>Read from the device</small></div>
             <div class="profile-row"><span>GPU</span><strong>Local accelerated stack</strong><small>Visible only on your machine</small></div>
+          </div>
+        </section>
+
+        <section class="detail-breakdown" id="details" aria-labelledby="details-title">
+          <div class="section-head">
+            <p>DECISION BREAKDOWN</p>
+            <h2 id="details-title">Every result has a reason.</h2>
+          </div>
+
+          <div class="detail-grid">
+            <article class="detail-card">
+              <span class="detail-index">01 / HARDWARE</span>
+              <h3>Measure the room first</h3>
+              <p>CPU, system memory, GPU model, VRAM, operating system, and architecture establish the limits before a model is judged.</p>
+              <dl>
+                <div><dt>RAM</dt><dd>Available memory for loading and running the model.</dd></div>
+                <div><dt>VRAM</dt><dd>GPU memory available for accelerated inference.</dd></div>
+              </dl>
+            </article>
+            <article class="detail-card">
+              <span class="detail-index">02 / FIT</span>
+              <h3>Explain the recommendation</h3>
+              <p>The client compares estimated model requirements with your hardware and tells you when to use GPU, CPU fallback, or a smaller model.</p>
+              <dl>
+                <div><dt>READY</dt><dd>Runtime and memory are available for a direct run.</dd></div>
+                <div><dt>LIMITED</dt><dd>The model can run, but may fall back to CPU or slower memory.</dd></div>
+              </dl>
+            </article>
+            <article class="detail-card">
+              <span class="detail-index">03 / VALIDATION</span>
+              <h3>Read quality and speed together</h3>
+              <p>Each task suite checks a different behavior instead of reducing a model to one synthetic score.</p>
+              <dl>
+                <div><dt>QUALITY</dt><dd>Pass/fail validation for the requested output format.</dd></div>
+                <div><dt>SPEED</dt><dd>Time to first token, total time, and tokens per second.</dd></div>
+              </dl>
+            </article>
           </div>
         </section>
 

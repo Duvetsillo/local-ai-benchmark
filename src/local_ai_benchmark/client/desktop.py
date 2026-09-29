@@ -9,7 +9,8 @@ import sys
 import threading
 import tkinter as tk
 import webbrowser
-from urllib.request import urlretrieve
+from urllib.parse import unquote, urlparse
+from urllib.request import Request, urlopen, urlretrieve
 from dataclasses import dataclass
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -43,6 +44,12 @@ TASK_SUITE_DESCRIPTIONS = {
     "math": "Checks exact arithmetic and resistance to unnecessary explanation.",
     "json": "Checks strict JSON formatting and schema compliance.",
     "spanish": "Checks Spanish comprehension and concise instruction following.",
+}
+
+
+MODEL_DOWNLOAD_CATALOG = {
+    "TinyLlama 1.1B · Q4_K_M · lightweight": "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf?download=true",
+    "Phi-3 Mini · Q4_K_M · general": "https://huggingface.co/TheBloke/Phi-3-mini-4k-instruct-GGUF/resolve/main/phi-3-mini-4k-instruct.Q4_K_M.gguf?download=true",
 }
 
 
@@ -86,6 +93,9 @@ class AetherionDesktopClient:
         self.events: queue.Queue[tuple[str, Any]] = queue.Queue()
         self.models: dict[str, ModelInfo] = {}
         self.recommended_model_name: str | None = None
+        self.download_window: tk.Toplevel | None = None
+        self.download_progress: ttk.Progressbar | None = None
+        self.download_status: tk.Label | None = None
         self.busy = False
         self.closing = False
         self.brand_phase = 0
@@ -282,6 +292,23 @@ class AetherionDesktopClient:
             cursor="hand2",
         )
         self.install_requirements_button.pack(fill="x", pady=(0, 18))
+        self.download_model_button = tk.Button(
+            controls,
+            text="DOWNLOAD A GGUF MODEL",
+            command=self.open_model_downloader,
+            bg="#171717",
+            fg="#C8C8C8",
+            activebackground="#2A2A2A",
+            activeforeground="#FFFFFF",
+            relief="flat",
+            highlightbackground="#3A3A3A",
+            highlightthickness=1,
+            font=("Segoe UI", 8, "bold"),
+            padx=10,
+            pady=8,
+            cursor="hand2",
+        )
+        self.download_model_button.pack(fill="x", pady=(0, 18))
 
         tk.Label(controls, text="TASK SUITE", bg="#141414", fg="#A0A0A0", font=("Segoe UI", 8, "bold")).pack(anchor="w")
         self.category_var = tk.StringVar(value="All tasks")
@@ -484,6 +511,81 @@ class AetherionDesktopClient:
                 fg="#B8B8B8",
             )
 
+    def open_model_downloader(self) -> None:
+        if self.download_window is not None and self.download_window.winfo_exists():
+            self.download_window.focus_force()
+            return
+        window = tk.Toplevel(self.root)
+        self.download_window = window
+        window.title("Download local model")
+        window.geometry("560x330")
+        window.minsize(500, 300)
+        window.configure(bg="#111111")
+        window.transient(self.root)
+
+        content = tk.Frame(window, bg="#111111")
+        content.pack(fill="both", expand=True, padx=24, pady=22)
+        tk.Label(content, text="MODEL DOWNLOAD", bg="#111111", fg="#B8B8B8", font=("Segoe UI", 9, "bold")).pack(anchor="w")
+        tk.Label(content, text="Download a GGUF model directly to your selected model folder.", bg="#111111", fg="#8C8C8C", font=("Segoe UI", 9)).pack(anchor="w", pady=(4, 18))
+
+        tk.Label(content, text="CATALOG", bg="#111111", fg="#A0A0A0", font=("Segoe UI", 8, "bold")).pack(anchor="w")
+        catalog_var = tk.StringVar(value=next(iter(MODEL_DOWNLOAD_CATALOG)))
+        catalog_menu = ttk.Combobox(content, textvariable=catalog_var, values=list(MODEL_DOWNLOAD_CATALOG), state="readonly", style="Aetherion.TCombobox")
+        catalog_menu.pack(fill="x", pady=(7, 14))
+
+        tk.Label(content, text="DOWNLOAD URL", bg="#111111", fg="#A0A0A0", font=("Segoe UI", 8, "bold")).pack(anchor="w")
+        url_var = tk.StringVar(value=MODEL_DOWNLOAD_CATALOG[catalog_var.get()])
+        url_entry = tk.Entry(content, textvariable=url_var, bg="#0B0B0B", fg="#D8D8D8", insertbackground="#F0F0F0", relief="flat", highlightbackground="#3A3A3A", highlightthickness=1, font=("Segoe UI", 8))
+        url_entry.pack(fill="x", pady=(7, 14), ipady=7)
+        catalog_menu.bind("<<ComboboxSelected>>", lambda _event: url_var.set(MODEL_DOWNLOAD_CATALOG[catalog_var.get()]))
+
+        destination = str(self.session.gguf_provider.models_dir)
+        tk.Label(content, text=f"DESTINATION  {destination}", bg="#111111", fg="#777777", font=("Segoe UI", 8)).pack(anchor="w")
+        self.download_progress = ttk.Progressbar(content, mode="determinate", maximum=100, value=0, style="Aetherion.Horizontal.TProgressbar")
+        self.download_progress.pack(fill="x", pady=(16, 5))
+        self.download_status = tk.Label(content, text="Ready to download", bg="#111111", fg="#8C8C8C", anchor="w", font=("Segoe UI", 8))
+        self.download_status.pack(fill="x")
+        download_button = tk.Button(content, text="DOWNLOAD MODEL", command=lambda: self.download_model(url_var.get(), download_button), bg="#C8C8C8", fg="#0B0B0B", activebackground="#F0F0F0", activeforeground="#0B0B0B", relief="flat", font=("Segoe UI", 9, "bold"), padx=12, pady=10, cursor="hand2")
+        download_button.pack(anchor="e", pady=(14, 0))
+
+    def download_model(self, url: str, button: tk.Button) -> None:
+        parsed = urlparse(url.strip())
+        filename = Path(unquote(parsed.path)).name
+        if parsed.scheme != "https" or not filename.lower().endswith(".gguf"):
+            self.download_status.configure(text="Use a valid HTTPS URL ending in .gguf", fg="#FF9D9D")
+            return
+        target_dir = self.session.gguf_provider.models_dir
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target_path = target_dir / filename
+        button.configure(state="disabled")
+        self.download_progress.configure(value=0)
+        self.download_status.configure(text=f"Downloading {filename}...", fg="#B8B8B8")
+
+        def run_download() -> None:
+            temporary_path = target_path.with_suffix(target_path.suffix + ".part")
+            try:
+                request = Request(url, headers={"User-Agent": "Aetherion-Client/0.1"})
+                with urlopen(request, timeout=30) as response, temporary_path.open("wb") as output:
+                    total = int(response.headers.get("Content-Length") or 0)
+                    downloaded = 0
+                    while True:
+                        chunk = response.read(1024 * 1024)
+                        if not chunk:
+                            break
+                        output.write(chunk)
+                        downloaded += len(chunk)
+                        self.events.put(("model_download_progress", (downloaded, total, filename)))
+                temporary_path.replace(target_path)
+                self.events.put(("model_download_complete", str(target_path)))
+            except (OSError, ValueError) as exc:
+                try:
+                    temporary_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
+                self.events.put(("model_download_error", str(exc)))
+
+        threading.Thread(target=run_download, daemon=True).start()
+
     def append_output(self, text: str, tag: str | None = None) -> None:
         self.output.configure(state="normal")
         self.output.insert("end", text, tag)
@@ -680,6 +782,23 @@ class AetherionDesktopClient:
             elif event == "installer_download_error":
                 self.requirements_label.configure(text=f"Installer download failed\n{payload}", fg="#FF9D9D")
                 self.install_requirements_button.configure(state="normal", text="RETRY DOWNLOAD")
+            elif event == "model_download_progress":
+                downloaded, total, filename = payload
+                if self.download_progress is not None and self.download_status is not None:
+                    progress = downloaded / total * 100 if total else 0
+                    self.download_progress.configure(value=progress)
+                    downloaded_mb = downloaded / (1024 ** 2)
+                    total_text = f" / {total / (1024 ** 2):.1f} MB" if total else ""
+                    self.download_status.configure(text=f"{filename}: {downloaded_mb:.1f} MB{total_text}")
+            elif event == "model_download_complete":
+                if self.download_progress is not None and self.download_status is not None:
+                    self.download_progress.configure(value=100)
+                    self.download_status.configure(text=f"Downloaded: {payload}", fg="#91E2B2")
+                self.append_output(f"\nModel downloaded: {payload}\n", "good")
+                self.refresh_models()
+            elif event == "model_download_error":
+                if self.download_status is not None:
+                    self.download_status.configure(text=f"Download failed: {payload}", fg="#FF9D9D")
         self.root.after(100, self.process_events)
 
     def show_task_result(self, index: int, total: int, result: BenchmarkResult) -> None:
