@@ -924,6 +924,7 @@ footer p {
 
 .hero-panel,
 .model-card,
+.feature-card,
 .results-box,
 .contact-form,
 .glass-card,
@@ -2077,6 +2078,11 @@ body {
   background: #101010;
 }
 
+.feature-card {
+  background: #101010;
+  border-color: rgba(235, 235, 235, 0.12);
+}
+
 .hero-panel::before,
 .model-card::before,
 .contact-form::before,
@@ -2103,4 +2109,119 @@ body {
 .hero-points li {
   background: #151515;
   border-color: rgba(235, 235, 235, 0.1);
+}
+
+.nav a {
+  padding: 8px 0 10px;
+  color: rgba(241, 238, 232, 0.62);
+}
+
+.nav a::after,
+.nav a:hover::after,
+.nav a:focus-visible::after,
+.nav a[aria-current="page"]::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: auto !important;
+  height: 1px !important;
+  border: 0 !important;
+  background: #b8b8b8 !important;
+  opacity: 0.28;
+  transform: scaleX(0.35);
+  transform-origin: left center;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.nav a:hover::after,
+.nav a:focus-visible::after,
+.nav a[aria-current="page"]::after {
+  opacity: 0.9;
+  transform: scaleX(1);
+}
+
+.summary,
+.models,
+.benchmarks,
+.feature-showcase,
+.contact {
+  position: relative;
+  margin-top: 18px;
+  border-top: 1px solid rgba(235, 235, 235, 0.1);
+}
+
+.summary,
+.models,
+.benchmarks,
+.feature-showcase,
+.contact {
+  padding-top: 84px;
+}
+
+.section-head {
+  max-width: 720px;
+  margin-bottom: 28px;
+}
+
+.section-head h2 {
+  max-width: 660px;
+  color: #eeeeee;
+  font-size: clamp(2rem, 3.4vw, 3.4rem);
+  line-height: 1.04;
+}
+
+.primary,
+.secondary,
+.button {
+  border-radius: 8px;
+}
+
+.hero-meta span,
+.hero-points li {
+  border-radius: 6px;
+}
+
+.feature-showcase {
+  padding-bottom: 6px;
+}
+
+.feature-card {
+  border-radius: 10px;
+  background: #101010;
+  box-shadow: none;
+}
+
+.feature-card::after {
+  background: #888888;
+  opacity: 0.45;
+}
+
+.feature-number {
+  border-radius: 6px;
+  background: #1B1B1B;
+  border-color: rgba(235, 235, 235, 0.18);
+  color: #D6D6D6;
+}
+
+.download-panel {
+  margin-top: 84px;
+  border-radius: 10px;
+  padding: 34px;
+}
+
+.download-panel::after {
+  display: none;
+}
+
+.contact-form {
+  border-radius: 10px;
+  padding: clamp(20px, 4vw, 34px);
+}
+
+:focus-visible {
+  outline: 2px solid #D8D8D8;
+  outline-offset: 4px;
 }
