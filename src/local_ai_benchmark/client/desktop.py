@@ -22,6 +22,7 @@ if __package__ in {None, ""}:
         sys.path.insert(0, str(project_root))
     from local_ai_benchmark.client.core import ClientRunRecord, generate_run_id
     from local_ai_benchmark.client.hardware import detect_hardware
+    from local_ai_benchmark.client.licensing import LicenseError, LicenseManager, LicenseStatus, machine_fingerprint
     from local_ai_benchmark.client.storage import LocalResultStore
     from local_ai_benchmark.engine import BenchmarkEngine
     from local_ai_benchmark.models import BenchmarkResult, ModelInfo
@@ -31,6 +32,7 @@ if __package__ in {None, ""}:
 else:
     from .core import ClientRunRecord, generate_run_id
     from .hardware import detect_hardware
+    from .licensing import LicenseError, LicenseManager, LicenseStatus, machine_fingerprint
     from .storage import LocalResultStore
     from ..engine import BenchmarkEngine
     from ..models import BenchmarkResult, ModelInfo
@@ -93,10 +95,16 @@ class AetherionDesktopClient:
     def __init__(self, root: tk.Tk | None = None, base_dir: str | Path | None = None):
         self.root = root or tk.Tk()
         self.root.title("AETHERION Client")
-        self.root.geometry("1180x820")
-        self.root.minsize(960, 700)
-        self.root.configure(bg="#080B10")
-        self.session = DesktopSession.create(base_dir)
+        self.root.geometry("1200x820")
+        self.root.minsize(1020, 720)
+        self.root.configure(bg="#090D13")
+        self.base_dir = base_dir
+        self.license_manager = LicenseManager()
+        self.license_status: LicenseStatus | None = None
+        self.license_gate: tk.Frame | None = None
+        self.container: tk.Frame | None = None
+        self.workspace_ready = False
+        self.session: DesktopSession | None = None
         self.events: queue.Queue[tuple[str, Any]] = queue.Queue()
         self.models: dict[str, ModelInfo] = {}
         self.recommended_model_name: str | None = None
@@ -104,338 +112,667 @@ class AetherionDesktopClient:
         self.download_progress: ttk.Progressbar | None = None
         self.download_status: tk.Label | None = None
         self.busy = False
+        self.benchmark_stop_event: threading.Event | None = None
         self.closing = False
         self.brand_phase = 0
-        self.build_ui()
         self.root.protocol("WM_DELETE_WINDOW", self.close)
-        self.root.after(100, self.process_events)
-        self.animate_brand_mark()
-        self.root.after(200, self.refresh_dependency_status)
-        self.refresh_models()
+        try:
+            self.license_status = self.license_manager.check()
+        except LicenseError as exc:
+            self.show_license_gate(str(exc))
+        else:
+            self.start_workspace()
+        self.root.after(30_000, self.check_license_periodically)
+
+    def start_workspace(self) -> None:
+        self.license_gate = None
+        self.root.geometry("1200x820")
+        self.root.minsize(1020, 720)
+        if self.container is None:
+            self.session = DesktopSession.create(self.base_dir)
+            self.build_ui()
+            self.workspace_ready = True
+            self.root.after(100, self.process_events)
+            self.animate_brand_mark()
+            self.root.after(200, self.refresh_dependency_status)
+            self.refresh_models()
+        else:
+            self.workspace_ready = True
+            self.container.pack(fill="both", expand=True, padx=18, pady=18)
+
+    def show_license_gate(self, message: str) -> None:
+        self.workspace_ready = False
+        if self.container is not None:
+            self.container.pack_forget()
+        if self.license_gate is not None and self.license_gate.winfo_exists():
+            for widget in self.license_gate.winfo_children():
+                widget.destroy()
+        else:
+            self.license_gate = tk.Frame(self.root, bg=COLORS["canvas"])
+            self.license_gate.pack(fill="both", expand=True)
+        gate = self.license_gate
+        gate.configure(bg=COLORS["canvas"])
+        gate.grid_columnconfigure(0, weight=1)
+        gate.grid_rowconfigure(0, weight=1)
+        card = tk.Frame(gate, bg=COLORS["surface"], highlightbackground=COLORS["line"], highlightthickness=1, bd=0)
+        card.grid(row=0, column=0, padx=32, pady=32, sticky="")
+        tk.Frame(card, bg=COLORS["accent"], height=3).pack(fill="x")
+        body = tk.Frame(card, bg=COLORS["surface"])
+        body.pack(fill="both", expand=True, padx=30, pady=26)
+        tk.Label(body, text="AETHERION  /  LICENSE ACTIVATION", bg=COLORS["surface"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w")
+        tk.Label(body, text="A key is required", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 23, "bold")).pack(anchor="w", pady=(8, 5))
+        tk.Label(body, text="Activate this installation to access the local benchmark workspace.", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["body"], wraplength=570, justify="left").pack(anchor="w", pady=(0, 20))
+        tk.Label(body, text="THIS DEVICE ID", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["section"]).pack(anchor="w")
+        device_row = tk.Frame(body, bg=COLORS["surface_elevated"], highlightbackground=COLORS["line_strong"], highlightthickness=1)
+        device_row.pack(fill="x", pady=(7, 5))
+        device_id = machine_fingerprint()
+        device_label = tk.Label(device_row, text=device_id, bg=COLORS["surface_elevated"], fg=COLORS["text"], font=FONTS["mono"], padx=12, pady=11, anchor="w")
+        device_label.pack(side="left", fill="x", expand=True)
+        self._button(device_row, "COPY ID", lambda: self.copy_device_id(device_id)).pack(side="right", padx=6, pady=6)
+        tk.Label(body, text="Provide this ID when generating the license. Keys are bound to this device.", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"], wraplength=570, justify="left").pack(anchor="w", pady=(2, 16))
+        tk.Label(body, text="LICENSE KEY", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["section"]).pack(anchor="w")
+        key_box = tk.Text(body, height=5, wrap="word", bg=COLORS["surface_elevated"], fg=COLORS["text"], insertbackground=COLORS["accent"], selectbackground=COLORS["surface_interactive"], relief="flat", bd=0, font=FONTS["mono"], padx=12, pady=10, highlightbackground=COLORS["line_strong"], highlightthickness=1)
+        key_box.pack(fill="x", pady=(7, 6))
+        feedback = tk.Label(body, text=message, bg=COLORS["surface"], fg=COLORS["error"] if message else COLORS["quiet"], font=FONTS["small"], wraplength=570, justify="left", anchor="w")
+        feedback.pack(fill="x", pady=(2, 10))
+
+        def activate() -> None:
+            try:
+                self.license_status = self.license_manager.activate(key_box.get("1.0", "end").strip())
+            except LicenseError as exc:
+                feedback.configure(text=str(exc), fg=COLORS["error"])
+                return
+            self.license_gate.destroy()
+            self.license_gate = None
+            self.start_workspace()
+
+        self._button(body, "ACTIVATE LICENSE", activate, primary=True).pack(fill="x", pady=(4, 10))
+        tk.Label(body, text="Offline signature validation  ·  Your key and benchmark results stay on this device.", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"], wraplength=570, justify="left").pack(anchor="w", pady=(3, 0))
+
+    def copy_device_id(self, device_id: str) -> None:
+        self.root.clipboard_clear()
+        self.root.clipboard_append(device_id)
+
+    def check_license_periodically(self) -> None:
+        if self.closing:
+            return
+        if self.workspace_ready:
+            try:
+                self.license_status = self.license_manager.check()
+            except LicenseError as exc:
+                self.show_license_gate(str(exc))
+        self.root.after(30_000, self.check_license_periodically)
+
+    def _card(self, parent: tk.Widget, *, accent: bool = False) -> tk.Frame:
+        card = tk.Frame(
+            parent,
+            bg=COLORS["surface"],
+            highlightbackground=COLORS["line"],
+            highlightthickness=1,
+            bd=0,
+        )
+        if accent:
+            tk.Frame(card, bg=COLORS["accent"], height=2).pack(fill="x")
+        return card
+
+    def _button(self, parent: tk.Widget, text: str, command: Any, *, primary: bool = False) -> tk.Button:
+        bg = COLORS["accent"] if primary else COLORS["surface_interactive"]
+        fg = COLORS["canvas"] if primary else COLORS["text_soft"]
+        active_bg = COLORS["accent"] if primary else COLORS["line_strong"]
+        active_fg = COLORS["canvas"] if primary else COLORS["text"]
+        return tk.Button(
+            parent,
+            text=text,
+            command=command,
+            bg=bg,
+            fg=fg,
+            activebackground=active_bg,
+            activeforeground=active_fg,
+            disabledforeground=COLORS["quiet"],
+            relief="flat",
+            bd=0,
+            font=("Segoe UI", 9, "bold"),
+            padx=14,
+            pady=10,
+            cursor="hand2",
+            highlightthickness=0,
+        )
+
+    def _field_label(self, parent: tk.Widget, text: str) -> tk.Label:
+        return tk.Label(
+            parent,
+            text=text.upper(),
+            bg=COLORS["surface"],
+            fg=COLORS["muted"],
+            font=FONTS["section"],
+            anchor="w",
+        )
+
+    def _card(self, parent: tk.Widget, *, accent: bool = False) -> tk.Frame:
+        card = tk.Frame(
+            parent,
+            bg=COLORS["surface"],
+            highlightbackground=COLORS["line"],
+            highlightthickness=1,
+            bd=0,
+        )
+        if accent:
+            tk.Frame(card, bg=COLORS["accent"], height=2).pack(fill="x")
+        return card
+
+    def _button(self, parent: tk.Widget, text: str, command: Any, *, primary: bool = False) -> tk.Button:
+        bg = COLORS["accent"] if primary else COLORS["surface_interactive"]
+        fg = COLORS["canvas"] if primary else COLORS["text_soft"]
+        active_bg = COLORS["accent"] if primary else COLORS["line_strong"]
+        active_fg = COLORS["canvas"] if primary else COLORS["text"]
+        return tk.Button(
+            parent,
+            text=text,
+            command=command,
+            bg=bg,
+            fg=fg,
+            activebackground=active_bg,
+            activeforeground=active_fg,
+            disabledforeground=COLORS["quiet"],
+            relief="flat",
+            bd=0,
+            font=("Segoe UI", 9, "bold"),
+            padx=14,
+            pady=10,
+            cursor="hand2",
+            highlightthickness=0,
+        )
+
+    def _field_label(self, parent: tk.Widget, text: str) -> tk.Label:
+        return tk.Label(
+            parent,
+            text=text.upper(),
+            bg=COLORS["surface"],
+            fg=COLORS["muted"],
+            font=FONTS["section"],
+            anchor="w",
+        )
 
     def build_ui(self) -> None:
         style = ttk.Style(self.root)
         configure_ttk(style)
 
         self.root.configure(bg=COLORS["canvas"])
-        self.container = tk.Frame(self.root, bg=COLORS["shell"])
-        self.container.pack(fill="both", expand=True, padx=32, pady=26)
-
-        self.shell = tk.Frame(self.container, bg=COLORS["shell"])
+        self.container = tk.Frame(self.root, bg=COLORS["canvas"])
+        self.container.pack(fill="both", expand=True, padx=18, pady=18)
+        self.shell = tk.Frame(self.container, bg=COLORS["canvas"])
         self.shell.pack(fill="both", expand=True)
+
         self.create_sidebar(self.shell)
-        self.workspace = tk.Frame(self.shell, bg=COLORS["shell"])
-        self.workspace.pack(side="left", fill="both", expand=True, padx=(24, 0))
+        self.workspace = tk.Frame(self.shell, bg=COLORS["canvas"])
+        self.workspace.pack(side="left", fill="both", expand=True, padx=(18, 0))
 
-        header = tk.Frame(self.workspace, bg=COLORS["shell"])
-        header.pack(fill="x", pady=(0, 26))
-        self.brand_mark = tk.Canvas(header, width=58, height=58, bg=COLORS["shell"], bd=0, highlightthickness=0)
-        self.brand_mark.pack(side="left", padx=(0, 14))
-        self.brand_mark.create_oval(5, 5, 53, 53, outline="#8A8A8A", width=1)
-        self.brand_orbit = self.brand_mark.create_arc(9, 9, 49, 49, start=15, extent=118, outline="#E0E0E0", width=1, style="arc")
-        self.brand_mark.create_oval(12, 12, 46, 46, outline="#343434", width=1)
-        self.brand_mark.create_line(29, 12, 29, 46, fill="#4A4A4A", width=1)
-        self.brand_mark.create_line(12, 29, 46, 29, fill="#4A4A4A", width=1)
-        self.brand_mark.create_polygon(
-            29, 14, 33, 25, 44, 29, 33, 33, 29, 44, 25, 33, 14, 29, 25, 25,
-            fill="#AFAFAF",
-            outline="#F2F2F2",
-            width=1,
-        )
-        self.brand_mark.create_oval(26, 26, 32, 32, fill="#F2F2F2", outline="")
-
-        brand_copy = tk.Frame(header, bg=COLORS["shell"])
-        brand_copy.pack(side="left", anchor="center")
-        tk.Label(brand_copy, text="AETHERION", bg=COLORS["shell"], fg=COLORS["text"], font=FONTS["display"]).pack(anchor="w")
-        tk.Label(brand_copy, text="LOCAL MODEL BENCHMARK  /  PRIVATE BY DESIGN", bg=COLORS["shell"], fg=COLORS["muted"], font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(2, 0))
+        header = tk.Frame(self.workspace, bg=COLORS["canvas"], height=66)
+        header.pack(fill="x", pady=(0, 15))
+        header.pack_propagate(False)
+        heading = tk.Frame(header, bg=COLORS["canvas"])
+        heading.pack(side="left", fill="y", expand=True)
+        tk.Label(
+            heading,
+            text="AETHERION  /  LOCAL MODEL BENCHMARK",
+            bg=COLORS["canvas"],
+            fg=COLORS["quiet"],
+            font=FONTS["section"],
+        ).pack(anchor="w", pady=(3, 4))
         self.section_var = tk.StringVar(value="DASHBOARD")
-        tk.Label(header, textvariable=self.section_var, bg=COLORS["shell"], fg=COLORS["quiet"], font=("Segoe UI", 8, "bold"), padx=42).pack(side="left", anchor="center")
+        tk.Label(
+            heading,
+            textvariable=self.section_var,
+            bg=COLORS["canvas"],
+            fg=COLORS["text"],
+            font=("Segoe UI", 23, "bold"),
+        ).pack(anchor="w")
         self.status_var = tk.StringVar(value="CONNECTING TO LOCAL RUNTIMES")
         self.status = tk.Label(
             header,
             textvariable=self.status_var,
             bg=COLORS["surface_elevated"],
             fg=COLORS["text_soft"],
-            font=("Segoe UI", 9, "bold"),
+            font=("Segoe UI", 8, "bold"),
             padx=13,
-            pady=8,
-            highlightbackground=COLORS["line_strong"],
+            pady=9,
+            highlightbackground=COLORS["line"],
             highlightthickness=1,
         )
-        self.status.pack(anchor="center", side="right")
+        self.status.pack(side="right", anchor="center", padx=(12, 0))
 
-        self.view_stack = tk.Frame(self.workspace, bg=COLORS["shell"])
+        self.view_stack = tk.Frame(self.workspace, bg=COLORS["canvas"])
         self.view_stack.pack(fill="both", expand=True)
-        self.dashboard_view = tk.Frame(self.view_stack, bg=COLORS["shell"])
+        self.dashboard_view = tk.Frame(self.view_stack, bg=COLORS["canvas"])
         self.dashboard_view.pack(fill="both", expand=True)
-        content = tk.Frame(self.dashboard_view, bg="#0D1117")
-        content.pack(fill="both", expand=True)
-        content.grid_columnconfigure(0, weight=1)
-        content.grid_columnconfigure(1, minsize=360)
-        content.grid_rowconfigure(0, weight=1)
-        self.left = tk.Frame(content, bg="#0D1117")
-        self.left.grid(row=0, column=0, sticky="nsew", padx=(0, 22))
-        self.right = tk.Frame(content, bg="#171F29", highlightbackground="#35485B", highlightthickness=1, width=360)
-        self.right.grid(row=0, column=1, sticky="nsew")
-        self.right.grid_propagate(False)
-        tk.Frame(self.right, bg="#67E8C5", height=2).pack(fill="x")
-        controls = tk.Frame(self.right, bg="#171F29")
-        controls.pack(fill="both", expand=True, padx=24, pady=24)
+        self.views: dict[str, tk.Frame] = {"dashboard": self.dashboard_view}
 
-        overview_panel = tk.Frame(self.left, bg=COLORS["surface"], highlightbackground=COLORS["line"], highlightthickness=1)
-        overview_panel.pack(fill="x", pady=(0, 16))
-        overview_panel.grid_columnconfigure((0, 1, 2), weight=1)
+        self.dashboard_view.grid_columnconfigure(0, weight=1)
+        self.dashboard_view.grid_rowconfigure(1, weight=1)
+
+        overview = tk.Frame(self.dashboard_view, bg=COLORS["canvas"])
+        overview.grid(row=0, column=0, sticky="ew", pady=(0, 14))
+        for column in range(3):
+            overview.grid_columnconfigure(column, weight=1, uniform="overview")
         overview_values = [
-            ("runtime_metric", "RUNTIME", "Scanning local providers"),
-            ("models_metric", "MODELS", "Waiting for discovery"),
-            ("last_run_metric", "LAST RUN", "No benchmark yet"),
+            ("runtime_metric", "ACTIVE RUNTIME", "Discovering providers"),
+            ("models_metric", "LOCAL MODELS", "Scanning this device"),
+            ("last_run_metric", "LATEST BENCHMARK", "No run yet"),
         ]
         self.overview_vars: dict[str, tk.StringVar] = {}
         for column, (key, label, value) in enumerate(overview_values):
-            cell = tk.Frame(overview_panel, bg=COLORS["surface"])
-            cell.grid(row=0, column=column, sticky="nsew", padx=(16 if column == 0 else 8, 8 if column < 2 else 16), pady=14)
-            tk.Label(cell, text=label, bg=COLORS["surface"], fg=COLORS["quiet"], font=("Segoe UI", 7, "bold")).pack(anchor="w")
+            card = self._card(overview)
+            card.grid(row=0, column=column, sticky="nsew", padx=(0 if column == 0 else 7, 0 if column == 2 else 7))
+            body = tk.Frame(card, bg=COLORS["surface"])
+            body.pack(fill="both", expand=True, padx=16, pady=12)
+            tk.Label(body, text=label, bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["section"]).pack(anchor="w")
             variable = tk.StringVar(value=value)
             self.overview_vars[key] = variable
-            tk.Label(cell, textvariable=variable, bg=COLORS["surface"], fg=COLORS["text_soft"], font=("Segoe UI", 9, "bold"), anchor="w").pack(anchor="w", pady=(6, 0))
+            tk.Label(
+                body,
+                textvariable=variable,
+                bg=COLORS["surface"],
+                fg=COLORS["text"],
+                font=("Segoe UI", 12, "bold"),
+                anchor="w",
+            ).pack(anchor="w", pady=(6, 0))
 
-        hardware_panel = self.create_glass_panel(self.left)
-        hardware_panel.pack(fill="x", pady=(0, 16))
-        hardware_content = tk.Frame(hardware_panel, bg="#131A22")
-        hardware_content.pack(fill="x", padx=16, pady=15)
-        tk.Label(hardware_content, text="LIVE SYSTEM PROFILE", bg="#131A22", fg="#67E8C5", font=("Segoe UI", 9, "bold")).pack(anchor="w")
-        tk.Label(hardware_content, text="Measured on this device", bg="#131A22", fg="#708196", font=("Segoe UI", 9)).pack(anchor="w", pady=(3, 7))
-        self.hardware_text = tk.Text(hardware_content, height=4, bg="#131A22", fg="#D9E4EE", bd=0, wrap="word", padx=0, pady=4, font=("Consolas", 9), selectbackground="#2B2B2B")
+        content = tk.Frame(self.dashboard_view, bg=COLORS["canvas"])
+        content.grid(row=1, column=0, sticky="nsew")
+        content.grid_rowconfigure(0, weight=1)
+        content.grid_columnconfigure(0, weight=3, minsize=330)
+        content.grid_columnconfigure(1, weight=2, minsize=310)
+        self.left = tk.Frame(content, bg=COLORS["canvas"])
+        self.left.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+        self.right = self._card(content, accent=True)
+        self.right.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
+
+        hardware_panel = self._card(self.left)
+        hardware_panel.pack(fill="x", pady=(0, 12))
+        hardware_content = tk.Frame(hardware_panel, bg=COLORS["surface"])
+        hardware_content.pack(fill="x", padx=16, pady=14)
+        hardware_heading = tk.Frame(hardware_content, bg=COLORS["surface"])
+        hardware_heading.pack(fill="x", pady=(0, 7))
+        tk.Label(hardware_heading, text="SYSTEM PROFILE", bg=COLORS["surface"], fg=COLORS["accent"], font=FONTS["section"]).pack(side="left")
+        tk.Label(hardware_heading, text="MEASURED ON THIS DEVICE", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"]).pack(side="right")
+        self.hardware_text = tk.Text(
+            hardware_content,
+            height=4,
+            bg=COLORS["surface"],
+            fg=COLORS["text_soft"],
+            bd=0,
+            wrap="word",
+            padx=0,
+            pady=2,
+            font=FONTS["mono"],
+            selectbackground=COLORS["surface_interactive"],
+            selectforeground=COLORS["text"],
+            relief="flat",
+            highlightthickness=0,
+        )
         self.hardware_text.pack(fill="x")
         self.hardware_text.insert("end", self.format_hardware(self.session.hardware))
         self.hardware_text.configure(state="disabled")
 
-        output_panel = self.create_glass_panel(self.left)
+        output_panel = self._card(self.left)
         output_panel.pack(fill="both", expand=True)
-        output_content = tk.Frame(output_panel, bg="#131A22")
-        output_content.pack(fill="both", expand=True, padx=16, pady=15)
-        output_header = tk.Frame(output_content, bg="#131A22")
+        output_content = tk.Frame(output_panel, bg=COLORS["surface"])
+        output_content.pack(fill="both", expand=True, padx=16, pady=14)
+        output_header = tk.Frame(output_content, bg=COLORS["surface"])
         output_header.pack(fill="x", pady=(0, 10))
-        tk.Label(output_header, text="BENCHMARK TRACE", bg="#131A22", fg="#67E8C5", font=("Segoe UI", 9, "bold")).pack(side="left")
-        tk.Label(output_header, text="LOCAL RESULTS", bg="#131A22", fg="#708196", font=("Segoe UI", 8, "bold")).pack(side="right")
-        output_frame = tk.Frame(output_content, bg="#080808", highlightbackground="#283747", highlightthickness=1)
+        tk.Label(output_header, text="BENCHMARK TRACE", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 11, "bold")).pack(side="left")
+        tk.Label(output_header, text="SAVED LOCALLY", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"]).pack(side="right")
+        output_frame = tk.Frame(output_content, bg=COLORS["canvas"], highlightbackground=COLORS["line"], highlightthickness=1)
         output_frame.pack(fill="both", expand=True)
-        self.output = tk.Text(output_frame, bg="#080808", fg="#D9E4EE", insertbackground="#F0F0F0", bd=0, wrap="word", padx=13, pady=12, font=("Consolas", 9), state="disabled", selectbackground="#2B2B2B")
+        self.output = tk.Text(
+            output_frame,
+            bg=COLORS["canvas"],
+            fg=COLORS["text_soft"],
+            insertbackground=COLORS["accent"],
+            bd=0,
+            wrap="word",
+            padx=14,
+            pady=13,
+            font=FONTS["mono"],
+            state="disabled",
+            selectbackground=COLORS["surface_interactive"],
+            selectforeground=COLORS["text"],
+            relief="flat",
+            highlightthickness=0,
+        )
         scrollbar = ttk.Scrollbar(output_frame, orient="vertical", command=self.output.yview, style="Aetherion.Vertical.TScrollbar")
         self.output.configure(yscrollcommand=scrollbar.set)
         self.output.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
-        self.output.tag_configure("good", foreground="#9AE4BA")
-        self.output.tag_configure("bad", foreground="#FF9D9D")
-        self.output.tag_configure("muted", foreground="#91A1AF")
+        self.output.tag_configure("good", foreground=COLORS["success"])
+        self.output.tag_configure("bad", foreground=COLORS["error"])
+        self.output.tag_configure("muted", foreground=COLORS["muted"])
         self.append_output("Choose a local model and run a benchmark. Results stay on this device.\n", "muted")
 
-        tk.Label(controls, text="RUN CONFIGURATION", bg="#171F29", fg="#67E8C5", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(0, 20))
-        tk.Label(controls, text="MODEL", bg="#171F29", fg="#91A0B2", font=("Segoe UI", 8, "bold")).pack(anchor="w")
+        self.configuration_canvas = tk.Canvas(
+            self.right,
+            bg=COLORS["surface"],
+            bd=0,
+            highlightthickness=0,
+            yscrollincrement=24,
+        )
+        self.configuration_scrollbar = ttk.Scrollbar(
+            self.right,
+            orient="vertical",
+            command=self.configuration_canvas.yview,
+            style="Aetherion.Vertical.TScrollbar",
+        )
+        self.configuration_canvas.configure(yscrollcommand=self.configuration_scrollbar.set)
+        self.configuration_canvas.pack(side="left", fill="both", expand=True, padx=(14, 0), pady=(14, 10))
+        self.configuration_scrollbar.pack(side="right", fill="y", padx=(0, 5), pady=(14, 10))
+        controls_outer = tk.Frame(self.configuration_canvas, bg=COLORS["surface"])
+        controls = tk.Frame(controls_outer, bg=COLORS["surface"])
+        controls.pack(fill="both", expand=True, padx=12, pady=12)
+        controls_window = self.configuration_canvas.create_window((0, 0), window=controls_outer, anchor="nw")
+        controls_outer.bind(
+            "<Configure>",
+            lambda _event: self.configuration_canvas.configure(scrollregion=self.configuration_canvas.bbox("all")),
+        )
+        self.configuration_canvas.bind(
+            "<Configure>",
+            lambda event: self.configuration_canvas.itemconfigure(controls_window, width=max(1, event.width)),
+        )
+
+        def scroll_configuration(event: tk.Event) -> None:
+            x0 = self.configuration_canvas.winfo_rootx()
+            y0 = self.configuration_canvas.winfo_rooty()
+            if x0 <= event.x_root <= x0 + self.configuration_canvas.winfo_width() and y0 <= event.y_root <= y0 + self.configuration_canvas.winfo_height():
+                self.configuration_canvas.yview_scroll(int(-event.delta / 120), "units")
+
+        self.root.bind_all("<MouseWheel>", scroll_configuration, add="+")
+        tk.Label(controls, text="Run a benchmark", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 15, "bold")).pack(anchor="w")
+        tk.Label(
+            controls,
+            text="Choose a local model and a validation suite.",
+            bg=COLORS["surface"],
+            fg=COLORS["muted"],
+            font=FONTS["body"],
+        ).pack(anchor="w", pady=(3, 14))
+
+        self._field_label(controls, "Model").pack(anchor="w")
         self.model_var = tk.StringVar()
         self.model_menu = ttk.Combobox(controls, textvariable=self.model_var, state="disabled", style="Aetherion.TCombobox")
-        self.model_menu.pack(fill="x", pady=(7, 18))
+        self.model_menu.pack(fill="x", pady=(6, 8))
         self.model_menu.bind("<<ComboboxSelected>>", lambda _event: self.update_model_details())
         self.model_details = tk.Label(
             controls,
-            text="No model selected",
-            bg="#171F29",
-            fg="#708196",
+            text="Discovering models on this device…",
+            bg=COLORS["surface"],
+            fg=COLORS["muted"],
             justify="left",
             anchor="w",
-            wraplength=310,
-            font=("Segoe UI", 8),
-            padx=1,
+            wraplength=340,
+            font=FONTS["small"],
+            padx=0,
         )
-        self.model_details.pack(anchor="w", fill="x", pady=(0, 16))
+        self.model_details.pack(anchor="w", fill="x", pady=(0, 13))
 
-        tk.Label(controls, text="GGUF MODEL FOLDER", bg="#171F29", fg="#91A0B2", font=("Segoe UI", 8, "bold")).pack(anchor="w")
-        model_path_frame = tk.Frame(controls, bg="#171F29")
-        model_path_frame.pack(fill="x", pady=(7, 18))
-        self.model_path_var = tk.StringVar(value=str(self.session.gguf_provider.models_dir))
-        self.model_path_entry = tk.Entry(
-            model_path_frame,
-            textvariable=self.model_path_var,
-            bg="#131A22",
-            fg="#D9E4EE",
-            insertbackground="#F0F0F0",
-            relief="flat",
-            highlightbackground="#35485B",
-            highlightthickness=1,
-            font=("Segoe UI", 8),
-        )
-        self.model_path_entry.pack(side="left", fill="x", expand=True, ipady=7)
-        tk.Button(
-            model_path_frame,
-            text="...",
-            command=self.browse_model_folder,
-            bg="#253444",
-            fg="#D9E4EE",
-            activebackground="#35485B",
-            activeforeground="#FFFFFF",
-            relief="flat",
-            highlightbackground="#35485B",
-            highlightthickness=1,
-            width=3,
-            cursor="hand2",
-        ).pack(side="right", padx=(7, 0), ipady=5)
-
-        self.requirements_label = tk.Label(
-            controls,
-            text="Checking requirements...",
-            bg="#171F29",
-            fg="#91A0B2",
-            justify="left",
-            anchor="w",
-            wraplength=310,
-            font=("Consolas", 8),
-            padx=1,
-        )
-        self.requirements_label.pack(anchor="w", fill="x", pady=(0, 8))
-        self.install_requirements_button = tk.Button(
-            controls,
-            text="DOWNLOAD MISSING INSTALLERS",
-            command=self.download_missing_dependencies,
-            bg="#253444",
-            fg="#D9E4EE",
-            activebackground="#35485B",
-            activeforeground="#FFFFFF",
-            relief="flat",
-            highlightbackground="#35485B",
-            highlightthickness=1,
-            font=("Segoe UI", 8, "bold"),
-            padx=10,
-            pady=8,
-            cursor="hand2",
-        )
-        self.install_requirements_button.pack(fill="x", pady=(0, 18))
-        self.download_model_button = tk.Button(
-            controls,
-            text="DOWNLOAD A GGUF MODEL",
-            command=self.open_model_downloader,
-            bg="#1C2733",
-            fg="#67E8C5",
-            activebackground="#2A2A2A",
-            activeforeground="#FFFFFF",
-            relief="flat",
-            highlightbackground="#35485B",
-            highlightthickness=1,
-            font=("Segoe UI", 8, "bold"),
-            padx=10,
-            pady=8,
-            cursor="hand2",
-        )
-        self.download_model_button.pack(fill="x", pady=(0, 18))
-
-        tk.Label(controls, text="TASK SUITE", bg="#171F29", fg="#91A0B2", font=("Segoe UI", 8, "bold")).pack(anchor="w")
+        self._field_label(controls, "Task suite").pack(anchor="w")
         self.category_var = tk.StringVar(value="All tasks")
         categories = list(dict.fromkeys(task.category for task in TASKS))
-        self.category_menu = ttk.Combobox(controls, textvariable=self.category_var, values=["All tasks", *categories], state="readonly", style="Aetherion.TCombobox")
-        self.category_menu.pack(fill="x", pady=(7, 22))
+        self.category_menu = ttk.Combobox(
+            controls,
+            textvariable=self.category_var,
+            values=["All tasks", *categories],
+            state="readonly",
+            style="Aetherion.TCombobox",
+        )
+        self.category_menu.pack(fill="x", pady=(6, 6))
         self.category_menu.bind("<<ComboboxSelected>>", lambda _event: self.update_suite_details())
         self.suite_details = tk.Label(
             controls,
             text=TASK_SUITE_DESCRIPTIONS["All tasks"],
-            bg="#171F29",
-            fg="#708196",
+            bg=COLORS["surface"],
+            fg=COLORS["quiet"],
             justify="left",
             anchor="w",
-            wraplength=270,
-            font=("Segoe UI", 8),
-            padx=1,
+            wraplength=340,
+            font=FONTS["small"],
         )
-        self.suite_details.pack(anchor="w", fill="x", pady=(0, 14))
+        self.suite_details.pack(anchor="w", fill="x", pady=(0, 11))
 
-        self.refresh_button = tk.Button(controls, text="REFRESH MODEL LIST", command=self.refresh_models, bg="#1C2733", fg="#D9E4EE", activebackground="#283747", activeforeground="#FFFFFF", font=("Segoe UI", 9, "bold"), relief="flat", highlightbackground="#35485B", highlightthickness=1, padx=12, pady=11, cursor="hand2")
-        self.refresh_button.pack(fill="x")
-        self.run_button = tk.Button(controls, text="RUN BENCHMARK", command=self.run_selected_benchmark, bg="#67E8C5", fg="#0D1117", activebackground="#F0F0F0", activeforeground="#0D1117", font=("Segoe UI", 10, "bold"), relief="flat", padx=12, pady=13, cursor="hand2", state="disabled")
-        self.run_button.pack(fill="x", pady=(10, 0))
-        self.result_status = tk.Label(controls, text="Waiting for local runtimes", bg="#171F29", fg="#999999", justify="left", anchor="w", wraplength=310, font=("Segoe UI", 9), padx=1, pady=8)
-        self.result_status.pack(anchor="w", fill="x", pady=(14, 10))
+        self.run_button = self._button(controls, "Run benchmark", self.run_selected_benchmark, primary=True)
+        self.run_button.pack(fill="x", pady=(0, 13))
+        self.stop_button = self._button(controls, "Stop benchmark", self.stop_benchmark)
+        self.stop_button.pack(fill="x", pady=(0, 13))
+        self.stop_button.configure(state="disabled")
+
+        separator = tk.Frame(controls, bg=COLORS["line"], height=1)
+        separator.pack(fill="x", pady=(0, 11))
+        self._field_label(controls, "GGUF model folder").pack(anchor="w")
+        model_path_frame = tk.Frame(controls, bg=COLORS["surface"])
+        model_path_frame.pack(fill="x", pady=(6, 10))
+        self.model_path_var = tk.StringVar(value=str(self.session.gguf_provider.models_dir))
+        self.model_path_entry = tk.Entry(
+            model_path_frame,
+            textvariable=self.model_path_var,
+            bg=COLORS["canvas"],
+            fg=COLORS["text_soft"],
+            insertbackground=COLORS["accent"],
+            relief="flat",
+            highlightbackground=COLORS["line"],
+            highlightcolor=COLORS["accent"],
+            highlightthickness=1,
+            font=FONTS["small"],
+        )
+        self.model_path_entry.pack(side="left", fill="x", expand=True, ipady=7, padx=(0, 6))
+        self._button(model_path_frame, "Browse", self.browse_model_folder).pack(side="right")
+
+        self.requirements_label = tk.Label(
+            controls,
+            text="Checking local runtimes…",
+            bg=COLORS["surface_elevated"],
+            fg=COLORS["muted"],
+            justify="left",
+            anchor="w",
+            wraplength=340,
+            font=FONTS["mono"],
+            padx=10,
+            pady=9,
+        )
+        self.requirements_label.pack(anchor="w", fill="x", pady=(0, 8))
+
+        actions = tk.Frame(controls, bg=COLORS["surface"])
+        actions.pack(fill="x")
+        actions.grid_columnconfigure((0, 1), weight=1, uniform="actions")
+        self.install_requirements_button = self._button(actions, "Install runtimes", self.download_missing_dependencies)
+        self.install_requirements_button.grid(row=0, column=0, sticky="ew", padx=(0, 4))
+        self.download_model_button = self._button(actions, "Get a GGUF model", self.open_model_downloader)
+        self.download_model_button.grid(row=0, column=1, sticky="ew", padx=(4, 0))
+        self.refresh_button = self._button(actions, "Refresh models", self.refresh_models)
+        self.refresh_button.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(8, 0))
+
+        self.result_status = tk.Label(
+            controls,
+            text="Waiting for local runtimes",
+            bg=COLORS["surface"],
+            fg=COLORS["muted"],
+            justify="left",
+            anchor="w",
+            wraplength=340,
+            font=FONTS["small"],
+            padx=0,
+            pady=6,
+        )
+        self.result_status.pack(anchor="w", fill="x", pady=(10, 2))
         self.progress = ttk.Progressbar(controls, mode="determinate", maximum=100, value=0, style="Aetherion.Horizontal.TProgressbar")
-        self.progress.pack(fill="x", pady=(0, 5))
-        self.progress_text = tk.Label(controls, text="Ready to benchmark", bg="#171F29", fg="#708196", anchor="w", font=("Segoe UI", 8))
-        self.progress_text.pack(anchor="w", fill="x", pady=(0, 12))
+        self.progress.pack(fill="x", pady=(0, 4))
+        self.progress_text = tk.Label(controls, text="Ready to benchmark", bg=COLORS["surface"], fg=COLORS["quiet"], anchor="w", font=FONTS["small"])
+        self.progress_text.pack(anchor="w", fill="x")
         self.run_metrics = tk.Label(
             controls,
-            text="NO RUN YET\nComplete a benchmark to see its summary.",
-            bg="#171F29",
-            fg="#91A0B2",
+            text="No run yet · complete a benchmark to see its summary.",
+            bg=COLORS["surface_elevated"],
+            fg=COLORS["text_soft"],
             justify="left",
             anchor="w",
-            wraplength=310,
-            font=("Consolas", 8),
-            padx=1,
-            pady=8,
+            wraplength=340,
+            font=FONTS["small"],
+            padx=10,
+            pady=9,
         )
-        self.run_metrics.pack(anchor="w", fill="x", pady=(0, 10))
-        tk.Frame(controls, bg="#35485B", height=1).pack(fill="x", pady=(2, 13))
-        self.open_results_button = tk.Button(controls, text="OPEN RESULTS FOLDER", command=self.open_results_folder, bg="#1C2733", fg="#67E8C5", activebackground="#2A2A2A", activeforeground="#FFFFFF", font=("Segoe UI", 8, "bold"), relief="flat", highlightbackground="#35485B", highlightthickness=1, padx=12, pady=10, cursor="hand2")
-        self.open_results_button.pack(fill="x", side="bottom")
-        self.views: dict[str, tk.Frame] = {"dashboard": self.dashboard_view}
+        self.run_metrics.pack(anchor="w", fill="x", pady=(10, 0))
+
+        self.views.update({})
         self.create_secondary_views()
+        self.open_results_button = self._button(self.right, "Open results folder", self.open_results_folder)
+        self.open_results_button.pack(fill="x", padx=14, pady=(0, 14))
 
     def view_header(self, parent: tk.Widget, eyebrow: str, title: str, description: str) -> None:
-        header = tk.Frame(parent, bg=COLORS["shell"])
-        header.pack(fill="x", pady=(6, 28))
-        tk.Label(header, text=eyebrow, bg=COLORS["shell"], fg=COLORS["quiet"], font=("Segoe UI", 8, "bold")).pack(anchor="w")
-        tk.Label(header, text=title, bg=COLORS["shell"], fg=COLORS["text"], font=("Segoe UI", 23, "bold")).pack(anchor="w", pady=(7, 5))
-        tk.Label(header, text=description, bg=COLORS["shell"], fg=COLORS["muted"], font=("Segoe UI", 9), wraplength=720, justify="left").pack(anchor="w")
+        header = tk.Frame(parent, bg=COLORS["canvas"])
+        header.pack(fill="x", pady=(4, 18))
+        tk.Label(header, text=eyebrow.upper(), bg=COLORS["canvas"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w")
+        tk.Label(header, text=title, bg=COLORS["canvas"], fg=COLORS["text"], font=("Segoe UI", 23, "bold")).pack(anchor="w", pady=(5, 4))
+        tk.Label(
+            header,
+            text=description,
+            bg=COLORS["canvas"],
+            fg=COLORS["muted"],
+            font=FONTS["body"],
+            wraplength=760,
+            justify="left",
+        ).pack(anchor="w")
 
     def create_secondary_views(self) -> None:
-        models_view = tk.Frame(self.view_stack, bg=COLORS["shell"])
+        models_view = tk.Frame(self.view_stack, bg=COLORS["canvas"])
         self.views["models"] = models_view
-        self.view_header(models_view, "MODEL CATALOG", "Choose the right local model.", "Review discovered runtimes, model size, format, and hardware fit before starting a benchmark.")
-        models_panel = tk.Frame(models_view, bg=COLORS["surface"], highlightbackground=COLORS["line"], highlightthickness=1)
+        self.view_header(models_view, "MODEL LIBRARY", "Your local model catalog", "Review available models, runtimes, and hardware fit.")
+        models_panel = self._card(models_view)
         models_panel.pack(fill="both", expand=True)
-        self.model_view_listbox = tk.Listbox(models_panel, bg=COLORS["surface"], fg=COLORS["text_soft"], selectbackground=COLORS["surface_interactive"], selectforeground=COLORS["text"], highlightthickness=0, bd=0, activestyle="none", font=("Segoe UI", 10))
-        self.model_view_listbox.pack(fill="both", expand=True, padx=18, pady=18)
+        self.model_view_listbox = tk.Listbox(
+            models_panel,
+            bg=COLORS["surface"],
+            fg=COLORS["text_soft"],
+            selectbackground=COLORS["surface_interactive"],
+            selectforeground=COLORS["text"],
+            highlightthickness=0,
+            bd=0,
+            activestyle="none",
+            font=FONTS["body"],
+            relief="flat",
+        )
+        self.model_view_listbox.pack(fill="both", expand=True, padx=16, pady=14)
 
-        benchmarks_view = tk.Frame(self.view_stack, bg=COLORS["shell"])
+        benchmarks_view = tk.Frame(self.view_stack, bg=COLORS["canvas"])
         self.views["benchmarks"] = benchmarks_view
-        self.view_header(benchmarks_view, "BENCHMARK LAB", "Measure before you decide.", "Select a model and task suite in the Dashboard, then run the controlled local validation from here.")
-        benchmark_panel = tk.Frame(benchmarks_view, bg=COLORS["surface"], highlightbackground=COLORS["line"], highlightthickness=1)
-        benchmark_panel.pack(fill="x", pady=(0, 18))
-        tk.Label(benchmark_panel, text="CURRENT CONFIGURATION", bg=COLORS["surface"], fg=COLORS["quiet"], font=("Segoe UI", 8, "bold")).pack(anchor="w", padx=20, pady=(18, 8))
-        self.benchmark_view_config = tk.Label(benchmark_panel, text="No model selected", bg=COLORS["surface"], fg=COLORS["text_soft"], font=("Segoe UI", 12, "bold"), anchor="w")
-        self.benchmark_view_config.pack(anchor="w", padx=20, pady=(0, 18))
-        tk.Button(benchmark_panel, text="OPEN DASHBOARD CONTROLS", command=lambda: self.focus_section("dashboard"), bg=COLORS["surface_interactive"], fg=COLORS["text_soft"], activebackground="#35485B", activeforeground=COLORS["text"], relief="flat", font=("Segoe UI", 8, "bold"), padx=12, pady=9, cursor="hand2").pack(anchor="w", padx=20, pady=(0, 18))
+        self.view_header(benchmarks_view, "BENCHMARK LAB", "Measure before you decide", "A controlled local validation, with each result saved on this device.")
+        benchmark_panel = self._card(benchmarks_view, accent=True)
+        benchmark_panel.pack(fill="x", pady=(0, 12))
+        benchmark_body = tk.Frame(benchmark_panel, bg=COLORS["surface"])
+        benchmark_body.pack(fill="x", padx=18, pady=16)
+        tk.Label(benchmark_body, text="CURRENT CONFIGURATION", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["section"]).pack(anchor="w")
+        self.benchmark_view_config = tk.Label(benchmark_body, text="No model selected", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 13, "bold"), anchor="w")
+        self.benchmark_view_config.pack(anchor="w", pady=(7, 12))
+        self._button(benchmark_body, "Open benchmark controls", lambda: self.focus_section("dashboard")).pack(anchor="w")
+        guidance = self._card(benchmarks_view)
+        guidance.pack(fill="x")
+        tk.Label(
+            guidance,
+            text="The suite checks general instruction following, code format, arithmetic, JSON, and Spanish comprehension. These checks are signals for comparison, not a universal quality score.",
+            bg=COLORS["surface"],
+            fg=COLORS["text_soft"],
+            justify="left",
+            wraplength=760,
+            font=FONTS["body"],
+            padx=18,
+            pady=16,
+        ).pack(anchor="w")
 
-        results_view = tk.Frame(self.view_stack, bg=COLORS["shell"])
+        results_view = tk.Frame(self.view_stack, bg=COLORS["canvas"])
         self.views["results"] = results_view
-        self.view_header(results_view, "RESULTS", "Evidence from your machine.", "Every completed run is stored locally and remains available for review.")
-        results_panel = tk.Frame(results_view, bg=COLORS["surface"], highlightbackground=COLORS["line"], highlightthickness=1)
+        self.view_header(results_view, "RESULTS", "Evidence from your machine", "Review completed runs stored in your local results folder.")
+        results_panel = self._card(results_view)
         results_panel.pack(fill="both", expand=True)
-        self.results_view_text = tk.Text(results_panel, bg=COLORS["surface"], fg=COLORS["text_soft"], bd=0, wrap="word", padx=20, pady=18, font=("Consolas", 9), state="disabled")
-        self.results_view_text.pack(fill="both", expand=True)
+        results_body = tk.Frame(results_panel, bg=COLORS["surface"])
+        results_body.pack(fill="both", expand=True, padx=14, pady=14)
+        self.results_view_text = tk.Text(
+            results_body,
+            bg=COLORS["surface"],
+            fg=COLORS["text_soft"],
+            bd=0,
+            wrap="word",
+            padx=6,
+            pady=6,
+            font=FONTS["mono"],
+            state="disabled",
+            relief="flat",
+            highlightthickness=0,
+        )
+        results_scrollbar = ttk.Scrollbar(results_body, orient="vertical", command=self.results_view_text.yview, style="Aetherion.Vertical.TScrollbar")
+        self.results_view_text.configure(yscrollcommand=results_scrollbar.set)
+        self.results_view_text.pack(side="left", fill="both", expand=True)
+        results_scrollbar.pack(side="right", fill="y")
 
-        hardware_view = tk.Frame(self.view_stack, bg=COLORS["shell"])
+        hardware_view = tk.Frame(self.view_stack, bg=COLORS["canvas"])
         self.views["hardware"] = hardware_view
-        self.view_header(hardware_view, "SYSTEM PROFILE", "Know the machine first.", "The runtime uses this profile to explain model fit, memory pressure, and acceleration options.")
-        hardware_panel = tk.Frame(hardware_view, bg=COLORS["surface"], highlightbackground=COLORS["line"], highlightthickness=1)
+        self.view_header(hardware_view, "SYSTEM PROFILE", "Know the machine first", "Detected hardware and available telemetry used to contextualize each run.")
+        hardware_panel = self._card(hardware_view, accent=True)
         hardware_panel.pack(fill="x")
-        self.hardware_view_text = tk.Text(hardware_panel, height=10, bg=COLORS["surface"], fg=COLORS["text_soft"], bd=0, wrap="word", padx=20, pady=20, font=("Consolas", 10), state="disabled")
+        self.hardware_view_text = tk.Text(
+            hardware_panel,
+            height=9,
+            bg=COLORS["surface"],
+            fg=COLORS["text_soft"],
+            bd=0,
+            wrap="word",
+            padx=18,
+            pady=16,
+            font=FONTS["mono"],
+            state="disabled",
+            relief="flat",
+            highlightthickness=0,
+        )
         self.hardware_view_text.pack(fill="x")
         self.hardware_view_text.configure(state="normal")
         self.hardware_view_text.insert("end", self.format_hardware(self.session.hardware))
         self.hardware_view_text.configure(state="disabled")
 
-        history_view = tk.Frame(self.view_stack, bg=COLORS["shell"])
+        history_view = tk.Frame(self.view_stack, bg=COLORS["canvas"])
         self.views["history"] = history_view
-        self.view_header(history_view, "HISTORY", "Your local benchmark trail.", "A quiet record of the decisions and runs already made on this device.")
-        history_panel = tk.Frame(history_view, bg=COLORS["surface"], highlightbackground=COLORS["line"], highlightthickness=1)
+        self.view_header(history_view, "HISTORY", "Your local benchmark trail", "Recent run records, newest first.")
+        history_panel = self._card(history_view)
         history_panel.pack(fill="both", expand=True)
-        self.history_view_listbox = tk.Listbox(history_panel, bg=COLORS["surface"], fg=COLORS["text_soft"], selectbackground=COLORS["surface_interactive"], selectforeground=COLORS["text"], highlightthickness=0, bd=0, activestyle="none", font=("Consolas", 9))
-        self.history_view_listbox.pack(fill="both", expand=True, padx=18, pady=18)
+        self.history_view_listbox = tk.Listbox(
+            history_panel,
+            bg=COLORS["surface"],
+            fg=COLORS["text_soft"],
+            selectbackground=COLORS["surface_interactive"],
+            selectforeground=COLORS["text"],
+            highlightthickness=0,
+            bd=0,
+            activestyle="none",
+            font=FONTS["mono"],
+            relief="flat",
+        )
+        self.history_view_listbox.pack(fill="both", expand=True, padx=16, pady=14)
 
-        settings_view = tk.Frame(self.view_stack, bg=COLORS["shell"])
+        settings_view = tk.Frame(self.view_stack, bg=COLORS["canvas"])
         self.views["settings"] = settings_view
-        self.view_header(settings_view, "SETTINGS", "Keep the workspace local.", "Configure where GGUF models live and inspect the runtimes available to AETHERION.")
-        settings_panel = tk.Frame(settings_view, bg=COLORS["surface"], highlightbackground=COLORS["line"], highlightthickness=1)
+        self.view_header(settings_view, "SETTINGS", "Local workspace", "Manage the folder used to discover GGUF models and inspect local runtime readiness.")
+        settings_panel = self._card(settings_view)
         settings_panel.pack(fill="x")
-        tk.Label(settings_panel, text="MODEL STORAGE", bg=COLORS["surface"], fg=COLORS["quiet"], font=("Segoe UI", 8, "bold")).pack(anchor="w", padx=20, pady=(20, 8))
-        tk.Label(settings_panel, textvariable=self.model_path_var, bg=COLORS["surface"], fg=COLORS["text_soft"], font=("Consolas", 9), anchor="w", wraplength=720, justify="left").pack(anchor="w", padx=20, pady=(0, 16))
-        tk.Button(settings_panel, text="CHANGE MODEL FOLDER", command=self.browse_model_folder, bg=COLORS["surface_interactive"], fg=COLORS["text_soft"], activebackground="#35485B", activeforeground=COLORS["text"], relief="flat", font=("Segoe UI", 8, "bold"), padx=12, pady=9, cursor="hand2").pack(anchor="w", padx=20, pady=(0, 20))
+        settings_body = tk.Frame(settings_panel, bg=COLORS["surface"])
+        settings_body.pack(fill="x", padx=18, pady=16)
+        tk.Label(settings_body, text="MODEL STORAGE", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["section"]).pack(anchor="w")
+        tk.Label(
+            settings_body,
+            textvariable=self.model_path_var,
+            bg=COLORS["surface"],
+            fg=COLORS["text_soft"],
+            font=FONTS["mono"],
+            anchor="w",
+            wraplength=760,
+            justify="left",
+        ).pack(anchor="w", pady=(7, 12))
+        settings_actions = tk.Frame(settings_body, bg=COLORS["surface"])
+        settings_actions.pack(anchor="w")
+        self._button(settings_actions, "Change model folder", self.browse_model_folder).pack(side="left", padx=(0, 8))
+        self._button(settings_actions, "Open results folder", self.open_results_folder).pack(side="left")
 
         self.refresh_model_view()
         self.refresh_results_view()
@@ -445,14 +782,21 @@ class AetherionDesktopClient:
         if not hasattr(self, "model_view_listbox"):
             return
         self.model_view_listbox.delete(0, "end")
+        if not self.models:
+            self.model_view_listbox.insert("end", "No local models discovered yet. Refresh the model list from the dashboard.")
+            return
         for model in self.models.values():
-            self.model_view_listbox.insert("end", f"{model.name}   /   {model.provider.upper()}   /   {self.assess_model(model).replace(chr(10), ' · ')}")
+            assessment = self.assess_model(model).replace(chr(10), " · ")
+            self.model_view_listbox.insert("end", f"{model.name}   |   {model.provider.upper()}   |   {assessment}")
 
     def refresh_results_view(self) -> None:
         if not hasattr(self, "results_view_text"):
             return
         rows = self.session.store.list()
-        text = "\n".join(f"{row.get('created_at', 'UNKNOWN')}  |  {row.get('benchmark', 'UNKNOWN')}  |  {row.get('status', 'UNKNOWN')}" for row in rows[-20:]) or "No benchmark results saved yet."
+        text = "\n".join(
+            f"{row.get('created_at', 'UNKNOWN')}  |  {row.get('benchmark', 'UNKNOWN')}  |  {row.get('status', 'UNKNOWN')}"
+            for row in rows[-20:]
+        ) or "No benchmark results saved yet."
         self.results_view_text.configure(state="normal")
         self.results_view_text.delete("1.0", "end")
         self.results_view_text.insert("end", text)
@@ -463,66 +807,86 @@ class AetherionDesktopClient:
             return
         self.history_view_listbox.delete(0, "end")
         rows = self.session.store.list()
+        if not rows:
+            self.history_view_listbox.insert("end", "No benchmark runs have been saved yet.")
+            return
         for row in reversed(rows[-20:]):
             self.history_view_listbox.insert("end", f"{row.get('created_at', 'UNKNOWN')}  ·  {row.get('benchmark', 'UNKNOWN')}  ·  {row.get('status', 'UNKNOWN')}")
 
     def create_sidebar(self, parent: tk.Widget) -> None:
-        sidebar = tk.Frame(parent, bg=COLORS["surface"], width=208, highlightbackground=COLORS["line"], highlightthickness=1)
+        sidebar = tk.Frame(
+            parent,
+            bg=COLORS["surface"],
+            width=196,
+            highlightbackground=COLORS["line"],
+            highlightthickness=1,
+        )
         sidebar.pack(side="left", fill="y")
         sidebar.pack_propagate(False)
 
-        logo_row = tk.Frame(sidebar, bg=COLORS["surface"])
-        logo_row.pack(fill="x", padx=18, pady=(20, 30))
-        tk.Label(logo_row, text="A", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 20, "bold"), width=2).pack(side="left")
-        logo_copy = tk.Frame(logo_row, bg=COLORS["surface"])
-        logo_copy.pack(side="left", padx=(6, 0))
+        brand = tk.Frame(sidebar, bg=COLORS["surface"])
+        brand.pack(fill="x", padx=15, pady=(17, 24))
+        self.brand_mark = tk.Canvas(brand, width=42, height=42, bg=COLORS["surface"], bd=0, highlightthickness=0)
+        self.brand_mark.pack(side="left", padx=(0, 9))
+        self.brand_mark.create_oval(4, 4, 38, 38, outline=COLORS["line_strong"], width=1)
+        self.brand_orbit = self.brand_mark.create_arc(7, 7, 35, 35, start=15, extent=120, outline=COLORS["accent"], width=2, style="arc")
+        self.brand_mark.create_polygon(21, 11, 24, 18, 31, 21, 24, 24, 21, 31, 18, 24, 11, 21, 18, 18, fill=COLORS["text"], outline="")
+        logo_copy = tk.Frame(brand, bg=COLORS["surface"])
+        logo_copy.pack(side="left", anchor="center")
         tk.Label(logo_copy, text="AETHERION", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 10, "bold")).pack(anchor="w")
-        tk.Label(logo_copy, text="BEYOND THE KNOWN", bg=COLORS["surface"], fg=COLORS["quiet"], font=("Segoe UI", 6, "bold")).pack(anchor="w", pady=(2, 0))
+        tk.Label(logo_copy, text="LOCAL MODEL LAB", bg=COLORS["surface"], fg=COLORS["quiet"], font=("Segoe UI", 7, "bold")).pack(anchor="w", pady=(3, 0))
 
+        tk.Label(sidebar, text="WORKSPACE", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["section"], padx=15).pack(anchor="w", pady=(0, 7))
         self.nav_buttons: dict[str, tk.Button] = {}
         navigation = [
-            ("DASHBOARD", "dashboard"),
-            ("BENCHMARKS", "benchmarks"),
-            ("MODELS", "models"),
-            ("RESULTS", "results"),
-            ("HARDWARE", "hardware"),
-            ("HISTORY", "history"),
-            ("SETTINGS", "settings"),
+            ("Overview", "dashboard", "▦"),
+            ("Benchmarks", "benchmarks", "◉"),
+            ("Models", "models", "◇"),
+            ("Results", "results", "▤"),
+            ("Hardware", "hardware", "⌘"),
+            ("History", "history", "◷"),
+            ("Settings", "settings", "⚙"),
         ]
-        tk.Label(sidebar, text="WORKSPACE", bg=COLORS["surface"], fg=COLORS["quiet"], font=("Segoe UI", 7, "bold"), padx=18).pack(anchor="w", pady=(0, 8))
-        for label, view in navigation:
+        for label, view, icon in navigation:
             button = tk.Button(
                 sidebar,
-                text=f"  {label}",
+                text=f"{icon}   {label}",
                 command=lambda view_name=view: self.focus_section(view_name),
                 bg=COLORS["surface"],
                 fg=COLORS["muted"],
                 activebackground=COLORS["surface_interactive"],
                 activeforeground=COLORS["text"],
                 relief="flat",
+                bd=0,
                 anchor="w",
-                font=("Segoe UI", 8, "bold"),
+                font=("Segoe UI", 9, "bold"),
                 padx=14,
-                pady=9,
+                pady=10,
                 cursor="hand2",
+                highlightthickness=0,
             )
-            button.pack(fill="x", padx=10, pady=1)
+            button.pack(fill="x", padx=8, pady=2)
             self.nav_buttons[view] = button
         self.nav_buttons["dashboard"].configure(bg=COLORS["surface_interactive"], fg=COLORS["text"])
 
-        sidebar_footer = tk.Frame(sidebar, bg=COLORS["surface"])
-        sidebar_footer.pack(side="bottom", fill="x", padx=18, pady=18)
-        tk.Frame(sidebar_footer, bg=COLORS["line"], height=1).pack(fill="x", pady=(0, 12))
-        tk.Label(sidebar_footer, text="AETHERION CLIENT", bg=COLORS["surface"], fg=COLORS["quiet"], font=("Segoe UI", 7, "bold")).pack(anchor="w")
-        tk.Label(sidebar_footer, text="v0.1.0  /  LOCAL-FIRST", bg=COLORS["surface"], fg=COLORS["muted"], font=("Consolas", 7)).pack(anchor="w", pady=(4, 0))
+        footer = tk.Frame(sidebar, bg=COLORS["surface"])
+        footer.pack(side="bottom", fill="x", padx=14, pady=14)
+        tk.Frame(footer, bg=COLORS["line"], height=1).pack(fill="x", pady=(0, 10))
+        tk.Label(footer, text="PRIVATE BY DESIGN", bg=COLORS["surface"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w")
+        tk.Label(footer, text="Runs and results stay local.", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"]).pack(anchor="w", pady=(4, 0))
+        if self.license_status is not None:
+            license_plan = self.license_status.plan.upper() if self.license_status.plan else "ACTIVE"
+            expiry = self.license_status.expires_at.strftime("%Y-%m-%d") if self.license_status.expires_at else "NO EXPIRY"
+            tk.Label(footer, text=f"LICENSE · {license_plan}", bg=COLORS["surface"], fg=COLORS["success"], font=FONTS["section"]).pack(anchor="w", pady=(11, 0))
+            tk.Label(footer, text=expiry, bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"]).pack(anchor="w", pady=(3, 0))
 
     def focus_section(self, view: str) -> None:
         labels = {
             "dashboard": "DASHBOARD",
-            "benchmarks": "BENCHMARKS",
-            "models": "MODELS",
+            "benchmarks": "BENCHMARK LAB",
+            "models": "MODEL LIBRARY",
             "results": "RESULTS",
-            "hardware": "HARDWARE",
+            "hardware": "SYSTEM PROFILE",
             "history": "HISTORY",
             "settings": "SETTINGS",
         }
@@ -533,27 +897,20 @@ class AetherionDesktopClient:
                 bg=COLORS["surface_interactive"] if active else COLORS["surface"],
                 fg=COLORS["text"] if active else COLORS["muted"],
             )
-        for name, frame in self.views.items():
+        for frame in self.views.values():
             frame.pack_forget()
         self.views.get(view, self.dashboard_view).pack(fill="both", expand=True)
-        targets = {
-            "dashboard": self.status,
-            "benchmarks": self.run_button,
-            "models": self.model_menu,
-            "results": self.output,
-            "hardware": self.hardware_text,
-            "history": self.run_metrics,
-            "settings": self.model_path_entry,
-        }
-        target = targets.get(view)
-        if target is not None and view == "dashboard":
-            target.focus_set()
 
     @staticmethod
     def create_glass_panel(parent: tk.Widget) -> tk.Frame:
-        panel = tk.Frame(parent, bg="#131A22", highlightbackground="#35485B", highlightthickness=1, bd=0)
-        tk.Frame(panel, bg="#708196", height=1).pack(fill="x")
-        return panel
+        return tk.Frame(
+            parent,
+            bg=COLORS["surface"],
+            highlightbackground=COLORS["line"],
+            highlightthickness=1,
+            bd=0,
+        )
+
 
     def animate_brand_mark(self) -> None:
         if self.closing:
@@ -591,7 +948,7 @@ class AetherionDesktopClient:
         runability = self.assess_model(model)
         self.model_details.configure(
             text=f"{model.provider.upper()}  ·  {size}\n{quantization}{digest_text}\n{recommendation}\n{runability}",
-            fg="#A8A8A8",
+            fg="#C4CFD9",
         )
 
     def update_suite_details(self) -> None:
@@ -664,7 +1021,7 @@ class AetherionDesktopClient:
 
     def refresh_dependency_status(self) -> None:
         text, missing = self.dependency_status()
-        self.requirements_label.configure(text=text, fg="#67E8C5" if not missing else "#A8A8A8")
+        self.requirements_label.configure(text=text, fg="#6DE5C1" if not missing else "#C4CFD9")
         self.install_requirements_button.configure(state="normal" if missing else "disabled")
 
     def download_missing_dependencies(self) -> None:
@@ -679,7 +1036,7 @@ class AetherionDesktopClient:
             installer_path = installer_dir / "OllamaSetup.exe"
             if sys.platform == "win32":
                 self.install_requirements_button.configure(state="disabled")
-                self.requirements_label.configure(text="Downloading Ollama installer...", fg="#67E8C5")
+                self.requirements_label.configure(text="Downloading Ollama installer...", fg="#6DE5C1")
 
                 def download() -> None:
                     try:
@@ -693,7 +1050,7 @@ class AetherionDesktopClient:
                 webbrowser.open(installer_url)
         if "llama-cpp-python" in missing and not getattr(sys, "frozen", False):
             self.install_requirements_button.configure(state="disabled")
-            self.requirements_label.configure(text="Installing llama-cpp-python...", fg="#67E8C5")
+            self.requirements_label.configure(text="Installing llama-cpp-python...", fg="#6DE5C1")
 
             def install() -> None:
                 try:
@@ -706,7 +1063,7 @@ class AetherionDesktopClient:
         elif "llama-cpp-python" in missing:
             self.requirements_label.configure(
                 text="GGUF runtime is not bundled in this desktop build.\nInstall the matching runtime package before using GGUF models.",
-                fg="#67E8C5",
+                fg="#6DE5C1",
             )
 
     def open_model_downloader(self) -> None:
@@ -718,46 +1075,46 @@ class AetherionDesktopClient:
         window.title("Download local model")
         window.geometry("560x330")
         window.minsize(500, 300)
-        window.configure(bg="#131A22")
+        window.configure(bg="#121C27")
         window.transient(self.root)
 
-        content = tk.Frame(window, bg="#131A22")
+        content = tk.Frame(window, bg="#121C27")
         content.pack(fill="both", expand=True, padx=24, pady=22)
-        tk.Label(content, text="MODEL DOWNLOAD", bg="#131A22", fg="#67E8C5", font=("Segoe UI", 9, "bold")).pack(anchor="w")
-        tk.Label(content, text="Download a GGUF model directly to your selected model folder.", bg="#131A22", fg="#91A0B2", font=("Segoe UI", 9)).pack(anchor="w", pady=(4, 18))
+        tk.Label(content, text="MODEL DOWNLOAD", bg="#121C27", fg="#6DE5C1", font=("Segoe UI", 9, "bold")).pack(anchor="w")
+        tk.Label(content, text="Download a GGUF model directly to your selected model folder.", bg="#121C27", fg="#94A6B5", font=("Segoe UI", 9)).pack(anchor="w", pady=(4, 18))
 
-        tk.Label(content, text="CATALOG", bg="#131A22", fg="#91A0B2", font=("Segoe UI", 8, "bold")).pack(anchor="w")
+        tk.Label(content, text="CATALOG", bg="#121C27", fg="#94A6B5", font=("Segoe UI", 8, "bold")).pack(anchor="w")
         catalog_var = tk.StringVar(value=next(iter(MODEL_DOWNLOAD_CATALOG)))
         catalog_menu = ttk.Combobox(content, textvariable=catalog_var, values=list(MODEL_DOWNLOAD_CATALOG), state="readonly", style="Aetherion.TCombobox")
         catalog_menu.pack(fill="x", pady=(7, 14))
 
-        tk.Label(content, text="DOWNLOAD URL", bg="#131A22", fg="#91A0B2", font=("Segoe UI", 8, "bold")).pack(anchor="w")
+        tk.Label(content, text="DOWNLOAD URL", bg="#121C27", fg="#94A6B5", font=("Segoe UI", 8, "bold")).pack(anchor="w")
         url_var = tk.StringVar(value=MODEL_DOWNLOAD_CATALOG[catalog_var.get()])
-        url_entry = tk.Entry(content, textvariable=url_var, bg="#0D1117", fg="#D9E4EE", insertbackground="#F0F0F0", relief="flat", highlightbackground="#35485B", highlightthickness=1, font=("Segoe UI", 8))
+        url_entry = tk.Entry(content, textvariable=url_var, bg="#0D141D", fg="#D9E4EE", insertbackground="#F0F0F0", relief="flat", highlightbackground="#344B5D", highlightthickness=1, font=("Segoe UI", 8))
         url_entry.pack(fill="x", pady=(7, 14), ipady=7)
         catalog_menu.bind("<<ComboboxSelected>>", lambda _event: url_var.set(MODEL_DOWNLOAD_CATALOG[catalog_var.get()]))
 
         destination = str(self.session.gguf_provider.models_dir)
-        tk.Label(content, text=f"DESTINATION  {destination}", bg="#131A22", fg="#708196", font=("Segoe UI", 8)).pack(anchor="w")
+        tk.Label(content, text=f"DESTINATION  {destination}", bg="#121C27", fg="#728393", font=("Segoe UI", 8)).pack(anchor="w")
         self.download_progress = ttk.Progressbar(content, mode="determinate", maximum=100, value=0, style="Aetherion.Horizontal.TProgressbar")
         self.download_progress.pack(fill="x", pady=(16, 5))
-        self.download_status = tk.Label(content, text="Ready to download", bg="#131A22", fg="#91A0B2", anchor="w", font=("Segoe UI", 8))
+        self.download_status = tk.Label(content, text="Ready to download", bg="#121C27", fg="#94A6B5", anchor="w", font=("Segoe UI", 8))
         self.download_status.pack(fill="x")
-        download_button = tk.Button(content, text="DOWNLOAD MODEL", command=lambda: self.download_model(url_var.get(), download_button), bg="#67E8C5", fg="#0D1117", activebackground="#F0F0F0", activeforeground="#0D1117", relief="flat", font=("Segoe UI", 9, "bold"), padx=12, pady=10, cursor="hand2")
+        download_button = tk.Button(content, text="DOWNLOAD MODEL", command=lambda: self.download_model(url_var.get(), download_button), bg="#6DE5C1", fg="#0D141D", activebackground="#F0F0F0", activeforeground="#0D141D", relief="flat", font=("Segoe UI", 9, "bold"), padx=12, pady=10, cursor="hand2")
         download_button.pack(anchor="e", pady=(14, 0))
 
     def download_model(self, url: str, button: tk.Button) -> None:
         parsed = urlparse(url.strip())
         filename = Path(unquote(parsed.path)).name
         if parsed.scheme != "https" or not filename.lower().endswith(".gguf"):
-            self.download_status.configure(text="Use a valid HTTPS URL ending in .gguf", fg="#FF9D9D")
+            self.download_status.configure(text="Use a valid HTTPS URL ending in .gguf", fg="#FF9292")
             return
         target_dir = self.session.gguf_provider.models_dir
         target_dir.mkdir(parents=True, exist_ok=True)
         target_path = target_dir / filename
         button.configure(state="disabled")
         self.download_progress.configure(value=0)
-        self.download_status.configure(text=f"Downloading {filename}...", fg="#67E8C5")
+        self.download_status.configure(text=f"Downloading {filename}...", fg="#6DE5C1")
 
         def run_download() -> None:
             temporary_path = target_path.with_suffix(target_path.suffix + ".part")
@@ -794,13 +1151,16 @@ class AetherionDesktopClient:
         if self.busy:
             return
         self.busy = True
+        stop_event = threading.Event()
+        self.benchmark_stop_event = stop_event
         self.refresh_button.configure(state="disabled")
         self.run_button.configure(state="disabled")
+        self.stop_button.configure(state="normal")
         self.model_menu.configure(state="disabled")
         self.status_var.set("LOOKING FOR LOCAL MODELS")
         self.update_overview("runtime_metric", "Scanning providers")
         self.update_overview("models_metric", "Discovering models")
-        self.result_status.configure(text="Checking local model runtimes on this computer…", fg="#67E8C5")
+        self.result_status.configure(text="Checking local model runtimes on this computer…", fg="#6DE5C1")
         self.progress.configure(value=0)
         self.progress_text.configure(text="Checking local model runtimes")
 
@@ -813,6 +1173,11 @@ class AetherionDesktopClient:
         threading.Thread(target=load_models, daemon=True).start()
 
     def run_selected_benchmark(self) -> None:
+        try:
+            self.license_status = self.license_manager.check()
+        except LicenseError as exc:
+            self.show_license_gate(str(exc))
+            return
         model_name = self.model_var.get()
         model = self.models.get(model_name)
         if model is None or self.busy:
@@ -820,7 +1185,7 @@ class AetherionDesktopClient:
         assessment = self.assess_model(model)
         if assessment.startswith("DIRECT RUN: NO"):
             self.status_var.set("MODEL NOT READY")
-            self.result_status.configure(text=assessment, fg="#FF9D9D")
+            self.result_status.configure(text=assessment, fg="#FF9292")
             self.append_output(f"\nModel cannot run on this machine:\n{assessment}\n", "bad")
             return
         category = None if self.category_var.get() == "All tasks" else self.category_var.get()
@@ -830,7 +1195,7 @@ class AetherionDesktopClient:
         self.model_menu.configure(state="disabled")
         self.category_menu.configure(state="disabled")
         self.status_var.set("BENCHMARK RUNNING")
-        self.result_status.configure(text=f"Running {category or 'all'} tasks on {model_name}…", fg="#67E8C5")
+        self.result_status.configure(text=f"Running {category or 'all'} tasks on {model_name}…", fg="#6DE5C1")
         self.progress.configure(value=0)
         self.progress_text.configure(text="Preparing benchmark tasks")
         self.output.configure(state="normal")
@@ -844,6 +1209,7 @@ class AetherionDesktopClient:
                     model_name,
                     category,
                     progress_callback=lambda index, total, result: self.events.put(("progress", (index, total, result))),
+                    stop_event=stop_event,
                 )
                 generated = [result for result in results if result.error is None]
                 rates = [result.metrics["tokens_per_second"] for result in generated if result.metrics.get("tokens_per_second") is not None]
@@ -855,7 +1221,8 @@ class AetherionDesktopClient:
                     "errors": sum(result.error is not None for result in results),
                     "average_tokens_per_second": round(sum(rates) / len(rates), 3) if rates else None,
                 }
-                status = "failed" if not generated else "partial" if summary["errors"] else "complete"
+                stopped = self.session.engine.last_run_stopped
+                status = "stopped" if stopped else "failed" if not generated else "partial" if summary["errors"] else "complete"
                 record = ClientRunRecord(
                     run_id=generate_run_id(),
                     benchmark=model_name,
@@ -865,7 +1232,8 @@ class AetherionDesktopClient:
                     hardware=self.session.hardware,
                     result=summary,
                     status=status,
-                    notes={"benchmark_results_file": str(self.session.engine.last_result_path) if self.session.engine.last_result_path else None},
+                    notes={"benchmark_results_file": str(self.session.engine.last_result_path) if self.session.engine.last_result_path else None,
+                           "stopped_by_user": stopped},
                 )
                 record_path = self.session.store.save(record)
                 self.events.put(("complete", (summary, status, record_path, self.session.engine.last_result_path)))
@@ -898,13 +1266,13 @@ class AetherionDesktopClient:
                     self.status_var.set(f"{runtimes} READY · {len(names)} MODEL(S)")
                     self.update_overview("runtime_metric", runtimes)
                     self.update_overview("models_metric", f"{len(names)} available")
-                    self.result_status.configure(text="Model list refreshed. Select a task suite and run it.", fg="#91E2B2")
+                    self.result_status.configure(text="Model list refreshed. Select a task suite and run it.", fg="#9BE0B5")
                     self.progress_text.configure(text=f"{len(names)} local model(s) ready")
                     self.run_button.configure(state="normal")
                 elif error:
                     self.model_var.set("")
                     self.status_var.set("LOCAL RUNTIMES UNAVAILABLE")
-                    self.result_status.configure(text="No local model runtime is responding. Check Ollama or the GGUF runtime. " + error, fg="#FF9D9D")
+                    self.result_status.configure(text="No local model runtime is responding. Check Ollama or the GGUF runtime. " + error, fg="#FF9292")
                     self.progress_text.configure(text="Connection unavailable")
                     self.append_output("No local model runtime responded.\n" + error + "\n", "bad")
                 else:
@@ -912,7 +1280,7 @@ class AetherionDesktopClient:
                     self.status_var.set("NO LOCAL MODELS")
                     self.update_overview("runtime_metric", "No providers")
                     self.update_overview("models_metric", "0 available")
-                    self.result_status.configure(text="No local models were found. Install an Ollama model or place a GGUF model in the local models folder.", fg="#67E8C5")
+                    self.result_status.configure(text="No local models were found. Install an Ollama model or place a GGUF model in the local models folder.", fg="#6DE5C1")
                     self.progress_text.configure(text="No local models detected")
                 self.category_menu.configure(state="readonly")
                 self.refresh_button.configure(state="normal")
@@ -924,12 +1292,12 @@ class AetherionDesktopClient:
                 self.show_task_result(index, total, result)
             elif event == "complete":
                 summary, status, record_path, result_path = payload
-                color = "#91E2B2" if status == "complete" else "#FF9D9D" if status == "failed" else "#67E8C5"
+                color = "#9BE0B5" if status == "complete" else "#FF9292" if status == "failed" else "#F2C879" if status == "stopped" else "#6DE5C1"
                 self.status_var.set(f"RUN {status.upper()}")
                 self.update_overview("last_run_metric", f"{status.upper()} · {summary['passed_checks']}/{summary['task_count']}")
                 self.result_status.configure(text=f"{summary['passed_checks']} passed · {summary['failed_checks']} failed · {summary['errors']} errors\nSaved locally: {record_path}", fg=color)
                 self.progress.configure(value=100)
-                self.progress_text.configure(text="Benchmark complete")
+                self.progress_text.configure(text="Benchmark stopped" if status == "stopped" else "Benchmark complete")
                 average = summary["average_tokens_per_second"]
                 average_text = f"{average:.2f} tokens/s" if average is not None else "Unavailable"
                 self.run_metrics.configure(
@@ -940,7 +1308,7 @@ class AetherionDesktopClient:
                         f"ERRORS      {summary['errors']}\n"
                         f"AVG SPEED   {average_text}"
                     ),
-                    fg="#67E8C5" if status == "complete" else "#A8A8A8",
+                    fg="#6DE5C1" if status == "complete" else "#C4CFD9",
                 )
                 self.refresh_results_view()
                 self.refresh_history_view()
@@ -953,28 +1321,32 @@ class AetherionDesktopClient:
                 self.model_menu.configure(state="readonly" if self.models else "disabled")
                 self.category_menu.configure(state="readonly")
                 self.run_button.configure(state="normal" if self.models else "disabled")
+                self.stop_button.configure(state="disabled")
+                self.benchmark_stop_event = None
             elif event == "run_error":
                 self.status_var.set("RUN FAILED")
-                self.result_status.configure(text=str(payload), fg="#FF9D9D")
+                self.result_status.configure(text=str(payload), fg="#FF9292")
                 self.progress_text.configure(text="Benchmark stopped with an error")
-                self.run_metrics.configure(text="RUN FAILED\nReview the benchmark trace for details.", fg="#FF9D9D")
+                self.run_metrics.configure(text="RUN FAILED\nReview the benchmark trace for details.", fg="#FF9292")
                 self.append_output(f"\nBenchmark could not finish: {payload}\n", "bad")
                 self.busy = False
                 self.refresh_button.configure(state="normal")
                 self.model_menu.configure(state="readonly" if self.models else "disabled")
                 self.category_menu.configure(state="readonly")
                 self.run_button.configure(state="normal" if self.models else "disabled")
+                self.stop_button.configure(state="disabled")
+                self.benchmark_stop_event = None
             elif event == "dependencies":
-                self.requirements_label.configure(text=str(payload), fg="#91E2B2")
+                self.requirements_label.configure(text=str(payload), fg="#9BE0B5")
                 self.refresh_dependency_status()
             elif event == "dependencies_error":
-                self.requirements_label.configure(text=f"Runtime installation failed\n{payload}", fg="#FF9D9D")
+                self.requirements_label.configure(text=f"Runtime installation failed\n{payload}", fg="#FF9292")
                 self.install_requirements_button.configure(state="normal")
             elif event == "installer_downloaded":
                 installer_path = Path(str(payload))
                 self.requirements_label.configure(
                     text=f"Ollama installer downloaded\n{installer_path}",
-                    fg="#91E2B2",
+                    fg="#9BE0B5",
                 )
                 self.install_requirements_button.configure(state="normal", text="DOWNLOAD AGAIN")
                 self.append_output(f"\nInstaller ready: {installer_path}\nRun it to install Ollama.\n", "good")
@@ -985,11 +1357,11 @@ class AetherionDesktopClient:
                 ):
                     try:
                         subprocess.Popen([str(installer_path)], shell=False)
-                        self.requirements_label.configure(text=f"Ollama installer launched\n{installer_path}", fg="#91E2B2")
+                        self.requirements_label.configure(text=f"Ollama installer launched\n{installer_path}", fg="#9BE0B5")
                     except OSError as exc:
-                        self.requirements_label.configure(text=f"Could not launch installer\n{exc}", fg="#FF9D9D")
+                        self.requirements_label.configure(text=f"Could not launch installer\n{exc}", fg="#FF9292")
             elif event == "installer_download_error":
-                self.requirements_label.configure(text=f"Installer download failed\n{payload}", fg="#FF9D9D")
+                self.requirements_label.configure(text=f"Installer download failed\n{payload}", fg="#FF9292")
                 self.install_requirements_button.configure(state="normal", text="RETRY DOWNLOAD")
             elif event == "model_download_progress":
                 downloaded, total, filename = payload
@@ -1002,12 +1374,12 @@ class AetherionDesktopClient:
             elif event == "model_download_complete":
                 if self.download_progress is not None and self.download_status is not None:
                     self.download_progress.configure(value=100)
-                    self.download_status.configure(text=f"Downloaded: {payload}", fg="#91E2B2")
+                    self.download_status.configure(text=f"Downloaded: {payload}", fg="#9BE0B5")
                 self.append_output(f"\nModel downloaded: {payload}\n", "good")
                 self.refresh_models()
             elif event == "model_download_error":
                 if self.download_status is not None:
-                    self.download_status.configure(text=f"Download failed: {payload}", fg="#FF9D9D")
+                    self.download_status.configure(text=f"Download failed: {payload}", fg="#FF9292")
         self.root.after(100, self.process_events)
 
     def show_task_result(self, index: int, total: int, result: BenchmarkResult) -> None:
@@ -1021,13 +1393,23 @@ class AetherionDesktopClient:
         tag = "good" if result.passed is True else "bad" if result.passed is False else "muted"
         self.append_output(prefix + f"{check} · {rate_text}\n", tag)
 
+    def stop_benchmark(self) -> None:
+        if self.benchmark_stop_event is None:
+            return
+        self.benchmark_stop_event.set()
+        self.stop_button.configure(state="disabled")
+        self.status_var.set("STOPPING BENCHMARK")
+        self.result_status.configure(text="Stopping after the active generation responds…", fg="#F2C879")
+        self.progress_text.configure(text="Waiting for the current model stream to stop")
+        self.append_output("\nStop requested. The active task will be discarded; completed tasks will be saved.\n", "muted")
+
     def open_results_folder(self) -> None:
         self.session.results_dir.mkdir(parents=True, exist_ok=True)
         command = "explorer" if sys.platform == "win32" else "open" if sys.platform == "darwin" else "xdg-open"
         try:
             subprocess.Popen([command, str(self.session.results_dir)])
         except OSError as exc:
-            self.result_status.configure(text=f"Could not open results folder: {exc}", fg="#FF9D9D")
+            self.result_status.configure(text=f"Could not open results folder: {exc}", fg="#FF9292")
 
     def close(self) -> None:
         if self.closing:
@@ -1039,6 +1421,8 @@ class AetherionDesktopClient:
         ):
             return
         self.closing = True
+        if self.benchmark_stop_event is not None:
+            self.benchmark_stop_event.set()
         self.root.destroy()
 
 

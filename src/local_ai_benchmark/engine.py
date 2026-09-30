@@ -3,10 +3,11 @@ import json
 import time
 from collections.abc import Callable
 from pathlib import Path
+import threading
 
 from .hardware import profile_hardware
 from .models import BenchmarkResult
-from .providers import ModelProvider, ProviderError
+from .providers import ModelProvider, ProviderCancelled, ProviderError
 from .tasks import tasks_for, validate
 
 
@@ -30,18 +31,29 @@ class BenchmarkEngine:
         self.provider = provider
         self.results_dir = Path(results_dir)
         self.last_result_path: Path | None = None
+        self.last_run_stopped = False
 
     def run(self, model: str, category: str | None = None, temperature: float = 0.0,
             context: int = 4096,
-            progress_callback: Callable[[int, int, BenchmarkResult], None] | None = None) -> list[BenchmarkResult]:
+            progress_callback: Callable[[int, int, BenchmarkResult], None] | None = None,
+            stop_event: threading.Event | None = None) -> list[BenchmarkResult]:
         hardware = profile_hardware().to_dict()
         results: list[BenchmarkResult] = []
         tasks = tasks_for(category)
+        self.last_run_stopped = False
+        self.last_result_path = None
         for index, task in enumerate(tasks, start=1):
+            if stop_event is not None and stop_event.is_set():
+                self.last_run_stopped = True
+                break
             started = time.perf_counter()
             resources_before = _resource_snapshot()
             try:
-                generation = self.provider.generate(model, task.prompt, temperature, context)
+                if stop_event is None:
+                    generation = self.provider.generate(model, task.prompt, temperature, context)
+                else:
+                    generation = self.provider.generate(model, task.prompt, temperature, context,
+                                                        stop_event=stop_event)
                 resources_after = _resource_snapshot()
                 output_tokens = generation.usage.get("eval_count")
                 measured_total = generation.total_seconds
@@ -67,6 +79,9 @@ class BenchmarkEngine:
                                          task.prompt, temperature, context, generation.text,
                                          validate(task, generation.text), None, hardware, metrics,
                                          generation.usage)
+            except ProviderCancelled:
+                self.last_run_stopped = True
+                break
             except ProviderError as exc:
                 result = BenchmarkResult(model, self.provider.name, task.name, task.category,
                                          task.prompt, temperature, context, "", None, str(exc),
@@ -76,7 +91,8 @@ class BenchmarkEngine:
             results.append(result)
             if progress_callback is not None:
                 progress_callback(index, len(tasks), result)
-        self.last_result_path = self._write(results, hardware)
+        if results:
+            self.last_result_path = self._write(results, hardware)
         return results
 
     def _write(self, results: list[BenchmarkResult], hardware: dict) -> Path:

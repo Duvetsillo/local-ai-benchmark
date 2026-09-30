@@ -45,6 +45,12 @@ This is not a chatbot, and it is not a cloud evaluation platform. It is a local 
 
 If Ollama has no models yet, run `ollama pull <model>` in PowerShell and refresh the model list. The client stores results under `%LOCALAPPDATA%\Aetherion\results` and does not upload them.
 
+### License activation
+
+The desktop client requires a signed key before opening its workspace. Keys are validated offline and bound to the device ID shown on the activation screen. The signed key is stored under `%LOCALAPPDATA%\Aetherion\license.json`.
+
+The repository owner issues keys with the separate Windows Forms tool in the `Aetherion License Manager` desktop folder. See `README-License-Manager.md` and `tools/Aetherion-License-Manager.ps1` for the manager and setup details. The manager offers Trial (7 days), custom duration (1–3650 days), and Unlimited. Every key is bound to one device ID. Its private signing key is protected with Windows DPAPI under `%LOCALAPPDATA%\Aetherion\licensing\signing_key.dpapi`; only the public key is stored in client source. On first use, initialize the authority and rebuild the Aetherion client before issuing keys. Expiration uses UTC and starts at issuance. The app records its last-seen time and blocks activation if the local clock moves materially backwards. This is an offline licensing control; it cannot provide the revocation or tamper resistance of a server-backed license service.
+
 Windows may show a SmartScreen warning for locally built executables that are not code-signed. The release build disables UPX compression and includes Windows version metadata to reduce heuristic false positives, but a trusted publisher signature is still required to remove the warning reliably. Release builds should be signed with an Authenticode certificate before distribution.
 
 To sign a release automatically, set `AETHERION_CERTIFICATE` to the certificate file before running `python build_client.py`. Set `AETHERION_SIGNTOOL` when `signtool.exe` is not on `PATH`; use `AETHERION_CERTIFICATE_PASSWORD` only as a temporary environment variable when the certificate requires a password. Never commit certificate files or passwords.

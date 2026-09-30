@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 authors = [{ name = "Local AI Benchmark contributors" }]
-dependencies = []
+dependencies = ["cryptography>=45.0"]
 
 [project.optional-dependencies]
 system = ["psutil>=5.9"]

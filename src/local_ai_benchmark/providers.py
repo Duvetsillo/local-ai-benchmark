@@ -1,5 +1,6 @@
 import json
 import time
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
@@ -21,11 +22,15 @@ class ModelProvider(Protocol):
     name: str
 
     def generate(self, model: str, prompt: str, temperature: float = 0.0,
-                 context: int = 4096) -> Generation: ...
+                 context: int = 4096, stop_event: threading.Event | None = None) -> Generation: ...
 
 
 class ProviderError(RuntimeError):
     pass
+
+
+class ProviderCancelled(ProviderError):
+    """Raised when the user stops an active generation."""
 
 
 class OllamaProvider:
@@ -51,7 +56,7 @@ class OllamaProvider:
                 for item in data.get("models", [])]
 
     def generate(self, model: str, prompt: str, temperature: float = 0.0,
-                 context: int = 4096) -> Generation:
+                 context: int = 4096, stop_event: threading.Event | None = None) -> Generation:
         request = Request(self.endpoint + "/api/generate", data=json.dumps({
             "model": model, "prompt": prompt, "stream": True,
             "options": {"temperature": temperature, "num_ctx": context},
@@ -63,6 +68,8 @@ class OllamaProvider:
         try:
             with urlopen(request, timeout=self.timeout) as response:
                 for raw_line in response:
+                    if stop_event is not None and stop_event.is_set():
+                        raise ProviderCancelled("Benchmark stopped by user")
                     if not raw_line.strip():
                         continue
                     item = json.loads(raw_line)
@@ -72,6 +79,8 @@ class OllamaProvider:
                     chunks.append(text)
                     usage.update({key: value for key, value in item.items()
                                   if key.endswith("_duration") or key.endswith("_count")})
+        except ProviderCancelled:
+            raise
         except (OSError, URLError, json.JSONDecodeError) as exc:
             raise ProviderError(f"Ollama generation failed: {exc}") from exc
         return Generation("".join(chunks), first_token, time.perf_counter() - started, usage)
@@ -132,7 +141,7 @@ class LlamaCppProvider:
         return self._models[model]
 
     def generate(self, model: str, prompt: str, temperature: float = 0.0,
-                 context: int = 4096) -> Generation:
+                 context: int = 4096, stop_event: threading.Event | None = None) -> Generation:
         model_instance = self._load_model(model)
         started = time.perf_counter()
         first_token = None
@@ -146,6 +155,8 @@ class LlamaCppProvider:
                 stream=True,
             )
             for item in stream:
+                if stop_event is not None and stop_event.is_set():
+                    raise ProviderCancelled("Benchmark stopped by user")
                 text = item.get("choices", [{}])[0].get("text", "")
                 if text and first_token is None:
                     first_token = time.perf_counter() - started
@@ -153,6 +164,8 @@ class LlamaCppProvider:
                 item_usage = item.get("usage") or {}
                 if item_usage:
                     usage.update(item_usage)
+        except ProviderCancelled:
+            raise
         except Exception as exc:
             raise ProviderError(f"GGUF generation failed: {exc}") from exc
         if "completion_tokens" in usage:
@@ -190,9 +203,11 @@ class ProviderRouter:
         return models
 
     def generate(self, model: str, prompt: str, temperature: float = 0.0,
-                 context: int = 4096) -> Generation:
+                 context: int = 4096, stop_event: threading.Event | None = None) -> Generation:
         provider = self._model_providers.get(model)
         if provider is None:
             raise ProviderError("Model list is outdated. Refresh the available local models and try again.")
         actual_model = model.split("/", 1)[1] if "/" in model else model
-        return provider.generate(actual_model, prompt, temperature, context)
+        if stop_event is None:
+            return provider.generate(actual_model, prompt, temperature, context)
+        return provider.generate(actual_model, prompt, temperature, context, stop_event=stop_event)
