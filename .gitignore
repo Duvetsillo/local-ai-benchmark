@@ -7,6 +7,10 @@ dist/
 .pytest_cache/
 .venv/
 venv/
+server/.env
+server/.env.*
+!server/.env.example
+server/data/
 
 # Local benchmark data: may contain hardware details and model responses
 results/

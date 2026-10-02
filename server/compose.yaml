@@ -1,0 +1,49 @@
+services:
+  api:
+    build: .
+    restart: unless-stopped
+    environment:
+      AETHERION_DATABASE_PATH: /data/aetherion.sqlite3
+      AETHERION_ADMIN_TOKEN: ${AETHERION_ADMIN_TOKEN:?Set a long random admin token in .env}
+      AETHERION_LICENSE_PUBLIC_KEY_N: ${AETHERION_LICENSE_PUBLIC_KEY_N:?Set the public modulus from licensing.py in .env}
+      AETHERION_OFFLINE_SIGNING_KEY: /data/offline-signing-ed25519.pem
+    volumes:
+      - aetherion-data:/data
+    expose:
+      - "8000"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      AETHERION_DOMAIN: ${AETHERION_DOMAIN:?Set the public domain in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: aetherion-duckdns
+    restart: unless-stopped
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-America/La_Paz}
+      SUBDOMAINS: aetherionlbs
+      TOKEN: ${DUCKDNS_TOKEN:?Set DUCKDNS_TOKEN in the private .env file}
+      LOG_FILE: "false"
+    volumes:
+      - duckdns-config:/config
+
+volumes:
+  duckdns-config:
+  aetherion-data:
+  caddy-data:
+  caddy-config:

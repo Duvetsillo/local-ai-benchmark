@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import datetime as dt
 import os
 import queue
 import shutil
@@ -22,7 +23,7 @@ if __package__ in {None, ""}:
         sys.path.insert(0, str(project_root))
     from local_ai_benchmark.client.core import ClientRunRecord, generate_run_id
     from local_ai_benchmark.client.hardware import detect_hardware
-    from local_ai_benchmark.client.licensing import LicenseError, LicenseManager, LicenseStatus, machine_fingerprint
+    from local_ai_benchmark.client.auth import AccountService, AuthError, AuthSession, AuthUnavailable, clear_cached_session, get_service_url, machine_fingerprint, save_service_url
     from local_ai_benchmark.client.storage import LocalResultStore
     from local_ai_benchmark.engine import BenchmarkEngine
     from local_ai_benchmark.models import BenchmarkResult, ModelInfo
@@ -32,7 +33,7 @@ if __package__ in {None, ""}:
 else:
     from .core import ClientRunRecord, generate_run_id
     from .hardware import detect_hardware
-    from .licensing import LicenseError, LicenseManager, LicenseStatus, machine_fingerprint
+    from .auth import AccountService, AuthError, AuthSession, AuthUnavailable, clear_cached_session, get_service_url, machine_fingerprint, save_service_url
     from .storage import LocalResultStore
     from ..engine import BenchmarkEngine
     from ..models import BenchmarkResult, ModelInfo
@@ -99,8 +100,20 @@ class AetherionDesktopClient:
         self.root.minsize(1020, 720)
         self.root.configure(bg="#090D13")
         self.base_dir = base_dir
-        self.license_manager = LicenseManager()
-        self.license_status: LicenseStatus | None = None
+        self.account_service = AccountService()
+        self.auth_session: AuthSession | None = None
+        self.account_events: queue.Queue[tuple[str, Any]] = queue.Queue()
+        self.auth_pending = False
+        self.auth_fields: dict[str, tk.Entry] = {}
+        self.auth_form: tk.Frame | None = None
+        self.auth_mode = "login"
+        self.auth_feedback: tk.Label | None = None
+        self.auth_submit_button: tk.Button | None = None
+        self.auth_url_entry: tk.Entry | None = None
+        self.auth_title: tk.Label | None = None
+        self.auth_description: tk.Label | None = None
+        self.auth_mode_buttons: dict[str, tk.Button] = {}
+        self.account_check_inflight = False
         self.license_gate: tk.Frame | None = None
         self.container: tk.Frame | None = None
         self.workspace_ready = False
@@ -116,13 +129,10 @@ class AetherionDesktopClient:
         self.closing = False
         self.brand_phase = 0
         self.root.protocol("WM_DELETE_WINDOW", self.close)
-        try:
-            self.license_status = self.license_manager.check()
-        except LicenseError as exc:
-            self.show_license_gate(str(exc))
-        else:
-            self.start_workspace()
-        self.root.after(30_000, self.check_license_periodically)
+        self.show_license_gate("Checking for a saved account session…")
+        self.root.after(100, self.process_account_events)
+        threading.Thread(target=self.restore_saved_session, daemon=True).start()
+        self.root.after(300_000, self.check_license_periodically)
 
     def start_workspace(self) -> None:
         self.license_gate = None
@@ -145,63 +155,285 @@ class AetherionDesktopClient:
         if self.container is not None:
             self.container.pack_forget()
         if self.license_gate is not None and self.license_gate.winfo_exists():
-            for widget in self.license_gate.winfo_children():
-                widget.destroy()
-        else:
-            self.license_gate = tk.Frame(self.root, bg=COLORS["canvas"])
-            self.license_gate.pack(fill="both", expand=True)
+            self.license_gate.destroy()
+        self.license_gate = tk.Frame(self.root, bg=COLORS["canvas"])
+        self.license_gate.pack(fill="both", expand=True)
         gate = self.license_gate
-        gate.configure(bg=COLORS["canvas"])
+        self._ambient_backdrop(gate)
         gate.grid_columnconfigure(0, weight=1)
         gate.grid_rowconfigure(0, weight=1)
-        card = tk.Frame(gate, bg=COLORS["surface"], highlightbackground=COLORS["line"], highlightthickness=1, bd=0)
+        card = tk.Frame(gate, bg=COLORS["surface"], highlightbackground=COLORS["line_strong"], highlightthickness=1, bd=0)
         card.grid(row=0, column=0, padx=32, pady=32, sticky="")
         tk.Frame(card, bg=COLORS["accent"], height=3).pack(fill="x")
         body = tk.Frame(card, bg=COLORS["surface"])
-        body.pack(fill="both", expand=True, padx=30, pady=26)
-        tk.Label(body, text="AETHERION  /  LICENSE ACTIVATION", bg=COLORS["surface"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w")
-        tk.Label(body, text="A key is required", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 23, "bold")).pack(anchor="w", pady=(8, 5))
-        tk.Label(body, text="Activate this installation to access the local benchmark workspace.", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["body"], wraplength=570, justify="left").pack(anchor="w", pady=(0, 20))
+        body.pack(fill="both", expand=True, padx=30, pady=24)
+        tk.Label(body, text="AETHERION  /  SECURE ACCOUNT", bg=COLORS["surface"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w")
+        self.auth_title = tk.Label(body, text="Welcome back", bg=COLORS["surface"], fg=COLORS["text"], font=FONTS["display"])
+        self.auth_title.pack(anchor="w", pady=(8, 5))
+        self.auth_description = tk.Label(body, text="Your models and benchmark results stay on this device.", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["body"], wraplength=620, justify="left")
+        self.auth_description.pack(anchor="w", pady=(0, 14))
+        tk.Label(body, text="LICENSE SERVICE URL", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["section"]).pack(anchor="w")
+        self.auth_url_entry = tk.Entry(body, bg=COLORS["surface_elevated"], fg=COLORS["text"], insertbackground=COLORS["accent"], relief="flat", font=FONTS["body"], highlightbackground=COLORS["line"], highlightcolor=COLORS["accent"], highlightthickness=1)
+        self._bind_entry_focus(self.auth_url_entry)
+        self.auth_url_entry.pack(fill="x", pady=(5, 12), ipady=7)
+        self.auth_url_entry.insert(0, get_service_url())
         tk.Label(body, text="THIS DEVICE ID", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["section"]).pack(anchor="w")
         device_row = tk.Frame(body, bg=COLORS["surface_elevated"], highlightbackground=COLORS["line_strong"], highlightthickness=1)
-        device_row.pack(fill="x", pady=(7, 5))
+        device_row.pack(fill="x", pady=(5, 10))
         device_id = machine_fingerprint()
-        device_label = tk.Label(device_row, text=device_id, bg=COLORS["surface_elevated"], fg=COLORS["text"], font=FONTS["mono"], padx=12, pady=11, anchor="w")
-        device_label.pack(side="left", fill="x", expand=True)
-        self._button(device_row, "COPY ID", lambda: self.copy_device_id(device_id)).pack(side="right", padx=6, pady=6)
-        tk.Label(body, text="Provide this ID when generating the license. Keys are bound to this device.", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"], wraplength=570, justify="left").pack(anchor="w", pady=(2, 16))
-        tk.Label(body, text="LICENSE KEY", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["section"]).pack(anchor="w")
-        key_box = tk.Text(body, height=5, wrap="word", bg=COLORS["surface_elevated"], fg=COLORS["text"], insertbackground=COLORS["accent"], selectbackground=COLORS["surface_interactive"], relief="flat", bd=0, font=FONTS["mono"], padx=12, pady=10, highlightbackground=COLORS["line_strong"], highlightthickness=1)
-        key_box.pack(fill="x", pady=(7, 6))
-        feedback = tk.Label(body, text=message, bg=COLORS["surface"], fg=COLORS["error"] if message else COLORS["quiet"], font=FONTS["small"], wraplength=570, justify="left", anchor="w")
-        feedback.pack(fill="x", pady=(2, 10))
-
-        def activate() -> None:
-            try:
-                self.license_status = self.license_manager.activate(key_box.get("1.0", "end").strip())
-            except LicenseError as exc:
-                feedback.configure(text=str(exc), fg=COLORS["error"])
-                return
-            self.license_gate.destroy()
-            self.license_gate = None
-            self.start_workspace()
-
-        self._button(body, "ACTIVATE LICENSE", activate, primary=True).pack(fill="x", pady=(4, 10))
-        tk.Label(body, text="Offline signature validation  ·  Your key and benchmark results stay on this device.", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"], wraplength=570, justify="left").pack(anchor="w", pady=(3, 0))
+        tk.Label(device_row, text=device_id, bg=COLORS["surface_elevated"], fg=COLORS["text"], font=FONTS["mono"], padx=12, pady=9, anchor="w").pack(side="left", fill="x", expand=True)
+        self._button(device_row, "COPY ID", lambda: self.copy_device_id(device_id)).pack(side="right", padx=6, pady=5)
+        tabs = tk.Frame(body, bg=COLORS["surface"])
+        tabs.pack(fill="x", pady=(1, 8))
+        self.auth_mode_buttons = {
+            "login": self._button(tabs, "SIGN IN", lambda: self.render_account_form("login"), primary=True),
+            "register": self._button(tabs, "CREATE ACCOUNT", lambda: self.render_account_form("register")),
+        }
+        self.auth_mode_buttons["login"].pack(side="left", padx=(0, 8))
+        self.auth_mode_buttons["register"].pack(side="left")
+        self.auth_form = tk.Frame(body, bg=COLORS["surface"])
+        self.auth_form.pack(fill="x")
+        self.auth_feedback = tk.Label(body, text=message, bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"], wraplength=620, justify="left", anchor="w")
+        self.auth_feedback.pack(fill="x", pady=(9, 8))
+        actions = tk.Frame(body, bg=COLORS["surface"])
+        actions.pack(fill="x")
+        self.auth_submit_button = self._button(actions, "SIGN IN", self.submit_account_form, primary=True)
+        self.auth_submit_button.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        self._button(actions, "CONTINUE OFFLINE", self.continue_offline).pack(side="left")
+        tk.Label(body, text="The benchmark remains local. A protected session grant allows up to 7 days offline on this Windows account and device.", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"], wraplength=620, justify="left").pack(anchor="w", pady=(11, 0))
+        self.render_account_form(self.auth_mode)
 
     def copy_device_id(self, device_id: str) -> None:
         self.root.clipboard_clear()
         self.root.clipboard_append(device_id)
 
+    @staticmethod
+    def _blend_hex(base: str, tint: str, amount: float) -> str:
+        base_rgb = tuple(int(base[index:index + 2], 16) for index in (1, 3, 5))
+        tint_rgb = tuple(int(tint[index:index + 2], 16) for index in (1, 3, 5))
+        mixed = tuple(round(left + (right - left) * amount) for left, right in zip(base_rgb, tint_rgb))
+        return "#" + "".join(f"{channel:02X}" for channel in mixed)
+
+    def _ambient_backdrop(self, parent: tk.Widget) -> tk.Canvas:
+        backdrop = tk.Canvas(parent, bg=COLORS["canvas"], bd=0, highlightthickness=0)
+        backdrop.place(x=0, y=0, relwidth=1, relheight=1)
+
+        def paint(event: tk.Event) -> None:
+            width, height = max(1, event.width), max(1, event.height)
+            backdrop.delete("ambient")
+            radius = int(max(width, height) * 0.74)
+            glows = (
+                (int(width * 0.88), int(height * 0.12), COLORS["glow_mint"], 0.42),
+                (int(width * 0.08), int(height * 0.92), COLORS["glow_blue"], 0.38),
+            )
+            for center_x, center_y, color, strength in glows:
+                for step in range(24, 0, -1):
+                    ring_radius = max(1, int(radius * step / 24))
+                    tint = self._blend_hex(COLORS["canvas"], color, (1 - step / 24) * strength)
+                    backdrop.create_oval(
+                        center_x - ring_radius, center_y - ring_radius,
+                        center_x + ring_radius, center_y + ring_radius,
+                        fill=tint, outline="", tags="ambient",
+                    )
+
+        backdrop.bind("<Configure>", paint, add="+")
+        # Canvas.lower() lowers a canvas item and requires a tag/id; use the
+        # underlying Tk window command to place this background behind widgets.
+        backdrop.tk.call("lower", backdrop._w)
+        return backdrop
+
+    @staticmethod
+    def _bind_entry_focus(entry: tk.Entry) -> None:
+        entry.bind("<FocusIn>", lambda _event: entry.configure(highlightbackground=COLORS["accent"], highlightcolor=COLORS["accent"]))
+        entry.bind("<FocusOut>", lambda _event: entry.configure(highlightbackground=COLORS["line"], highlightcolor=COLORS["line"]))
+
+    def render_account_form(self, mode: str) -> None:
+        if self.auth_form is None or not self.auth_form.winfo_exists():
+            return
+        self.auth_mode = mode
+        if self.auth_title is not None:
+            self.auth_title.configure(text="Welcome back" if mode == "login" else "Create your account")
+        if self.auth_description is not None:
+            copy = "Your models and benchmark results stay on this device." if mode == "login" else "New accounts need a valid license key and are bound to this device."
+            self.auth_description.configure(text=copy)
+        for name, button in self.auth_mode_buttons.items():
+            active = name == mode
+            button.configure(
+                bg=COLORS["accent"] if active else COLORS["surface_interactive"],
+                fg=COLORS["canvas"] if active else COLORS["text_soft"],
+                activebackground=COLORS["accent_hover"] if active else COLORS["line_strong"],
+                activeforeground=COLORS["canvas"] if active else COLORS["text"],
+            )
+            button.bind(
+                "<Enter>",
+                lambda _event, widget=button, key=name: widget.configure(
+                    bg=COLORS["accent_hover"] if key == self.auth_mode else COLORS["line_strong"]
+                ),
+            )
+            button.bind(
+                "<Leave>",
+                lambda _event, widget=button, key=name: widget.configure(
+                    bg=COLORS["accent"] if key == self.auth_mode else COLORS["surface_interactive"]
+                ),
+            )
+        self.auth_fields = {}
+        for widget in self.auth_form.winfo_children():
+            widget.destroy()
+        fields = [("username", "USERNAME", ""), ("password", "PASSWORD", "•")]
+        if mode == "register":
+            fields.extend([("confirm", "CONFIRM PASSWORD", "•"), ("license_key", "LICENSE KEY", "")])
+        for name, label, mask in fields:
+            tk.Label(self.auth_form, text=label, bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["section"]).pack(anchor="w", pady=(5, 3))
+            entry = tk.Entry(self.auth_form, bg=COLORS["surface_elevated"], fg=COLORS["text"], insertbackground=COLORS["accent"], relief="flat", font=FONTS["mono"] if name == "license_key" else FONTS["body"], show=mask, highlightbackground=COLORS["line"], highlightcolor=COLORS["accent"], highlightthickness=1)
+            self._bind_entry_focus(entry)
+            entry.pack(fill="x", ipady=6)
+            self.auth_fields[name] = entry
+        if self.auth_submit_button is not None and self.auth_submit_button.winfo_exists():
+            self.auth_submit_button.configure(text="CREATE ACCOUNT" if mode == "register" else "SIGN IN")
+
+    def submit_account_form(self) -> None:
+        if self.auth_pending or self.auth_url_entry is None or self.auth_feedback is None:
+            return
+        try:
+            base_url = save_service_url(self.auth_url_entry.get())
+        except AuthError as exc:
+            self.auth_feedback.configure(text=str(exc), fg=COLORS["error"])
+            return
+        values = {name: entry.get() for name, entry in self.auth_fields.items()}
+        username = values.get("username", "").strip()
+        password = values.get("password", "")
+        if not username or not password:
+            self.auth_feedback.configure(text="Enter your username and password.", fg=COLORS["error"])
+            return
+        mode = self.auth_mode
+        if mode == "register":
+            if len(password) < 12:
+                self.auth_feedback.configure(text="Use a password with at least 12 characters.", fg=COLORS["error"])
+                return
+            if password != values.get("confirm", ""):
+                self.auth_feedback.configure(text="The password confirmation does not match.", fg=COLORS["error"])
+                return
+            if not values.get("license_key", "").strip():
+                self.auth_feedback.configure(text="A valid license key is required to create an account.", fg=COLORS["error"])
+                return
+        service = AccountService(base_url)
+        self.auth_pending = True
+        self.auth_feedback.configure(text="Connecting securely to the license service…", fg=COLORS["accent"])
+        if self.auth_submit_button is not None:
+            self.auth_submit_button.configure(state="disabled")
+        def authenticate() -> None:
+            try:
+                if mode == "register":
+                    session = service.register(username, password, values["license_key"].strip(), machine_fingerprint())
+                else:
+                    session = service.login(username, password, machine_fingerprint())
+                self.account_events.put(("auth_success", (service, session)))
+            except Exception as exc:
+                self.account_events.put(("auth_error", str(exc)))
+        threading.Thread(target=authenticate, daemon=True).start()
+
+    def restore_saved_session(self) -> None:
+        try:
+            session = self.account_service.restore_cached(machine_fingerprint())
+            self.account_events.put(("restore_session", session))
+        except Exception as exc:
+            self.account_events.put(("restore_error", str(exc)))
+
+    def continue_offline(self) -> None:
+        if self.auth_pending:
+            return
+        self.auth_pending = True
+        if self.auth_feedback is not None:
+            self.auth_feedback.configure(text="Checking saved offline access…", fg=COLORS["accent"])
+        threading.Thread(target=self.restore_saved_session, daemon=True).start()
+
+    def process_account_events(self) -> None:
+        if self.closing:
+            return
+        while True:
+            try:
+                event, payload = self.account_events.get_nowait()
+            except queue.Empty:
+                break
+            if event == "auth_success":
+                self.account_service, self.auth_session = payload
+                self.auth_pending = False
+                if self.license_gate is not None and self.license_gate.winfo_exists():
+                    self.license_gate.destroy()
+                self.license_gate = None
+                self.start_workspace()
+            elif event in {"auth_error", "restore_error"}:
+                self.auth_pending = False
+                if self.auth_feedback is not None and self.auth_feedback.winfo_exists():
+                    self.auth_feedback.configure(text=str(payload), fg=COLORS["error"])
+                if self.auth_submit_button is not None:
+                    self.auth_submit_button.configure(state="normal")
+            elif event == "restore_session":
+                self.auth_pending = False
+                if payload is not None:
+                    self.auth_session = payload
+                    if self.license_gate is not None and self.license_gate.winfo_exists():
+                        self.license_gate.destroy()
+                    self.license_gate = None
+                    self.start_workspace()
+                elif self.auth_feedback is not None and self.auth_feedback.winfo_exists():
+                    self.auth_feedback.configure(text="Sign in or create an account to use Aetherion.", fg=COLORS["quiet"])
+            elif event == "refresh_success":
+                self.auth_session = payload
+                self.account_check_inflight = False
+            elif event == "refresh_unavailable":
+                self.account_check_inflight = False
+                if self.auth_session is not None and dt.datetime.now(dt.UTC) >= self.auth_session.offline_until:
+                    self.account_events.put(("session_expired", "The offline access period ended. Connect and sign in again."))
+            elif event == "session_expired":
+                self.account_check_inflight = False
+                self.auth_session = None
+                clear_cached_session()
+                self.show_license_gate(str(payload))
+            elif event == "signed_out":
+                self.auth_session = None
+                self.auth_pending = False
+                if self.container is not None:
+                    self.container.pack_forget()
+                self.show_license_gate("You have signed out.")
+        self.root.after(100, self.process_account_events)
+
     def check_license_periodically(self) -> None:
         if self.closing:
             return
-        if self.workspace_ready:
-            try:
-                self.license_status = self.license_manager.check()
-            except LicenseError as exc:
-                self.show_license_gate(str(exc))
-        self.root.after(30_000, self.check_license_periodically)
+        if self.workspace_ready and self.auth_session is not None and not self.account_check_inflight:
+            self.account_check_inflight = True
+            current_session = self.auth_session
+            def refresh_session() -> None:
+                try:
+                    if current_session.session_token:
+                        updated = self.account_service.refresh(current_session)
+                    else:
+                        updated = self.account_service.restore_cached(machine_fingerprint())
+                        if updated is None:
+                            raise AuthError("Session expired; sign in again.")
+                    self.account_events.put(("refresh_success", updated))
+                except AuthUnavailable:
+                    self.account_events.put(("refresh_unavailable", None))
+                except AuthError as exc:
+                    self.account_events.put(("session_expired", str(exc)))
+                except OSError:
+                    self.account_events.put(("refresh_unavailable", None))
+            threading.Thread(target=refresh_session, daemon=True).start()
+        self.root.after(300_000, self.check_license_periodically)
+
+    def sign_out(self) -> None:
+        if self.busy and not messagebox.askyesno("Benchmark in progress", "Stop the benchmark and sign out?", parent=self.root):
+            return
+        if self.benchmark_stop_event is not None:
+            self.benchmark_stop_event.set()
+        service, session = self.account_service, self.auth_session
+        self.auth_session = None
+        clear_cached_session()
+        if self.container is not None:
+            self.container.pack_forget()
+        self.show_license_gate("You have signed out.")
+        threading.Thread(target=lambda: service.logout(session), daemon=True).start()
 
     def _card(self, parent: tk.Widget, *, accent: bool = False) -> tk.Frame:
         card = tk.Frame(
@@ -218,9 +450,9 @@ class AetherionDesktopClient:
     def _button(self, parent: tk.Widget, text: str, command: Any, *, primary: bool = False) -> tk.Button:
         bg = COLORS["accent"] if primary else COLORS["surface_interactive"]
         fg = COLORS["canvas"] if primary else COLORS["text_soft"]
-        active_bg = COLORS["accent"] if primary else COLORS["line_strong"]
+        active_bg = COLORS["accent_hover"] if primary else COLORS["line_strong"]
         active_fg = COLORS["canvas"] if primary else COLORS["text"]
-        return tk.Button(
+        button = tk.Button(
             parent,
             text=text,
             command=command,
@@ -237,51 +469,9 @@ class AetherionDesktopClient:
             cursor="hand2",
             highlightthickness=0,
         )
-
-    def _field_label(self, parent: tk.Widget, text: str) -> tk.Label:
-        return tk.Label(
-            parent,
-            text=text.upper(),
-            bg=COLORS["surface"],
-            fg=COLORS["muted"],
-            font=FONTS["section"],
-            anchor="w",
-        )
-
-    def _card(self, parent: tk.Widget, *, accent: bool = False) -> tk.Frame:
-        card = tk.Frame(
-            parent,
-            bg=COLORS["surface"],
-            highlightbackground=COLORS["line"],
-            highlightthickness=1,
-            bd=0,
-        )
-        if accent:
-            tk.Frame(card, bg=COLORS["accent"], height=2).pack(fill="x")
-        return card
-
-    def _button(self, parent: tk.Widget, text: str, command: Any, *, primary: bool = False) -> tk.Button:
-        bg = COLORS["accent"] if primary else COLORS["surface_interactive"]
-        fg = COLORS["canvas"] if primary else COLORS["text_soft"]
-        active_bg = COLORS["accent"] if primary else COLORS["line_strong"]
-        active_fg = COLORS["canvas"] if primary else COLORS["text"]
-        return tk.Button(
-            parent,
-            text=text,
-            command=command,
-            bg=bg,
-            fg=fg,
-            activebackground=active_bg,
-            activeforeground=active_fg,
-            disabledforeground=COLORS["quiet"],
-            relief="flat",
-            bd=0,
-            font=("Segoe UI", 9, "bold"),
-            padx=14,
-            pady=10,
-            cursor="hand2",
-            highlightthickness=0,
-        )
+        button.bind("<Enter>", lambda _event: button.configure(bg=active_bg))
+        button.bind("<Leave>", lambda _event: button.configure(bg=bg))
+        return button
 
     def _field_label(self, parent: tk.Widget, text: str) -> tk.Label:
         return tk.Label(
@@ -310,6 +500,7 @@ class AetherionDesktopClient:
         header = tk.Frame(self.workspace, bg=COLORS["canvas"], height=66)
         header.pack(fill="x", pady=(0, 15))
         header.pack_propagate(False)
+        tk.Frame(header, bg=COLORS["line"], height=1).pack(side="bottom", fill="x")
         heading = tk.Frame(header, bg=COLORS["canvas"])
         heading.pack(side="left", fill="y", expand=True)
         tk.Label(
@@ -361,7 +552,7 @@ class AetherionDesktopClient:
         ]
         self.overview_vars: dict[str, tk.StringVar] = {}
         for column, (key, label, value) in enumerate(overview_values):
-            card = self._card(overview)
+            card = self._card(overview, accent=True)
             card.grid(row=0, column=column, sticky="nsew", padx=(0 if column == 0 else 7, 0 if column == 2 else 7))
             body = tk.Frame(card, bg=COLORS["surface"])
             body.pack(fill="both", expand=True, padx=16, pady=12)
@@ -867,18 +1058,34 @@ class AetherionDesktopClient:
             )
             button.pack(fill="x", padx=8, pady=2)
             self.nav_buttons[view] = button
+            button.bind(
+                "<Enter>",
+                lambda _event, widget=button, view_name=view: widget.configure(
+                    bg=COLORS["surface_interactive"] if view_name == self.active_view else COLORS["surface_elevated"],
+                    fg=COLORS["text"],
+                ),
+            )
+            button.bind(
+                "<Leave>",
+                lambda _event, widget=button, view_name=view: widget.configure(
+                    bg=COLORS["surface_interactive"] if view_name == self.active_view else COLORS["surface"],
+                    fg=COLORS["text"] if view_name == self.active_view else COLORS["muted"],
+                ),
+            )
         self.nav_buttons["dashboard"].configure(bg=COLORS["surface_interactive"], fg=COLORS["text"])
+        self.active_view = "dashboard"
 
         footer = tk.Frame(sidebar, bg=COLORS["surface"])
         footer.pack(side="bottom", fill="x", padx=14, pady=14)
         tk.Frame(footer, bg=COLORS["line"], height=1).pack(fill="x", pady=(0, 10))
         tk.Label(footer, text="PRIVATE BY DESIGN", bg=COLORS["surface"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w")
         tk.Label(footer, text="Runs and results stay local.", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"]).pack(anchor="w", pady=(4, 0))
-        if self.license_status is not None:
-            license_plan = self.license_status.plan.upper() if self.license_status.plan else "ACTIVE"
-            expiry = self.license_status.expires_at.strftime("%Y-%m-%d") if self.license_status.expires_at else "NO EXPIRY"
-            tk.Label(footer, text=f"LICENSE · {license_plan}", bg=COLORS["surface"], fg=COLORS["success"], font=FONTS["section"]).pack(anchor="w", pady=(11, 0))
-            tk.Label(footer, text=expiry, bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"]).pack(anchor="w", pady=(3, 0))
+        if self.auth_session is not None:
+            expiry = self.auth_session.expires_at.strftime("%Y-%m-%d") if self.auth_session.expires_at else "NO EXPIRY"
+            account_state = "OFFLINE GRACE" if self.auth_session.offline else self.auth_session.plan.upper()
+            tk.Label(footer, text=f"ACCOUNT · {self.auth_session.username.upper()}", bg=COLORS["surface"], fg=COLORS["success"], font=FONTS["section"]).pack(anchor="w", pady=(11, 0))
+            tk.Label(footer, text=f"{account_state} · {expiry}", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"]).pack(anchor="w", pady=(3, 0))
+            self._button(footer, "SIGN OUT", self.sign_out).pack(fill="x", pady=(8, 0))
 
     def focus_section(self, view: str) -> None:
         labels = {
@@ -890,12 +1097,15 @@ class AetherionDesktopClient:
             "history": "HISTORY",
             "settings": "SETTINGS",
         }
+        self.active_view = view
         self.section_var.set(labels.get(view, "DASHBOARD"))
         for name, button in self.nav_buttons.items():
             active = name == view
             button.configure(
                 bg=COLORS["surface_interactive"] if active else COLORS["surface"],
                 fg=COLORS["text"] if active else COLORS["muted"],
+                highlightbackground=COLORS["accent"] if active else COLORS["surface"],
+                highlightthickness=1 if active else 0,
             )
         for frame in self.views.values():
             frame.pack_forget()
@@ -1173,10 +1383,13 @@ class AetherionDesktopClient:
         threading.Thread(target=load_models, daemon=True).start()
 
     def run_selected_benchmark(self) -> None:
-        try:
-            self.license_status = self.license_manager.check()
-        except LicenseError as exc:
-            self.show_license_gate(str(exc))
+        if self.auth_session is None:
+            self.show_license_gate("Sign in to continue.")
+            return
+        if dt.datetime.now(dt.UTC) >= self.auth_session.offline_until:
+            self.auth_session = None
+            clear_cached_session()
+            self.show_license_gate("The offline access period has ended. Connect and sign in again.")
             return
         model_name = self.model_var.get()
         model = self.models.get(model_name)

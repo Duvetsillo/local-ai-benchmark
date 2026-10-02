@@ -1,20 +1,34 @@
 # Aetherion License Manager
 
-Aplicación gráfica independiente para el propietario del proyecto. El usuario final recibe solo Aetherion Client y una clave firmada para su equipo.
+Aplicación gráfica administrativa para Windows. Mantiene la clave privada de firma en el perfil Windows del propietario y administra licencias/cuentas mediante el servicio del VPS.
 
-## Uso
+## Abrir
 
-1. Ejecuta `Start-Aetherion-License-Manager.bat` desde la carpeta del Escritorio.
-2. En el primer inicio, confirma que la ruta del proyecto apunta al repositorio de Aetherion y selecciona **Create authority**.
-3. Desde la raíz del repositorio, reconstruye el cliente con `python build_client.py` y distribuye `downloads/Aetherion-Client.exe` para que incorpore la clave pública recién configurada. La versión que no tenga la clave pública aún no puede verificar licencias. El proyecto requiere Python con sus dependencias de compilación instaladas; la compilación existente tiene pendiente resolver el incidente de arranque descrito en la documentación del proyecto.
-4. El usuario final abre Aetherion; la pantalla de activación muestra su ID de equipo de 32 caracteres.
-5. Pega ese ID en el generador, selecciona Trial (7 días), duración personalizada o Unlimited y genera la licencia.
-6. Copia la licencia completa al usuario para pegarla en Aetherion.
+Ejecuta `Start-Aetherion-License-Manager.bat` en la carpeta `C:\Users\Dayve\Desktop\Aetherion License Manager`. El fuente mantenible está en `tools/Aetherion-License-Manager.ps1`.
 
-## Protección de la autoridad
+## Configurar el servicio
 
-La clave privada se conserva en `%LOCALAPPDATA%\Aetherion\licensing\signing_key.dpapi`, cifrada con Windows DPAPI para la cuenta y el equipo actuales. El archivo `licensing.py` del repositorio contiene solo la clave pública. Mantén protegido el perfil de Windows y no distribuyas la clave privada. El archivo DPAPI no constituye una copia portable: si se pierde el perfil/equipo o se reemplaza la autoridad, las licencias emitidas previamente no corresponderán a la nueva clave.
+Pulsa **Server settings** y escribe la URL HTTPS y el token administrativo de `server/.env`. La aplicación comprueba `/health`; guarda la URL/token cifrados con Windows DPAPI para la cuenta local. No uses la cuenta del License Manager en los clientes finales y no compartas el token.
 
-Trial dura siete días desde la emisión. Duration permite de 1 a 3650 días. Unlimited no tiene fecha de expiración. Todas las licencias quedan vinculadas al ID de un solo equipo.
+## Firmar y emitir una clave
 
-El administrador es una ventana PowerShell/Windows Forms, no un instalador EXE. Requiere Windows PowerShell 5.1 o PowerShell para Windows con acceso a Windows Forms y DPAPI.
+1. Verifica la ruta del repositorio Aetherion.
+2. La autoridad se prepara una única vez con **Create authority**. La clave privada RSA se almacena cifrada en `%LOCALAPPDATA%\Aetherion\licensing\signing_key.dpapi`.
+3. Copia el Device ID desde Aetherion Client.
+4. Elige Trial (7 días), duración de 1 a 3650 días o Unlimited.
+5. **Generate license key** firma en este equipo y sincroniza con el servicio usando HTTPS. El control solo muestra la clave si la sincronización fue exitosa.
+6. Entrega la clave por un canal seguro. Cada licencia se liga a un equipo y se reclama una vez para crear una cuenta.
+
+Las claves creadas con versiones anteriores pueden sincronizarse desde **Sync existing key** pegando la clave completa. El servidor valida su firma antes de registrarla. No se transmite la clave privada.
+
+## Usuarios y renovaciones
+
+En **Manage accounts** consulta username, estado, plan, vencimiento, días restantes, Device ID e inicio de sesión más reciente. **Extend selected account** añade los días ingresados a la misma cuenta/licencia. Confirma el pago fuera de la app antes de ampliar el acceso. No se entrega una nueva clave.
+
+El control **Disable / enable** bloquea o reactiva la cuenta. La suspensión revoca sesiones activas y se aplica al próximo contacto del cliente; la sesión offline ya firmada puede durar hasta siete días desde su última validación.
+
+## Despliegue y seguridad
+
+El propietario debe configurar un dominio y VPS antes de usar el modo central. Sigue `server/README.md`. No compartas ni subas `.env`, el bearer token, la autoridad privada, los datos SQLite o el volumen de llaves offline. Conserva copias de seguridad cifradas del volumen de datos del servicio.
+
+El administrador requiere Windows PowerShell 5.1 o PowerShell para Windows con Windows Forms y DPAPI.

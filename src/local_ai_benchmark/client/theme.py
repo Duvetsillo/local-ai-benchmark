@@ -5,24 +5,27 @@ from typing import Final
 
 
 COLORS: Final[dict[str, str]] = {
-    "canvas": "#090D13",
-    "shell": "#0D141D",
-    "surface": "#121C27",
-    "surface_elevated": "#182533",
-    "surface_interactive": "#223547",
-    "line": "#263746",
-    "line_strong": "#344B5D",
+    "canvas": "#070C14",
+    "shell": "#0B121C",
+    "surface": "#111D2A",
+    "surface_elevated": "#172637",
+    "surface_interactive": "#21384B",
+    "line": "#263B4D",
+    "line_strong": "#3A566B",
     "text": "#F4F7FA",
     "text_soft": "#C4CFD9",
     "muted": "#94A6B5",
     "quiet": "#728393",
-    "accent": "#6DE5C1",
+    "accent": "#75E8C8",
+    "accent_hover": "#9AF4D9",
+    "glow_mint": "#0B5558",
+    "glow_blue": "#1B395E",
     "success": "#9BE0B5",
     "error": "#FF9292",
 }
 
 FONTS: Final[dict[str, tuple[str, int, str]]] = {
-    "display": ("Segoe UI", 25, "bold"),
+    "display": ("Segoe UI", 27, "bold"),
     "section": ("Segoe UI", 9, "bold"),
     "body": ("Segoe UI", 10, "normal"),
     "small": ("Segoe UI", 9, "normal"),
