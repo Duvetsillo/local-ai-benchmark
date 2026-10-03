@@ -22,6 +22,8 @@ This is not a chatbot, and it is not a cloud evaluation platform. It is a local 
 
 - Hardware profiling for CPU, RAM, and NVIDIA GPU telemetry
 - Local model discovery via Ollama
+- Estimated model fit guidance that indicates whether a model is likely to run with GPU or CPU, or whether a runtime or more memory is needed
+- In-client GGUF model downloads from the catalog or a direct external HTTPS `.gguf` URL to the selected local model folder
 - Deterministic validation tasks for math, JSON, coding, and general prompts
 - Reproducible result output in JSON
 - Local dashboard for quick review

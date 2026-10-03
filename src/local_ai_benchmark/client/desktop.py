@@ -124,6 +124,7 @@ class AetherionDesktopClient:
         self.download_window: tk.Toplevel | None = None
         self.download_progress: ttk.Progressbar | None = None
         self.download_status: tk.Label | None = None
+        self.download_button: tk.Button | None = None
         self.busy = False
         self.benchmark_stop_event: threading.Event | None = None
         self.closing = False
@@ -685,6 +686,24 @@ class AetherionDesktopClient:
             font=FONTS["body"],
         ).pack(anchor="w", pady=(3, 14))
 
+        self.download_model_button = self._button(
+            controls,
+            "Download a model",
+            self.open_model_downloader,
+            primary=True,
+        )
+        self.download_model_button.pack(fill="x", pady=(0, 5))
+        tk.Label(
+            controls,
+            text="Browse the catalog or use a direct HTTPS link to an external GGUF file.",
+            bg=COLORS["surface"],
+            fg=COLORS["quiet"],
+            justify="left",
+            anchor="w",
+            wraplength=340,
+            font=FONTS["small"],
+        ).pack(anchor="w", fill="x", pady=(0, 14))
+
         self._field_label(controls, "Model").pack(anchor="w")
         self.model_var = tk.StringVar()
         self.model_menu = ttk.Combobox(controls, textvariable=self.model_var, state="disabled", style="Aetherion.TCombobox")
@@ -770,13 +789,11 @@ class AetherionDesktopClient:
 
         actions = tk.Frame(controls, bg=COLORS["surface"])
         actions.pack(fill="x")
-        actions.grid_columnconfigure((0, 1), weight=1, uniform="actions")
+        actions.grid_columnconfigure(0, weight=1)
         self.install_requirements_button = self._button(actions, "Install runtimes", self.download_missing_dependencies)
-        self.install_requirements_button.grid(row=0, column=0, sticky="ew", padx=(0, 4))
-        self.download_model_button = self._button(actions, "Get a GGUF model", self.open_model_downloader)
-        self.download_model_button.grid(row=0, column=1, sticky="ew", padx=(4, 0))
+        self.install_requirements_button.grid(row=0, column=0, sticky="ew")
         self.refresh_button = self._button(actions, "Refresh models", self.refresh_models)
-        self.refresh_button.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(8, 0))
+        self.refresh_button.grid(row=1, column=0, sticky="ew", pady=(8, 0))
 
         self.result_status = tk.Label(
             controls,
@@ -1156,8 +1173,10 @@ class AetherionDesktopClient:
         digest_text = f" · {digest[:12]}" if digest else ""
         recommendation = "RECOMMENDED FOR THIS HARDWARE" if model.name == self.recommended_model_name else "ALTERNATIVE MODEL"
         runability = self.assess_model(model)
+        fit_summary = self.model_fit_summary(runability)
         self.model_details.configure(
-            text=f"{model.provider.upper()}  ·  {size}\n{quantization}{digest_text}\n{recommendation}\n{runability}",
+            text=f"{model.provider.upper()}  ·  {size}\n{quantization}{digest_text}\n"
+                 f"ESTIMATED FIT: {fit_summary}\n{recommendation}\n{runability}",
             fg="#C4CFD9",
         )
 
@@ -1206,6 +1225,20 @@ class AetherionDesktopClient:
         if isinstance(vram_gb, (int, float)):
             return f"DIRECT RUN: YES · CPU fallback\nRAM: ~{required_gb:.1f} GB needed\nVRAM: {vram_text} · insufficient for full load"
         return f"DIRECT RUN: YES · CPU\nRAM: ~{required_gb:.1f} GB needed\nVRAM: unavailable"
+
+    @staticmethod
+    def model_fit_summary(assessment: str) -> str:
+        if assessment.startswith("DIRECT RUN: YES · GPU"):
+            return "LIKELY TO RUN · GPU"
+        if assessment.startswith("DIRECT RUN: YES · CPU fallback"):
+            return "LIKELY TO RUN · CPU fallback"
+        if assessment.startswith("DIRECT RUN: YES"):
+            return "LIKELY TO RUN · CPU"
+        if assessment.startswith("DIRECT RUN: NO"):
+            if assessment.startswith("DIRECT RUN: NO ·"):
+                return "NOT READY · required runtime missing"
+            return "NOT RECOMMENDED · available RAM is below estimate"
+        return "CANNOT CONFIRM · model size unavailable"
 
     def browse_model_folder(self) -> None:
         current_path = Path(self.model_path_var.get())
@@ -1282,36 +1315,45 @@ class AetherionDesktopClient:
             return
         window = tk.Toplevel(self.root)
         self.download_window = window
-        window.title("Download local model")
-        window.geometry("560x330")
-        window.minsize(500, 300)
+        window.title("Download a model")
+        window.geometry("580x390")
+        window.minsize(520, 350)
         window.configure(bg="#121C27")
         window.transient(self.root)
 
         content = tk.Frame(window, bg="#121C27")
         content.pack(fill="both", expand=True, padx=24, pady=22)
-        tk.Label(content, text="MODEL DOWNLOAD", bg="#121C27", fg="#6DE5C1", font=("Segoe UI", 9, "bold")).pack(anchor="w")
-        tk.Label(content, text="Download a GGUF model directly to your selected model folder.", bg="#121C27", fg="#94A6B5", font=("Segoe UI", 9)).pack(anchor="w", pady=(4, 18))
+        tk.Label(content, text="DOWNLOAD A MODEL", bg="#121C27", fg="#6DE5C1", font=("Segoe UI", 11, "bold")).pack(anchor="w")
+        tk.Label(
+            content,
+            text="Choose a catalog model or paste a direct HTTPS link to an external .gguf file. The file is saved into your selected model folder.",
+            bg="#121C27",
+            fg="#94A6B5",
+            font=("Segoe UI", 9),
+            justify="left",
+            wraplength=510,
+        ).pack(anchor="w", pady=(5, 16))
 
-        tk.Label(content, text="CATALOG", bg="#121C27", fg="#94A6B5", font=("Segoe UI", 8, "bold")).pack(anchor="w")
+        tk.Label(content, text="CATALOG (OPTIONAL)", bg="#121C27", fg="#94A6B5", font=("Segoe UI", 8, "bold")).pack(anchor="w")
         catalog_var = tk.StringVar(value=next(iter(MODEL_DOWNLOAD_CATALOG)))
         catalog_menu = ttk.Combobox(content, textvariable=catalog_var, values=list(MODEL_DOWNLOAD_CATALOG), state="readonly", style="Aetherion.TCombobox")
         catalog_menu.pack(fill="x", pady=(7, 14))
 
-        tk.Label(content, text="DOWNLOAD URL", bg="#121C27", fg="#94A6B5", font=("Segoe UI", 8, "bold")).pack(anchor="w")
+        tk.Label(content, text="MODEL FILE URL (.GGUF)", bg="#121C27", fg="#94A6B5", font=("Segoe UI", 8, "bold")).pack(anchor="w")
         url_var = tk.StringVar(value=MODEL_DOWNLOAD_CATALOG[catalog_var.get()])
         url_entry = tk.Entry(content, textvariable=url_var, bg="#0D141D", fg="#D9E4EE", insertbackground="#F0F0F0", relief="flat", highlightbackground="#344B5D", highlightthickness=1, font=("Segoe UI", 8))
         url_entry.pack(fill="x", pady=(7, 14), ipady=7)
         catalog_menu.bind("<<ComboboxSelected>>", lambda _event: url_var.set(MODEL_DOWNLOAD_CATALOG[catalog_var.get()]))
 
         destination = str(self.session.gguf_provider.models_dir)
-        tk.Label(content, text=f"DESTINATION  {destination}", bg="#121C27", fg="#728393", font=("Segoe UI", 8)).pack(anchor="w")
+        tk.Label(content, text=f"SAVED TO  {destination}", bg="#121C27", fg="#728393", font=("Segoe UI", 8), wraplength=510, justify="left").pack(anchor="w")
         self.download_progress = ttk.Progressbar(content, mode="determinate", maximum=100, value=0, style="Aetherion.Horizontal.TProgressbar")
         self.download_progress.pack(fill="x", pady=(16, 5))
         self.download_status = tk.Label(content, text="Ready to download", bg="#121C27", fg="#94A6B5", anchor="w", font=("Segoe UI", 8))
         self.download_status.pack(fill="x")
         download_button = tk.Button(content, text="DOWNLOAD MODEL", command=lambda: self.download_model(url_var.get(), download_button), bg="#6DE5C1", fg="#0D141D", activebackground="#F0F0F0", activeforeground="#0D141D", relief="flat", font=("Segoe UI", 9, "bold"), padx=12, pady=10, cursor="hand2")
         download_button.pack(anchor="e", pady=(14, 0))
+        self.download_button = download_button
 
     def download_model(self, url: str, button: tk.Button) -> None:
         parsed = urlparse(url.strip())
@@ -1403,8 +1445,11 @@ class AetherionDesktopClient:
             return
         category = None if self.category_var.get() == "All tasks" else self.category_var.get()
         self.busy = True
+        stop_event = threading.Event()
+        self.benchmark_stop_event = stop_event
         self.refresh_button.configure(state="disabled")
         self.run_button.configure(state="disabled")
+        self.stop_button.configure(state="normal")
         self.model_menu.configure(state="disabled")
         self.category_menu.configure(state="disabled")
         self.status_var.set("BENCHMARK RUNNING")
@@ -1588,11 +1633,15 @@ class AetherionDesktopClient:
                 if self.download_progress is not None and self.download_status is not None:
                     self.download_progress.configure(value=100)
                     self.download_status.configure(text=f"Downloaded: {payload}", fg="#9BE0B5")
+                if self.download_button is not None and self.download_button.winfo_exists():
+                    self.download_button.configure(state="normal")
                 self.append_output(f"\nModel downloaded: {payload}\n", "good")
                 self.refresh_models()
             elif event == "model_download_error":
                 if self.download_status is not None:
                     self.download_status.configure(text=f"Download failed: {payload}", fg="#FF9292")
+                if self.download_button is not None and self.download_button.winfo_exists():
+                    self.download_button.configure(state="normal")
         self.root.after(100, self.process_events)
 
     def show_task_result(self, index: int, total: int, result: BenchmarkResult) -> None:
