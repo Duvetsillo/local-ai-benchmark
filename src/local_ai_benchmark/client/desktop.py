@@ -157,7 +157,6 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         self.busy = False
         self.benchmark_stop_event: threading.Event | None = None
         self.closing = False
-        self.brand_phase = 0
         self.root.protocol("WM_DELETE_WINDOW", self.close)
         self.show_license_gate("Checking for a saved account session…")
         self.root.after(100, self.process_account_events)
@@ -995,31 +994,6 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         models_panel.pack(fill="both", expand=True)
         self.create_model_catalog(models_panel)
 
-        benchmarks_view = tk.Frame(self.view_stack, bg=COLORS["canvas"])
-        self.views["benchmarks"] = benchmarks_view
-        self.view_header(benchmarks_view, "BENCHMARK LAB", "Measure before you decide", "A controlled local validation, with each result saved on this device.")
-        benchmark_panel = self._card(benchmarks_view, accent=True)
-        benchmark_panel.pack(fill="x", pady=(0, 12))
-        benchmark_body = tk.Frame(benchmark_panel, bg=COLORS["surface"])
-        benchmark_body.pack(fill="x", padx=18, pady=16)
-        tk.Label(benchmark_body, text="CURRENT CONFIGURATION", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["section"]).pack(anchor="w")
-        self.benchmark_view_config = tk.Label(benchmark_body, text="No model selected", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 13, "bold"), anchor="w")
-        self.benchmark_view_config.pack(anchor="w", pady=(7, 12))
-        self._button(benchmark_body, "Open benchmark controls", lambda: self.focus_section("dashboard")).pack(anchor="w")
-        guidance = self._card(benchmarks_view)
-        guidance.pack(fill="x")
-        tk.Label(
-            guidance,
-            text="The suite checks general instruction following, code format, arithmetic, JSON, and Spanish comprehension. These checks are signals for comparison, not a universal quality score.",
-            bg=COLORS["surface"],
-            fg=COLORS["text_soft"],
-            justify="left",
-            wraplength=760,
-            font=FONTS["body"],
-            padx=18,
-            pady=16,
-        ).pack(anchor="w")
-
         results_view = tk.Frame(self.view_stack, bg=COLORS["canvas"])
         self.views["results"] = results_view
         self.view_header(results_view, "RESULTS", "Evidence from your machine", "Review completed runs stored in your local results folder.")
@@ -1115,96 +1089,6 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         for row in reversed(rows[-20:]):
             self.history_view_listbox.insert("end", f"{row.get('created_at', 'UNKNOWN')}  ·  {row.get('benchmark', 'UNKNOWN')}  ·  {row.get('status', 'UNKNOWN')}")
 
-    def create_sidebar(self, parent: tk.Widget) -> None:
-        sidebar = tk.Frame(
-            parent,
-            bg=COLORS["surface"],
-            width=208,
-            highlightbackground=COLORS["line"],
-            highlightthickness=1,
-        )
-        sidebar.pack(side="left", fill="y")
-        sidebar.pack_propagate(False)
-
-        brand = tk.Frame(sidebar, bg=COLORS["surface"])
-        brand.pack(fill="x", padx=16, pady=(19, 28))
-        self.brand_mark = tk.Canvas(brand, width=42, height=42, bg=COLORS["surface"], bd=0, highlightthickness=0)
-        self.brand_mark.pack(anchor="w", pady=(0, 14))
-        self.brand_mark.create_oval(4, 4, 38, 38, outline=COLORS["line_strong"], width=1)
-        self.brand_orbit = self.brand_mark.create_arc(7, 7, 35, 35, start=15, extent=120, outline=COLORS["accent"], width=2, style="arc")
-        self.brand_mark.create_polygon(21, 11, 24, 18, 31, 21, 24, 24, 21, 31, 18, 24, 11, 21, 18, 18, fill=COLORS["text"], outline="")
-        logo_copy = tk.Frame(brand, bg=COLORS["surface"])
-        logo_copy.pack(anchor="w")
-        tk.Label(logo_copy, text="AETHERION", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 15, "bold")).pack(anchor="w")
-        tk.Label(logo_copy, text="THE MODEL ATELIER", bg=COLORS["surface"], fg=COLORS["accent"], font=("Segoe UI", 8, "bold")).pack(anchor="w", pady=(5, 0))
-
-        tk.Label(sidebar, text="WORKSPACE", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["section"], padx=16).pack(anchor="w", pady=(0, 9))
-        self.nav_buttons: dict[str, tk.Button] = {}
-        self.nav_indicators: dict[str, tk.Frame] = {}
-        navigation = [
-            ("Overview", "dashboard", "▦"),
-            ("Benchmarks", "benchmarks", "◉"),
-            ("Models", "models", "◇"),
-            ("Results", "results", "▤"),
-            ("Hardware", "hardware", "⌘"),
-            ("History", "history", "◷"),
-            ("Settings", "settings", "⚙"),
-        ]
-        for label, view, icon in navigation:
-            nav_row = tk.Frame(sidebar, bg=COLORS["surface"])
-            nav_row.pack(fill="x", padx=8, pady=2)
-            indicator = tk.Frame(nav_row, bg=COLORS["surface"], width=3)
-            indicator.pack(side="left", fill="y", padx=(0, 5))
-            self.nav_indicators[view] = indicator
-            button = tk.Button(
-                nav_row,
-                text=f"{icon}   {label}",
-                command=lambda view_name=view: self.focus_section(view_name),
-                bg=COLORS["surface"],
-                fg=COLORS["muted"],
-                activebackground=COLORS["surface_interactive"],
-                activeforeground=COLORS["text"],
-                relief="flat",
-                bd=0,
-                anchor="w",
-                font=("Segoe UI", 10, "bold"),
-                padx=14,
-                pady=11,
-                cursor="hand2",
-                highlightthickness=0,
-            )
-            button.pack(fill="x", expand=True)
-            self.nav_buttons[view] = button
-            button.bind(
-                "<Enter>",
-                lambda _event, widget=button, view_name=view: widget.configure(
-                    bg=COLORS["surface_interactive"] if view_name == self.active_view else COLORS["surface_elevated"],
-                    fg=COLORS["text"],
-                ),
-            )
-            button.bind(
-                "<Leave>",
-                lambda _event, widget=button, view_name=view: widget.configure(
-                    bg=COLORS["surface_interactive"] if view_name == self.active_view else COLORS["surface"],
-                    fg=COLORS["text"] if view_name == self.active_view else COLORS["muted"],
-                ),
-            )
-        self.active_view = "dashboard"
-        self.nav_buttons["dashboard"].configure(bg=COLORS["surface_interactive"], fg=COLORS["text"])
-        self.nav_indicators["dashboard"].configure(bg=COLORS["accent"])
-
-        footer = tk.Frame(sidebar, bg=COLORS["surface"])
-        footer.pack(side="bottom", fill="x", padx=14, pady=14)
-        tk.Frame(footer, bg=COLORS["line"], height=1).pack(fill="x", pady=(0, 10))
-        tk.Label(footer, text="PRIVATE BY DESIGN", bg=COLORS["surface"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w")
-        tk.Label(footer, text="Runs and results stay local.", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"]).pack(anchor="w", pady=(4, 0))
-        if self.auth_session is not None:
-            expiry = self.auth_session.expires_at.strftime("%Y-%m-%d") if self.auth_session.expires_at else "NO EXPIRY"
-            account_state = "OFFLINE GRACE" if self.auth_session.offline else self.auth_session.plan.upper()
-            tk.Label(footer, text=f"ACCOUNT · {self.auth_session.username.upper()}", bg=COLORS["surface"], fg=COLORS["success"], font=FONTS["section"]).pack(anchor="w", pady=(11, 0))
-            tk.Label(footer, text=f"{account_state} · {expiry}", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"]).pack(anchor="w", pady=(3, 0))
-            self._button(footer, "SIGN OUT", self.sign_out).pack(fill="x", pady=(8, 0))
-
     def focus_section(self, view: str) -> None:
         labels = {
             "dashboard": "Workspace",
@@ -1254,13 +1138,6 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
             bd=0,
         )
 
-
-    def animate_brand_mark(self) -> None:
-        if self.closing:
-            return
-        self.brand_phase = (self.brand_phase + 8) % 360
-        self.brand_mark.itemconfigure(self.brand_orbit, start=self.brand_phase)
-        self.root.after(90, self.animate_brand_mark)
 
     @staticmethod
     def format_hardware(hardware: dict[str, Any]) -> str:
@@ -1743,7 +1620,6 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                 if names:
                     self.model_var.set(names[0])
                     self.update_model_details()
-                    self.benchmark_view_config.configure(text=f"{names[0]}  ·  {self.models[names[0]].provider.upper()}")
                     runtimes = ", ".join(sorted({model.provider.upper() for model in models}))
                     self.status_var.set(f"{runtimes} READY · {len(names)} MODEL(S)")
                     self.update_overview("runtime_metric", runtimes)
