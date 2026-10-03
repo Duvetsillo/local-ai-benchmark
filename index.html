@@ -11,6 +11,7 @@
     />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="stylesheet" href="styles.css?v=20260928-4" />
+    <link rel="stylesheet" href="monochrome.css" />
   </head>
   <body class="intro-active">
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -64,7 +65,7 @@
 
     <div class="page-shell">
       <header class="topbar">
-        <div class="brand" aria-label="AETHERION home">
+        <a class="brand" href="index.html" aria-label="AETHERION home">
           <div class="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 64 64" role="img" aria-label="AETHERION logo">
               <defs>
@@ -85,8 +86,8 @@
             <span class="brand-name">AETHERION</span>
             <small>BEYOND THE KNOWN.</small>
           </div>
-        </div>
-        <nav class="nav" aria-label="Main navigation">
+        </a>
+        <nav class="nav" id="aetherion-navigation" aria-label="Main navigation">
           <a href="overview.html">Overview</a>
           <a href="models.html">Models</a>
           <a href="#details">Details</a>
@@ -97,83 +98,41 @@
           <a href="terms.html">Terms</a>
           <a href="cookies.html">Cookies</a>
         </nav>
+        <button class="design-menu" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="aetherion-navigation"><span></span><span></span></button>
       </header>
 
       <main id="main-content">
         <section class="hero" id="overview">
           <div class="hero-copy">
-            <p class="eyebrow">ENGINEERING THE UNKNOWN.</p>
-            <h1>Build what comes next.</h1>
+            <p class="eyebrow">LOCAL INTELLIGENCE. MEASURED.</p>
+            <h1>Beyond<br>the <span class="hero-word-light">known.</span></h1>
             <p class="lead">
-              AETHERION turns raw local intelligence into clarity. We measure hardware, compare capable models,
-              and help teams move from uncertainty to practical, evidence-based decisions.
+              Know what your machine can do. Profile your hardware, compare local models and turn every benchmark into a clearer decision.
             </p>
             <div class="hero-actions">
-              <a class="primary" href="#models">Explore systems</a>
-              <a class="secondary" href="#workflow">See the process</a>
+              <a class="primary" href="#benchmarkSection">Get the Windows client <span aria-hidden="true">↗</span></a>
+              <a class="secondary" href="#workflow">Explore the process ↓</a>
             </div>
             <div class="hero-meta" aria-label="AETHERION capabilities">
               <span>Local-first</span>
               <span>Hardware-aware</span>
               <span>Results-driven</span>
             </div>
-            <ul class="hero-points">
-              <li>Hardware-aware intelligence</li>
-              <li>Future-ready model analysis</li>
-              <li>Design for real-world systems</li>
-            </ul>
+
           </div>
 
-          <div class="hero-panel spotlight-card">
-            <div class="hero-identity" aria-label="AETHERION local intelligence">
-              <div class="hero-identity-mark" aria-hidden="true">
-                <svg viewBox="0 0 64 64" role="img" aria-label="AETHERION emblem">
-                  <defs>
-                    <linearGradient id="heroBrandGradient" x1="0%" x2="100%" y1="0%" y2="100%">
-                      <stop offset="0%" stop-color="#D5D5D5" />
-                      <stop offset="48%" stop-color="#B8B8B8" />
-                      <stop offset="100%" stop-color="#F4F4F4" />
-                    </linearGradient>
-                  </defs>
-                  <circle cx="32" cy="32" r="23" fill="none" stroke="url(#heroBrandGradient)" stroke-width="1.4" opacity="0.55" />
-                  <circle cx="32" cy="32" r="16" fill="none" stroke="url(#heroBrandGradient)" stroke-width="1.2" stroke-dasharray="2 4" opacity="0.7" />
-                  <path d="M32 16 L36 28 L48 32 L36 36 L32 48 L28 36 L16 32 L28 28 Z" fill="rgba(169,199,255,0.08)" stroke="url(#heroBrandGradient)" stroke-width="2" stroke-linejoin="round" />
-                  <circle cx="32" cy="32" r="5" fill="#E8E8E8" />
-                </svg>
-              </div>
-              <div>
-                <span class="hero-identity-kicker">AETHERION / 01</span>
-                <strong>Local intelligence, made visible.</strong>
-              </div>
+          <div class="engine-visual" aria-label="Interactive overview of the Aetherion workflow">
+            <div class="engine-coordinate coordinate-top">AETH / LOCAL INTELLIGENCE ENGINE</div>
+            <div class="engine-stage">
+              <div class="engine-orbit engine-orbit-one" aria-hidden="true"></div><div class="engine-orbit engine-orbit-two" aria-hidden="true"></div><div class="engine-orbit engine-orbit-three" aria-hidden="true"></div>
+              <svg class="engine-flow" viewBox="0 0 500 450" aria-hidden="true"><g fill="none" stroke="#ffffff20"><path d="M40 225H460M250 40V410"/><circle cx="250" cy="225" r="174" stroke-dasharray="1 12"/></g><g fill="none" stroke="#dadada" stroke-dasharray="9 160" class="flow-trace"><path d="M40 225H460M250 40V410"/></g></svg>
+              <div class="engine-nucleus"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="34" fill="none" stroke="currentColor" stroke-width="1"/><path d="M50 14L61 39L86 50L61 61L50 86L39 61L14 50L39 39Z" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="50" cy="50" r="8" fill="currentColor"/></svg><span>AETHERION</span></div>
+              <span class="engine-token token-north" aria-hidden="true">CPU / GPU</span><span class="engine-token token-west" aria-hidden="true">LOCAL</span><span class="engine-token token-east" aria-hidden="true">MODELS</span><span class="engine-token token-south" aria-hidden="true">EVIDENCE</span>
             </div>
-            <div class="panel-header">
-              <span>Current lens</span>
-              <strong>Local hardware, measured at runtime</strong>
-            </div>
-            <div class="stats-grid">
-              <article>
-                <span>GPU</span>
-                <strong>Local GPU</strong>
-                <small>Detected on your device</small>
-              </article>
-              <article>
-                <span>MEMORY</span>
-                <strong>System RAM</strong>
-                <small>Measured live</small>
-              </article>
-              <article>
-                <span>PROCESSOR</span>
-                <strong>CPU profile</strong>
-                <small>Runtime data</small>
-              </article>
-              <article>
-                <span>MODELS</span>
-                <strong>Available</strong>
-                <small>Ready to benchmark</small>
-              </article>
-            </div>
+            <div class="engine-lens"><div class="engine-tabs" aria-label="Explore the workflow"><button type="button" data-engine-lens="hardware" aria-pressed="true">01 Hardware</button><button type="button" data-engine-lens="models" aria-pressed="false">02 Models</button><button type="button" data-engine-lens="evidence" aria-pressed="false">03 Evidence</button></div><div class="engine-description" aria-live="polite"><strong id="engine-lens-title">Start with your machine.</strong><p id="engine-lens-copy">Profile the hardware before choosing a model. CPU, memory and available acceleration set the context.</p></div></div>
           </div>
         </section>
+        <div class="system-rail"><span>DESIGNED FOR YOUR HARDWARE</span><span>OLLAMA / GGUF</span><span>LOCAL EXECUTION</span><a href="#details">FOLLOW THE EVIDENCE ↓</a></div>
 
         <section class="summary" id="workflow">
           <div class="section-head">
@@ -437,6 +396,7 @@
       </footer>
     </div>
 
+    <script src="design.js"></script>
     <script src="app.js?v=20260928-2"></script>
   </body>
 </html>
