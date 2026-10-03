@@ -63,6 +63,29 @@ MODEL_DOWNLOAD_CATALOG = {
 }
 
 
+def _remote_model_size(url: str) -> int:
+    last_error: OSError | ValueError | None = None
+    for method, headers in (("HEAD", {}), ("GET", {"Range": "bytes=0-0"})):
+        request = Request(url, headers=headers, method=method)
+        try:
+            with urlopen(request, timeout=15) as response:
+                content_range = response.headers.get("Content-Range", "")
+                if "/" in content_range:
+                    total = content_range.rsplit("/", 1)[1]
+                    if total.isdigit() and int(total) > 0:
+                        return int(total)
+                if getattr(response, "status", None) != 206:
+                    content_length = response.headers.get("Content-Length", "")
+                    if content_length.isdigit() and int(content_length) > 0:
+                        return int(content_length)
+                last_error = ValueError("The server did not provide the model file size.")
+        except (OSError, ValueError) as exc:
+            last_error = exc
+    raise ValueError(
+        "Could not determine the GGUF file size. Use a direct link whose server provides a file size."
+    ) from last_error
+
+
 @dataclass
 class DesktopSession:
     hardware: dict[str, Any]
@@ -98,7 +121,7 @@ class AetherionDesktopClient:
         self.root.title("AETHERION Client")
         self.root.geometry("1200x820")
         self.root.minsize(1020, 720)
-        self.root.configure(bg="#090D13")
+        self.root.configure(bg=COLORS["canvas"])
         self.base_dir = base_dir
         self.account_service = AccountService()
         self.auth_session: AuthSession | None = None
@@ -125,6 +148,9 @@ class AetherionDesktopClient:
         self.download_progress: ttk.Progressbar | None = None
         self.download_status: tk.Label | None = None
         self.download_button: tk.Button | None = None
+        self.download_compatibility_label: tk.Label | None = None
+        self.download_check_button: tk.Button | None = None
+        self.download_url_var: tk.StringVar | None = None
         self.busy = False
         self.benchmark_stop_event: threading.Event | None = None
         self.closing = False
@@ -440,12 +466,12 @@ class AetherionDesktopClient:
         card = tk.Frame(
             parent,
             bg=COLORS["surface"],
-            highlightbackground=COLORS["line"],
+            highlightbackground=COLORS["line_strong"] if accent else COLORS["line"],
             highlightthickness=1,
             bd=0,
         )
         if accent:
-            tk.Frame(card, bg=COLORS["accent"], height=2).pack(fill="x")
+            tk.Frame(card, bg=COLORS["accent"], height=3).pack(fill="x")
         return card
 
     def _button(self, parent: tk.Widget, text: str, command: Any, *, primary: bool = False) -> tk.Button:
@@ -465,13 +491,21 @@ class AetherionDesktopClient:
             relief="flat",
             bd=0,
             font=("Segoe UI", 9, "bold"),
-            padx=14,
-            pady=10,
+            padx=15,
+            pady=11,
             cursor="hand2",
             highlightthickness=0,
         )
-        button.bind("<Enter>", lambda _event: button.configure(bg=active_bg))
-        button.bind("<Leave>", lambda _event: button.configure(bg=bg))
+
+        def show_hover(_event: tk.Event) -> None:
+            if str(button["state"]) != "disabled":
+                button.configure(bg=active_bg)
+
+        def show_default(_event: tk.Event) -> None:
+            button.configure(bg=bg)
+
+        button.bind("<Enter>", show_hover)
+        button.bind("<Leave>", show_default)
         return button
 
     def _field_label(self, parent: tk.Widget, text: str) -> tk.Label:
@@ -526,8 +560,8 @@ class AetherionDesktopClient:
             bg=COLORS["surface_elevated"],
             fg=COLORS["text_soft"],
             font=("Segoe UI", 8, "bold"),
-            padx=13,
-            pady=9,
+            padx=14,
+            pady=10,
             highlightbackground=COLORS["line"],
             highlightthickness=1,
         )
@@ -565,7 +599,7 @@ class AetherionDesktopClient:
                 textvariable=variable,
                 bg=COLORS["surface"],
                 fg=COLORS["text"],
-                font=("Segoe UI", 12, "bold"),
+                font=("Segoe UI", 13, "bold"),
                 anchor="w",
             ).pack(anchor="w", pady=(6, 0))
 
@@ -1025,7 +1059,7 @@ class AetherionDesktopClient:
         sidebar = tk.Frame(
             parent,
             bg=COLORS["surface"],
-            width=196,
+            width=208,
             highlightbackground=COLORS["line"],
             highlightthickness=1,
         )
@@ -1033,7 +1067,7 @@ class AetherionDesktopClient:
         sidebar.pack_propagate(False)
 
         brand = tk.Frame(sidebar, bg=COLORS["surface"])
-        brand.pack(fill="x", padx=15, pady=(17, 24))
+        brand.pack(fill="x", padx=16, pady=(19, 28))
         self.brand_mark = tk.Canvas(brand, width=42, height=42, bg=COLORS["surface"], bd=0, highlightthickness=0)
         self.brand_mark.pack(side="left", padx=(0, 9))
         self.brand_mark.create_oval(4, 4, 38, 38, outline=COLORS["line_strong"], width=1)
@@ -1044,8 +1078,9 @@ class AetherionDesktopClient:
         tk.Label(logo_copy, text="AETHERION", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 10, "bold")).pack(anchor="w")
         tk.Label(logo_copy, text="LOCAL MODEL LAB", bg=COLORS["surface"], fg=COLORS["quiet"], font=("Segoe UI", 7, "bold")).pack(anchor="w", pady=(3, 0))
 
-        tk.Label(sidebar, text="WORKSPACE", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["section"], padx=15).pack(anchor="w", pady=(0, 7))
+        tk.Label(sidebar, text="WORKSPACE", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["section"], padx=16).pack(anchor="w", pady=(0, 9))
         self.nav_buttons: dict[str, tk.Button] = {}
+        self.nav_indicators: dict[str, tk.Frame] = {}
         navigation = [
             ("Overview", "dashboard", "▦"),
             ("Benchmarks", "benchmarks", "◉"),
@@ -1056,8 +1091,13 @@ class AetherionDesktopClient:
             ("Settings", "settings", "⚙"),
         ]
         for label, view, icon in navigation:
+            nav_row = tk.Frame(sidebar, bg=COLORS["surface"])
+            nav_row.pack(fill="x", padx=8, pady=2)
+            indicator = tk.Frame(nav_row, bg=COLORS["surface"], width=3)
+            indicator.pack(side="left", fill="y", padx=(0, 5))
+            self.nav_indicators[view] = indicator
             button = tk.Button(
-                sidebar,
+                nav_row,
                 text=f"{icon}   {label}",
                 command=lambda view_name=view: self.focus_section(view_name),
                 bg=COLORS["surface"],
@@ -1069,11 +1109,11 @@ class AetherionDesktopClient:
                 anchor="w",
                 font=("Segoe UI", 9, "bold"),
                 padx=14,
-                pady=10,
+                pady=11,
                 cursor="hand2",
                 highlightthickness=0,
             )
-            button.pack(fill="x", padx=8, pady=2)
+            button.pack(fill="x", expand=True)
             self.nav_buttons[view] = button
             button.bind(
                 "<Enter>",
@@ -1089,8 +1129,9 @@ class AetherionDesktopClient:
                     fg=COLORS["text"] if view_name == self.active_view else COLORS["muted"],
                 ),
             )
-        self.nav_buttons["dashboard"].configure(bg=COLORS["surface_interactive"], fg=COLORS["text"])
         self.active_view = "dashboard"
+        self.nav_buttons["dashboard"].configure(bg=COLORS["surface_interactive"], fg=COLORS["text"])
+        self.nav_indicators["dashboard"].configure(bg=COLORS["accent"])
 
         footer = tk.Frame(sidebar, bg=COLORS["surface"])
         footer.pack(side="bottom", fill="x", padx=14, pady=14)
@@ -1121,8 +1162,9 @@ class AetherionDesktopClient:
             button.configure(
                 bg=COLORS["surface_interactive"] if active else COLORS["surface"],
                 fg=COLORS["text"] if active else COLORS["muted"],
-                highlightbackground=COLORS["accent"] if active else COLORS["surface"],
-                highlightthickness=1 if active else 0,
+            )
+            self.nav_indicators[name].configure(
+                bg=COLORS["accent"] if active else COLORS["surface"],
             )
         for frame in self.views.values():
             frame.pack_forget()
@@ -1240,6 +1282,42 @@ class AetherionDesktopClient:
             return "NOT RECOMMENDED · available RAM is below estimate"
         return "CANNOT CONFIRM · model size unavailable"
 
+    @staticmethod
+    def assess_download_hardware(size_bytes: int, hardware: dict[str, Any]) -> tuple[str, str]:
+        model_gb = size_bytes / (1024 ** 3)
+        required_ram_gb = max(model_gb * 1.25, 1.0)
+        memory = hardware.get("memory", {})
+        available_ram_gb = memory.get("available_gb") if isinstance(memory, dict) else None
+        gpus = hardware.get("gpu", [])
+        vram_gb = next(
+            (
+                gpu.get("vram_gb")
+                for gpu in gpus
+                if isinstance(gpu, dict) and isinstance(gpu.get("vram_gb"), (int, float))
+            ),
+            None,
+        )
+        ram_text = (
+            f"RAM: ~{required_ram_gb:.1f} GB needed, {available_ram_gb:.1f} GB available."
+            if isinstance(available_ram_gb, (int, float))
+            else f"RAM: ~{required_ram_gb:.1f} GB estimated; available RAM could not be read."
+        )
+        vram_text = (
+            f"GPU: {vram_gb:.1f} GB VRAM detected."
+            if isinstance(vram_gb, (int, float))
+            else "GPU: VRAM unavailable, so GPU fit cannot be confirmed."
+        )
+
+        if not isinstance(available_ram_gb, (int, float)):
+            return f"FIT UNKNOWN · Cannot confirm whether this PC can run the model.\n{ram_text}\n{vram_text}", "#F2C879"
+        if available_ram_gb < required_ram_gb:
+            return f"NOT RECOMMENDED · Available RAM is below the estimate.\n{ram_text}\n{vram_text}", "#FF9292"
+        if isinstance(vram_gb, (int, float)) and model_gb <= vram_gb * 0.9:
+            return f"LIKELY COMPATIBLE · Estimated to fit GPU and RAM.\n{ram_text}\n{vram_text}", "#9BE0B5"
+        if isinstance(vram_gb, (int, float)):
+            return f"LIKELY TO RUN · RAM appears sufficient; GPU VRAM is too small, so CPU fallback is expected.\n{ram_text}\n{vram_text}", "#F2C879"
+        return f"LIKELY TO RUN ON CPU · RAM appears sufficient; GPU fit is unknown.\n{ram_text}\n{vram_text}", "#F2C879"
+
     def browse_model_folder(self) -> None:
         current_path = Path(self.model_path_var.get())
         initial_dir = current_path if current_path.is_dir() else Path.home()
@@ -1316,8 +1394,8 @@ class AetherionDesktopClient:
         window = tk.Toplevel(self.root)
         self.download_window = window
         window.title("Download a model")
-        window.geometry("580x390")
-        window.minsize(520, 350)
+        window.geometry("600x500")
+        window.minsize(540, 450)
         window.configure(bg="#121C27")
         window.transient(self.root)
 
@@ -1341,9 +1419,52 @@ class AetherionDesktopClient:
 
         tk.Label(content, text="MODEL FILE URL (.GGUF)", bg="#121C27", fg="#94A6B5", font=("Segoe UI", 8, "bold")).pack(anchor="w")
         url_var = tk.StringVar(value=MODEL_DOWNLOAD_CATALOG[catalog_var.get()])
+        self.download_url_var = url_var
         url_entry = tk.Entry(content, textvariable=url_var, bg="#0D141D", fg="#D9E4EE", insertbackground="#F0F0F0", relief="flat", highlightbackground="#344B5D", highlightthickness=1, font=("Segoe UI", 8))
         url_entry.pack(fill="x", pady=(7, 14), ipady=7)
-        catalog_menu.bind("<<ComboboxSelected>>", lambda _event: url_var.set(MODEL_DOWNLOAD_CATALOG[catalog_var.get()]))
+
+        def clear_compatibility(_event: tk.Event | None = None) -> None:
+            if self.download_compatibility_label is not None:
+                self.download_compatibility_label.configure(
+                    text="Check this GGUF link to estimate RAM and GPU fit for this PC.",
+                    fg="#94A6B5",
+                )
+
+        def select_catalog_model(_event: tk.Event) -> None:
+            url_var.set(MODEL_DOWNLOAD_CATALOG[catalog_var.get()])
+            clear_compatibility()
+
+        catalog_menu.bind("<<ComboboxSelected>>", select_catalog_model)
+        url_entry.bind("<KeyRelease>", clear_compatibility)
+
+        check_row = tk.Frame(content, bg="#121C27")
+        check_row.pack(fill="x", pady=(0, 6))
+        self.download_check_button = tk.Button(
+            check_row,
+            text="CHECK PC COMPATIBILITY",
+            command=self.check_download_compatibility,
+            bg="#263A49",
+            fg="#D9E4EE",
+            activebackground="#344B5D",
+            activeforeground="#F0F0F0",
+            relief="flat",
+            font=("Segoe UI", 8, "bold"),
+            padx=11,
+            pady=8,
+            cursor="hand2",
+        )
+        self.download_check_button.pack(anchor="w")
+        self.download_compatibility_label = tk.Label(
+            content,
+            text="Check this GGUF link to estimate RAM and GPU fit for this PC.",
+            bg="#121C27",
+            fg="#94A6B5",
+            font=("Segoe UI", 8),
+            justify="left",
+            anchor="w",
+            wraplength=510,
+        )
+        self.download_compatibility_label.pack(fill="x", pady=(4, 10))
 
         destination = str(self.session.gguf_provider.models_dir)
         tk.Label(content, text=f"SAVED TO  {destination}", bg="#121C27", fg="#728393", font=("Segoe UI", 8), wraplength=510, justify="left").pack(anchor="w")
@@ -1354,6 +1475,35 @@ class AetherionDesktopClient:
         download_button = tk.Button(content, text="DOWNLOAD MODEL", command=lambda: self.download_model(url_var.get(), download_button), bg="#6DE5C1", fg="#0D141D", activebackground="#F0F0F0", activeforeground="#0D141D", relief="flat", font=("Segoe UI", 9, "bold"), padx=12, pady=10, cursor="hand2")
         download_button.pack(anchor="e", pady=(14, 0))
         self.download_button = download_button
+
+    def check_download_compatibility(self) -> None:
+        if self.download_url_var is None:
+            return
+        url = self.download_url_var.get().strip()
+        parsed = urlparse(url)
+        filename = Path(unquote(parsed.path)).name
+        if parsed.scheme != "https" or not parsed.netloc or not filename.lower().endswith(".gguf"):
+            self.download_compatibility_label.configure(
+                text="Enter a direct HTTPS link ending in .gguf.",
+                fg="#FF9292",
+            )
+            return
+
+        self.download_check_button.configure(state="disabled")
+        self.download_compatibility_label.configure(
+            text="Checking the remote file size and comparing it with this PC's RAM and GPU…",
+            fg="#6DE5C1",
+        )
+
+        def check() -> None:
+            try:
+                size_bytes = _remote_model_size(url)
+                result, color = self.assess_download_hardware(size_bytes, self.session.hardware)
+                self.events.put(("model_compatibility_result", (url, size_bytes, result, color)))
+            except (OSError, ValueError) as exc:
+                self.events.put(("model_compatibility_error", (url, str(exc))))
+
+        threading.Thread(target=check, daemon=True).start()
 
     def download_model(self, url: str, button: tk.Button) -> None:
         parsed = urlparse(url.strip())
@@ -1621,6 +1771,35 @@ class AetherionDesktopClient:
             elif event == "installer_download_error":
                 self.requirements_label.configure(text=f"Installer download failed\n{payload}", fg="#FF9292")
                 self.install_requirements_button.configure(state="normal", text="RETRY DOWNLOAD")
+            elif event == "model_compatibility_result":
+                url, size_bytes, result, color = payload
+                if self.download_check_button is not None and self.download_check_button.winfo_exists():
+                    self.download_check_button.configure(state="normal")
+                if (
+                    self.download_compatibility_label is not None
+                    and self.download_compatibility_label.winfo_exists()
+                    and self.download_url_var is not None
+                    and self.download_url_var.get().strip() == url
+                ):
+                    size_gb = size_bytes / (1024 ** 3)
+                    self.download_compatibility_label.configure(
+                        text=f"FILE SIZE: {size_gb:.2f} GB\n{result}\nEstimate only; actual fit varies by model, context size and runtime.",
+                        fg=color,
+                    )
+            elif event == "model_compatibility_error":
+                url, error = payload
+                if self.download_check_button is not None and self.download_check_button.winfo_exists():
+                    self.download_check_button.configure(state="normal")
+                if (
+                    self.download_compatibility_label is not None
+                    and self.download_compatibility_label.winfo_exists()
+                    and self.download_url_var is not None
+                    and self.download_url_var.get().strip() == url
+                ):
+                    self.download_compatibility_label.configure(
+                        text=f"Could not estimate compatibility: {error}",
+                        fg="#FF9292",
+                    )
             elif event == "model_download_progress":
                 downloaded, total, filename = payload
                 if self.download_progress is not None and self.download_status is not None:
