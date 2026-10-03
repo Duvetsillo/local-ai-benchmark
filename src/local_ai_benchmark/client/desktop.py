@@ -1504,6 +1504,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         if self.busy:
             return
         self.busy = True
+        self.sync_studio_actions()
         stop_event = threading.Event()
         self.benchmark_stop_event = stop_event
         self.refresh_button.configure(state="disabled")
@@ -1546,6 +1547,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
             return
         category = None if self.category_var.get() == "All tasks" else self.category_var.get()
         self.busy = True
+        self.sync_studio_actions()
         stop_event = threading.Event()
         self.benchmark_stop_event = stop_event
         self.refresh_button.configure(state="disabled")
@@ -1645,6 +1647,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                 self.busy = False
                 self.refresh_studio_home()
                 self.refresh_model_cards()
+                self.sync_studio_actions()
             elif event == "progress":
                 index, total, result = payload
                 self.progress.configure(value=(index / total) * 100 if total else 0)
@@ -1678,6 +1681,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                     self.append_output(f"Task results: {result_path}\n", "muted")
                 self.busy = False
                 self.refresh_button.configure(state="normal")
+                self.sync_studio_actions()
                 self.model_menu.configure(state="readonly" if self.models else "disabled")
                 self.category_menu.configure(state="readonly")
                 self.run_button.configure(state="normal" if self.models else "disabled")
@@ -1691,6 +1695,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                 self.append_output(f"\nBenchmark could not finish: {payload}\n", "bad")
                 self.busy = False
                 self.refresh_button.configure(state="normal")
+                self.sync_studio_actions()
                 self.model_menu.configure(state="readonly" if self.models else "disabled")
                 self.category_menu.configure(state="readonly")
                 self.run_button.configure(state="normal" if self.models else "disabled")

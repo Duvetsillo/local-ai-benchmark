@@ -4,6 +4,7 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+dist-studio03/
 .pytest_cache/
 .venv/
 .test-deps/

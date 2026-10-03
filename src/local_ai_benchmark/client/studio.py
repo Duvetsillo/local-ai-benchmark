@@ -160,6 +160,16 @@ class StudioWorkspaceMixin:
             self.update_model_details()
             self.focus_section("benchmarks")
 
+    def sync_studio_actions(self) -> None:
+        state = "disabled" if self.busy else "normal"
+        for name in ("featured_action", "catalog_refresh_button"):
+            widget = getattr(self, name, None)
+            if widget is not None:
+                widget.configure(state=state)
+        for widget in getattr(self, "catalog_use_buttons", []):
+            if widget.winfo_exists():
+                widget.configure(state=state)
+
     def _scroll_home(self, event: tk.Event) -> None:
         canvas = self.home_canvas
         if canvas.winfo_ismapped() and canvas.winfo_rootx() <= event.x_root <= canvas.winfo_rootx() + canvas.winfo_width() and canvas.winfo_rooty() <= event.y_root <= canvas.winfo_rooty() + canvas.winfo_height():
@@ -224,7 +234,8 @@ class StudioWorkspaceMixin:
                           insertbackground=COLORS["accent"], font=FONTS["body"], relief="flat",
                           highlightthickness=1, highlightbackground=COLORS["line_strong"], highlightcolor=COLORS["accent"])
         search.pack(side="left", fill="x", expand=True, ipady=10, padx=(0, 12))
-        self._button(tools, "Refresh", self.refresh_models).pack(side="left", padx=(0, 8))
+        self.catalog_refresh_button = self._button(tools, "Refresh", self.refresh_models)
+        self.catalog_refresh_button.pack(side="left", padx=(0, 8))
         self._button(tools, "Add a model", self.open_model_downloader, primary=True).pack(side="left")
         self.model_search.trace_add("write", lambda *_args: self.refresh_model_cards())
         viewport = tk.Frame(parent, bg=COLORS["surface"])
@@ -250,6 +261,7 @@ class StudioWorkspaceMixin:
             return
         for child in self.model_cards.winfo_children():
             child.destroy()
+        self.catalog_use_buttons = []
         for col in range(2):
             self.model_cards.grid_columnconfigure(col, weight=1, uniform="model-cards")
         query = self.model_search.get().strip().casefold()
@@ -273,6 +285,7 @@ class StudioWorkspaceMixin:
             fit.pack(fill="x", pady=(0, 16))
             body.bind("<Configure>", lambda event, labels=(name, fit): [label.configure(wraplength=max(120, event.width)) for label in labels])
             button = self._button(body, "Use in benchmark", lambda name=model.name: self.prepare_model(name))
+            self.catalog_use_buttons.append(button)
             button.pack(fill="x", side="bottom")
             button.configure(state="disabled" if self.busy else "normal")
 
