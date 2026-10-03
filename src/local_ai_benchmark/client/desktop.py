@@ -30,6 +30,7 @@ if __package__ in {None, ""}:
     from local_ai_benchmark.providers import LlamaCppProvider, OllamaProvider, ProviderRouter
     from local_ai_benchmark.tasks import TASKS
     from local_ai_benchmark.client.theme import COLORS, FONTS, configure_ttk
+    from local_ai_benchmark.client.studio import StudioWorkspaceMixin
 else:
     from .core import ClientRunRecord, generate_run_id
     from .hardware import detect_hardware
@@ -40,6 +41,7 @@ else:
     from ..providers import LlamaCppProvider, OllamaProvider, ProviderRouter
     from ..tasks import TASKS
     from .theme import COLORS, FONTS, configure_ttk
+    from .studio import StudioWorkspaceMixin
 
 
 TASK_SUITE_DESCRIPTIONS = {
@@ -113,15 +115,16 @@ class DesktopSession:
         )
 
 
-class AetherionDesktopClient:
+class AetherionDesktopClient(StudioWorkspaceMixin):
     """Desktop interface for discovering local models and benchmarking them."""
 
     def __init__(self, root: tk.Tk | None = None, base_dir: str | Path | None = None):
         self.root = root or tk.Tk()
-        self.root.title("AETHERION Client")
+        self.root.title("AETHERION STUDIO 03 · Local Model Workspace")
         self.root.geometry("1200x820")
         self.root.minsize(1020, 720)
         self.root.configure(bg=COLORS["canvas"])
+        configure_ttk(ttk.Style(self.root))
         self.base_dir = base_dir
         self.account_service = AccountService()
         self.auth_session: AuthSession | None = None
@@ -170,7 +173,6 @@ class AetherionDesktopClient:
             self.build_ui()
             self.workspace_ready = True
             self.root.after(100, self.process_events)
-            self.animate_brand_mark()
             self.root.after(200, self.refresh_dependency_status)
             self.refresh_models()
         else:
@@ -187,25 +189,67 @@ class AetherionDesktopClient:
         self.license_gate.pack(fill="both", expand=True)
         gate = self.license_gate
         self._ambient_backdrop(gate)
-        gate.grid_columnconfigure(0, weight=1)
+        gate.grid_columnconfigure(0, weight=5, uniform="access")
+        gate.grid_columnconfigure(1, weight=4, uniform="access")
         gate.grid_rowconfigure(0, weight=1)
-        card = tk.Frame(gate, bg=COLORS["surface"], highlightbackground=COLORS["line_strong"], highlightthickness=1, bd=0)
-        card.grid(row=0, column=0, padx=32, pady=32, sticky="")
-        tk.Frame(card, bg=COLORS["accent"], height=3).pack(fill="x")
-        body = tk.Frame(card, bg=COLORS["surface"])
-        body.pack(fill="both", expand=True, padx=30, pady=24)
-        tk.Label(body, text="AETHERION  /  SECURE ACCOUNT", bg=COLORS["surface"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w")
+        story = tk.Frame(gate, bg=COLORS["hero"])
+        story.grid(row=0, column=0, sticky="nsew", padx=(24, 0), pady=24)
+        brand = tk.Frame(story, bg=COLORS["hero"])
+        brand.pack(fill="x", padx=36, pady=(30, 0))
+        tk.Label(brand, text="A E T H E R I O N", bg=COLORS["hero"], fg=COLORS["text"], font=("Segoe UI", 19, "bold")).pack(anchor="w")
+        tk.Label(brand, text="THE LOCAL MODEL ATELIER", bg=COLORS["hero"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w", pady=(8, 0))
+        promise = tk.Frame(story, bg=COLORS["hero"])
+        promise.pack(side="bottom", fill="x", padx=36, pady=(0, 30))
+        tk.Label(promise, text="Your machine.\nIts full potential.", bg=COLORS["hero"], fg=COLORS["text"], font=("Segoe UI", 34, "bold"), justify="left", anchor="w").pack(anchor="w")
+        story_copy = tk.Label(promise, text="Discover the right model. Measure what matters.\nKeep every experiment on your own device.", bg=COLORS["hero"], fg=COLORS["muted"], font=("Segoe UI", 11), justify="left", anchor="w")
+        story_copy.pack(fill="x", pady=(14, 22))
+        promise.bind("<Configure>", lambda event: story_copy.configure(wraplength=max(160, event.width)))
+        tk.Frame(promise, bg=COLORS["line_strong"], height=1).pack(fill="x")
+        tk.Label(promise, text="01 / DISCOVER     02 / BENCHMARK     03 / DECIDE", bg=COLORS["hero"], fg=COLORS["accent"], font=("Segoe UI", 8, "bold"), anchor="w").pack(fill="x", pady=(16, 0))
+        self._identity_art(story).pack(fill="both", expand=True, padx=24, pady=10)
+
+        card = tk.Frame(gate, bg=COLORS["surface"], highlightbackground=COLORS["line"], highlightthickness=1, bd=0)
+        card.grid(row=0, column=1, padx=(0, 24), pady=24, sticky="nsew")
+        tk.Frame(card, bg=COLORS["accent"], height=4).pack(fill="x")
+        auth_canvas = tk.Canvas(card, bg=COLORS["surface"], bd=0, highlightthickness=0)
+        auth_scroll = ttk.Scrollbar(card, orient="vertical", command=auth_canvas.yview, style="Aetherion.Vertical.TScrollbar")
+        auth_scroll.pack(side="right", fill="y")
+        auth_canvas.pack(fill="both", expand=True)
+        auth_canvas.configure(yscrollcommand=auth_scroll.set)
+        body = tk.Frame(auth_canvas, bg=COLORS["surface"])
+        auth_window = auth_canvas.create_window(0, 0, window=body, anchor="nw")
+        body.bind("<Configure>", lambda _event: auth_canvas.configure(scrollregion=auth_canvas.bbox("all")))
+        auth_canvas.bind("<Configure>", lambda event: auth_canvas.itemconfigure(auth_window, width=event.width))
+        content = tk.Frame(body, bg=COLORS["surface"])
+        content.pack(fill="both", expand=True, padx=28, pady=34)
+        body = content
+        self.auth_canvas = auth_canvas
+        def scroll_auth(event: tk.Event) -> None:
+            if auth_canvas.winfo_exists() and auth_canvas.winfo_rootx() <= event.x_root <= auth_canvas.winfo_rootx() + auth_canvas.winfo_width() and auth_canvas.winfo_rooty() <= event.y_root <= auth_canvas.winfo_rooty() + auth_canvas.winfo_height():
+                auth_canvas.yview_scroll(int(-event.delta / 120), "units")
+        self.root.bind_all("<MouseWheel>", scroll_auth, add="+")
+        tk.Label(body, text="YOUR PRIVATE WORKSPACE", bg=COLORS["surface"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w")
         self.auth_title = tk.Label(body, text="Welcome back", bg=COLORS["surface"], fg=COLORS["text"], font=FONTS["display"])
         self.auth_title.pack(anchor="w", pady=(8, 5))
-        self.auth_description = tk.Label(body, text="Your models and benchmark results stay on this device.", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["body"], wraplength=620, justify="left")
+        self.auth_description = tk.Label(body, text="Your models and benchmark results stay on this device.", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["body"], wraplength=350, justify="left")
         self.auth_description.pack(anchor="w", pady=(0, 14))
-        tk.Label(body, text="LICENSE SERVICE URL", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["section"]).pack(anchor="w")
-        self.auth_url_entry = tk.Entry(body, bg=COLORS["surface_elevated"], fg=COLORS["text"], insertbackground=COLORS["accent"], relief="flat", font=FONTS["body"], highlightbackground=COLORS["line"], highlightcolor=COLORS["accent"], highlightthickness=1)
+        connection = tk.Frame(body, bg=COLORS["surface"])
+        def toggle_connection() -> None:
+            if connection.winfo_manager():
+                connection.pack_forget()
+                connection_button.configure(text="Connection settings  +")
+            else:
+                connection.pack(fill="x", before=tabs, pady=(0, 14))
+                connection_button.configure(text="Connection settings  −")
+        connection_button = self._button(body, "Connection settings  +", toggle_connection)
+        connection_button.pack(fill="x", pady=(0, 16))
+        tk.Label(connection, text="LICENSE SERVICE URL", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["section"]).pack(anchor="w")
+        self.auth_url_entry = tk.Entry(connection, bg=COLORS["surface_elevated"], fg=COLORS["text"], insertbackground=COLORS["accent"], relief="flat", font=FONTS["body"], highlightbackground=COLORS["line"], highlightcolor=COLORS["accent"], highlightthickness=1)
         self._bind_entry_focus(self.auth_url_entry)
         self.auth_url_entry.pack(fill="x", pady=(5, 12), ipady=7)
         self.auth_url_entry.insert(0, get_service_url())
-        tk.Label(body, text="THIS DEVICE ID", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["section"]).pack(anchor="w")
-        device_row = tk.Frame(body, bg=COLORS["surface_elevated"], highlightbackground=COLORS["line_strong"], highlightthickness=1)
+        tk.Label(connection, text="THIS DEVICE ID", bg=COLORS["surface"], fg=COLORS["muted"], font=FONTS["section"]).pack(anchor="w")
+        device_row = tk.Frame(connection, bg=COLORS["surface_elevated"], highlightbackground=COLORS["line_strong"], highlightthickness=1)
         device_row.pack(fill="x", pady=(5, 10))
         device_id = machine_fingerprint()
         tk.Label(device_row, text=device_id, bg=COLORS["surface_elevated"], fg=COLORS["text"], font=FONTS["mono"], padx=12, pady=9, anchor="w").pack(side="left", fill="x", expand=True)
@@ -220,14 +264,16 @@ class AetherionDesktopClient:
         self.auth_mode_buttons["register"].pack(side="left")
         self.auth_form = tk.Frame(body, bg=COLORS["surface"])
         self.auth_form.pack(fill="x")
-        self.auth_feedback = tk.Label(body, text=message, bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"], wraplength=620, justify="left", anchor="w")
+        self.auth_feedback = tk.Label(body, text=message, bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"], wraplength=350, justify="left", anchor="w")
         self.auth_feedback.pack(fill="x", pady=(9, 8))
         actions = tk.Frame(body, bg=COLORS["surface"])
         actions.pack(fill="x")
         self.auth_submit_button = self._button(actions, "SIGN IN", self.submit_account_form, primary=True)
-        self.auth_submit_button.pack(side="left", fill="x", expand=True, padx=(0, 8))
-        self._button(actions, "CONTINUE OFFLINE", self.continue_offline).pack(side="left")
-        tk.Label(body, text="The benchmark remains local. A protected session grant allows up to 7 days offline on this Windows account and device.", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"], wraplength=620, justify="left").pack(anchor="w", pady=(11, 0))
+        self.auth_submit_button.pack(fill="x", pady=(0, 10))
+        self._button(actions, "CONTINUE OFFLINE", self.continue_offline).pack(fill="x")
+        privacy = tk.Label(body, text="PRIVATE BY DESIGN\nYour benchmark data stays here. Saved access allows up to 7 days offline on this device and Windows account.", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"], wraplength=350, justify="left")
+        privacy.pack(anchor="w", fill="x", pady=(24, 0))
+        content.bind("<Configure>", lambda event: [label.configure(wraplength=max(160, event.width)) for label in (self.auth_description, self.auth_feedback, privacy)])
         self.render_account_form(self.auth_mode)
 
     def copy_device_id(self, device_id: str) -> None:
@@ -268,6 +314,41 @@ class AetherionDesktopClient:
         # underlying Tk window command to place this background behind widgets.
         backdrop.tk.call("lower", backdrop._w)
         return backdrop
+
+    @staticmethod
+    def _identity_art(parent: tk.Widget, *, compact: bool = False) -> tk.Canvas:
+        """Draw a scalable orbital signature using native vector primitives."""
+        import math
+
+        art = tk.Canvas(parent, bg=COLORS["hero"], bd=0, highlightthickness=0,
+                        width=180 if compact else 400, height=100 if compact else 280)
+        def paint(event: tk.Event) -> None:
+            art.delete("all")
+            width, height = event.width, event.height
+            cx, cy = width * .5, height * .5
+            radius = min(width * .40, height * .42)
+            for step in range(24, 0, -1):
+                r = radius * (1 + step / 22)
+                tint = AetherionDesktopClient._blend_hex(COLORS["hero"], COLORS["glow_blue"], (1 - step / 25) * .5)
+                art.create_oval(cx-r, cy-r, cx+r, cy+r, fill=tint, outline="")
+            for factor, color in ((1.15, COLORS["line_strong"]), (.94, COLORS["accent"]), (.72, COLORS["line_strong"])):
+                r = radius * factor
+                art.create_oval(cx-r, cy-r, cx+r, cy+r, outline=color, width=1)
+            art.create_oval(cx-radius*1.48, cy-radius*.36, cx+radius*1.48, cy+radius*.36, outline=COLORS["accent"], width=2)
+            for angle in (35, 155, 275):
+                x = cx + math.cos(math.radians(angle)) * radius * .94
+                y = cy + math.sin(math.radians(angle)) * radius * .94
+                art.create_oval(x-4, y-4, x+4, y+4, fill=COLORS["accent"], outline="")
+            r = radius * .55
+            points = []
+            for i in range(8):
+                angle = math.radians(i * 45 - 90)
+                reach = r if i % 2 == 0 else r * .20
+                points.extend((cx + math.cos(angle)*reach, cy + math.sin(angle)*reach))
+            art.create_polygon(points, fill=COLORS["text"], outline="")
+            art.create_oval(cx-4, cy-4, cx+4, cy+4, fill=COLORS["accent"], outline="")
+        art.bind("<Configure>", paint)
+        return art
 
     @staticmethod
     def _bind_entry_focus(entry: tk.Entry) -> None:
@@ -490,11 +571,13 @@ class AetherionDesktopClient:
             disabledforeground=COLORS["quiet"],
             relief="flat",
             bd=0,
-            font=("Segoe UI", 9, "bold"),
+            font=FONTS["button"],
             padx=15,
             pady=11,
             cursor="hand2",
-            highlightthickness=0,
+            highlightthickness=1,
+            highlightbackground=bg,
+            highlightcolor=COLORS["accent"],
         )
 
         def show_hover(_event: tk.Event) -> None:
@@ -506,6 +589,7 @@ class AetherionDesktopClient:
 
         button.bind("<Enter>", show_hover)
         button.bind("<Leave>", show_default)
+        button.bind("<Return>", lambda _event: button.invoke())
         return button
 
     def _field_label(self, parent: tk.Widget, text: str) -> tk.Label:
@@ -521,6 +605,11 @@ class AetherionDesktopClient:
     def build_ui(self) -> None:
         style = ttk.Style(self.root)
         configure_ttk(style)
+        self.root.option_add("*TCombobox*Listbox.background", COLORS["surface_elevated"])
+        self.root.option_add("*TCombobox*Listbox.foreground", COLORS["text"])
+        self.root.option_add("*TCombobox*Listbox.selectBackground", COLORS["surface_interactive"])
+        self.root.option_add("*TCombobox*Listbox.selectForeground", COLORS["accent"])
+        self.root.option_add("*TCombobox*Listbox.font", FONTS["body"])
 
         self.root.configure(bg=COLORS["canvas"])
         self.container = tk.Frame(self.root, bg=COLORS["canvas"])
@@ -528,44 +617,46 @@ class AetherionDesktopClient:
         self.shell = tk.Frame(self.container, bg=COLORS["canvas"])
         self.shell.pack(fill="both", expand=True)
 
-        self.create_sidebar(self.shell)
+        self.create_top_navigation(self.shell)
         self.workspace = tk.Frame(self.shell, bg=COLORS["canvas"])
-        self.workspace.pack(side="left", fill="both", expand=True, padx=(18, 0))
+        self.workspace.pack(fill="both", expand=True)
 
-        header = tk.Frame(self.workspace, bg=COLORS["canvas"], height=66)
+        header = tk.Frame(self.workspace, bg=COLORS["canvas"], height=76,
+                          highlightbackground=COLORS["line"], highlightthickness=1)
         header.pack(fill="x", pady=(0, 15))
         header.pack_propagate(False)
-        tk.Frame(header, bg=COLORS["line"], height=1).pack(side="bottom", fill="x")
+        signature = tk.Frame(header, bg=COLORS["canvas"], width=220)
+        signature.pack(side="right", fill="y", padx=(8, 12), pady=12)
+        signature.pack_propagate(False)
         heading = tk.Frame(header, bg=COLORS["canvas"])
-        heading.pack(side="left", fill="y", expand=True)
-        tk.Label(
-            heading,
-            text="AETHERION  /  LOCAL MODEL BENCHMARK",
-            bg=COLORS["canvas"],
-            fg=COLORS["quiet"],
-            font=FONTS["section"],
-        ).pack(anchor="w", pady=(3, 4))
-        self.section_var = tk.StringVar(value="DASHBOARD")
+        heading.pack(side="left", fill="both", expand=True, padx=16, pady=8)
+        self.section_var = tk.StringVar(value="Workspace")
         tk.Label(
             heading,
             textvariable=self.section_var,
             bg=COLORS["canvas"],
             fg=COLORS["text"],
-            font=("Segoe UI", 23, "bold"),
+            font=("Segoe UI", 20, "bold"),
         ).pack(anchor="w")
+        self.section_description = tk.StringVar(value="Find the model that feels at home on your hardware.")
+        header_copy = tk.Label(heading, textvariable=self.section_description, bg=COLORS["canvas"],
+                 fg=COLORS["muted"], font=FONTS["small"], anchor="w", justify="left")
+        header_copy.pack(anchor="w", fill="x", pady=(4, 0))
+        heading.bind("<Configure>", lambda event: header_copy.configure(wraplength=max(160, event.width)))
         self.status_var = tk.StringVar(value="CONNECTING TO LOCAL RUNTIMES")
         self.status = tk.Label(
-            header,
+            signature,
             textvariable=self.status_var,
             bg=COLORS["surface_elevated"],
             fg=COLORS["text_soft"],
-            font=("Segoe UI", 8, "bold"),
-            padx=14,
-            pady=10,
+            font=("Segoe UI", 7, "bold"),
+            padx=6,
+            pady=5,
+            wraplength=200,
             highlightbackground=COLORS["line"],
             highlightthickness=1,
         )
-        self.status.pack(side="right", anchor="center", padx=(12, 0))
+        self.status.pack(fill="x", expand=True)
 
         self.view_stack = tk.Frame(self.workspace, bg=COLORS["canvas"])
         self.view_stack.pack(fill="both", expand=True)
@@ -587,21 +678,27 @@ class AetherionDesktopClient:
         ]
         self.overview_vars: dict[str, tk.StringVar] = {}
         for column, (key, label, value) in enumerate(overview_values):
-            card = self._card(overview, accent=True)
+            card = self._card(overview)
             card.grid(row=0, column=column, sticky="nsew", padx=(0 if column == 0 else 7, 0 if column == 2 else 7))
             body = tk.Frame(card, bg=COLORS["surface"])
-            body.pack(fill="both", expand=True, padx=16, pady=12)
-            tk.Label(body, text=label, bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["section"]).pack(anchor="w")
+            body.pack(fill="both", expand=True, padx=16, pady=14)
+            metric_heading = tk.Frame(body, bg=COLORS["surface"])
+            metric_heading.pack(fill="x")
+            tk.Label(metric_heading, text=f"0{column + 1}", bg=COLORS["surface"], fg=COLORS["accent"], font=("Consolas", 12, "bold")).pack(side="left", padx=(0, 10))
+            tk.Label(metric_heading, text=label, bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["section"]).pack(side="left")
             variable = tk.StringVar(value=value)
             self.overview_vars[key] = variable
-            tk.Label(
+            metric_label = tk.Label(
                 body,
                 textvariable=variable,
                 bg=COLORS["surface"],
                 fg=COLORS["text"],
-                font=("Segoe UI", 13, "bold"),
+                font=FONTS["metric"],
                 anchor="w",
-            ).pack(anchor="w", pady=(6, 0))
+                justify="left",
+            )
+            metric_label.pack(anchor="w", fill="x", pady=(8, 0))
+            body.bind("<Configure>", lambda event, label=metric_label: label.configure(wraplength=max(80, event.width)))
 
         content = tk.Frame(self.dashboard_view, bg=COLORS["canvas"])
         content.grid(row=1, column=0, sticky="nsew")
@@ -675,6 +772,15 @@ class AetherionDesktopClient:
         self.output.tag_configure("muted", foreground=COLORS["muted"])
         self.append_output("Choose a local model and run a benchmark. Results stay on this device.\n", "muted")
 
+        # Keep the primary action visible while the configuration scrolls.
+        action_dock = tk.Frame(self.right, bg=COLORS["surface"])
+        action_dock.pack(side="bottom", fill="x", padx=18, pady=(0, 16))
+        tk.Frame(action_dock, bg=COLORS["line"], height=1).pack(fill="x", pady=(0, 12))
+        self.run_button = self._button(action_dock, "Run benchmark  →", self.run_selected_benchmark, primary=True)
+        self.run_button.pack(fill="x", pady=(0, 8))
+        self.open_results_button = self._button(action_dock, "Open results folder", self.open_results_folder)
+        self.open_results_button.pack(fill="x")
+
         self.configuration_canvas = tk.Canvas(
             self.right,
             bg=COLORS["surface"],
@@ -689,11 +795,14 @@ class AetherionDesktopClient:
             style="Aetherion.Vertical.TScrollbar",
         )
         self.configuration_canvas.configure(yscrollcommand=self.configuration_scrollbar.set)
-        self.configuration_canvas.pack(side="left", fill="both", expand=True, padx=(14, 0), pady=(14, 10))
         self.configuration_scrollbar.pack(side="right", fill="y", padx=(0, 5), pady=(14, 10))
+        self.configuration_canvas.pack(side="left", fill="both", expand=True, padx=(6, 0), pady=(8, 10))
         controls_outer = tk.Frame(self.configuration_canvas, bg=COLORS["surface"])
         controls = tk.Frame(controls_outer, bg=COLORS["surface"])
         controls.pack(fill="both", expand=True, padx=12, pady=12)
+        controls.bind("<Configure>", lambda event: [label.configure(wraplength=max(120, event.width))
+                      for label in (self.model_details, self.suite_details, self.requirements_label,
+                                    self.result_status, self.run_metrics) if label.winfo_exists()])
         controls_window = self.configuration_canvas.create_window((0, 0), window=controls_outer, anchor="nw")
         controls_outer.bind(
             "<Configure>",
@@ -711,7 +820,8 @@ class AetherionDesktopClient:
                 self.configuration_canvas.yview_scroll(int(-event.delta / 120), "units")
 
         self.root.bind_all("<MouseWheel>", scroll_configuration, add="+")
-        tk.Label(controls, text="Run a benchmark", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 15, "bold")).pack(anchor="w")
+        tk.Label(controls, text="THE BENCHMARK LAB", bg=COLORS["surface"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w", pady=(0, 8))
+        tk.Label(controls, text="Set the standard.", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 21, "bold")).pack(anchor="w")
         tk.Label(
             controls,
             text="Choose a local model and a validation suite.",
@@ -724,7 +834,7 @@ class AetherionDesktopClient:
             controls,
             "Download a model",
             self.open_model_downloader,
-            primary=True,
+            primary=False,
         )
         self.download_model_button.pack(fill="x", pady=(0, 5))
         tk.Label(
@@ -780,8 +890,6 @@ class AetherionDesktopClient:
         )
         self.suite_details.pack(anchor="w", fill="x", pady=(0, 11))
 
-        self.run_button = self._button(controls, "Run benchmark", self.run_selected_benchmark, primary=True)
-        self.run_button.pack(fill="x", pady=(0, 13))
         self.stop_button = self._button(controls, "Stop benchmark", self.stop_benchmark)
         self.stop_button.pack(fill="x", pady=(0, 13))
         self.stop_button.configure(state="disabled")
@@ -862,8 +970,7 @@ class AetherionDesktopClient:
 
         self.views.update({})
         self.create_secondary_views()
-        self.open_results_button = self._button(self.right, "Open results folder", self.open_results_folder)
-        self.open_results_button.pack(fill="x", padx=14, pady=(0, 14))
+        self.build_studio_home()
 
     def view_header(self, parent: tk.Widget, eyebrow: str, title: str, description: str) -> None:
         header = tk.Frame(parent, bg=COLORS["canvas"])
@@ -886,19 +993,7 @@ class AetherionDesktopClient:
         self.view_header(models_view, "MODEL LIBRARY", "Your local model catalog", "Review available models, runtimes, and hardware fit.")
         models_panel = self._card(models_view)
         models_panel.pack(fill="both", expand=True)
-        self.model_view_listbox = tk.Listbox(
-            models_panel,
-            bg=COLORS["surface"],
-            fg=COLORS["text_soft"],
-            selectbackground=COLORS["surface_interactive"],
-            selectforeground=COLORS["text"],
-            highlightthickness=0,
-            bd=0,
-            activestyle="none",
-            font=FONTS["body"],
-            relief="flat",
-        )
-        self.model_view_listbox.pack(fill="both", expand=True, padx=16, pady=14)
+        self.create_model_catalog(models_panel)
 
         benchmarks_view = tk.Frame(self.view_stack, bg=COLORS["canvas"])
         self.views["benchmarks"] = benchmarks_view
@@ -930,25 +1025,7 @@ class AetherionDesktopClient:
         self.view_header(results_view, "RESULTS", "Evidence from your machine", "Review completed runs stored in your local results folder.")
         results_panel = self._card(results_view)
         results_panel.pack(fill="both", expand=True)
-        results_body = tk.Frame(results_panel, bg=COLORS["surface"])
-        results_body.pack(fill="both", expand=True, padx=14, pady=14)
-        self.results_view_text = tk.Text(
-            results_body,
-            bg=COLORS["surface"],
-            fg=COLORS["text_soft"],
-            bd=0,
-            wrap="word",
-            padx=6,
-            pady=6,
-            font=FONTS["mono"],
-            state="disabled",
-            relief="flat",
-            highlightthickness=0,
-        )
-        results_scrollbar = ttk.Scrollbar(results_body, orient="vertical", command=self.results_view_text.yview, style="Aetherion.Vertical.TScrollbar")
-        self.results_view_text.configure(yscrollcommand=results_scrollbar.set)
-        self.results_view_text.pack(side="left", fill="both", expand=True)
-        results_scrollbar.pack(side="right", fill="y")
+        self.create_results_board(results_panel)
 
         hardware_view = tk.Frame(self.view_stack, bg=COLORS["canvas"])
         self.views["hardware"] = hardware_view
@@ -1021,28 +1098,11 @@ class AetherionDesktopClient:
         self.refresh_history_view()
 
     def refresh_model_view(self) -> None:
-        if not hasattr(self, "model_view_listbox"):
-            return
-        self.model_view_listbox.delete(0, "end")
-        if not self.models:
-            self.model_view_listbox.insert("end", "No local models discovered yet. Refresh the model list from the dashboard.")
-            return
-        for model in self.models.values():
-            assessment = self.assess_model(model).replace(chr(10), " · ")
-            self.model_view_listbox.insert("end", f"{model.name}   |   {model.provider.upper()}   |   {assessment}")
+        self.refresh_model_cards()
+        self.refresh_studio_home()
 
     def refresh_results_view(self) -> None:
-        if not hasattr(self, "results_view_text"):
-            return
-        rows = self.session.store.list()
-        text = "\n".join(
-            f"{row.get('created_at', 'UNKNOWN')}  |  {row.get('benchmark', 'UNKNOWN')}  |  {row.get('status', 'UNKNOWN')}"
-            for row in rows[-20:]
-        ) or "No benchmark results saved yet."
-        self.results_view_text.configure(state="normal")
-        self.results_view_text.delete("1.0", "end")
-        self.results_view_text.insert("end", text)
-        self.results_view_text.configure(state="disabled")
+        self.refresh_results_board()
 
     def refresh_history_view(self) -> None:
         if not hasattr(self, "history_view_listbox"):
@@ -1069,14 +1129,14 @@ class AetherionDesktopClient:
         brand = tk.Frame(sidebar, bg=COLORS["surface"])
         brand.pack(fill="x", padx=16, pady=(19, 28))
         self.brand_mark = tk.Canvas(brand, width=42, height=42, bg=COLORS["surface"], bd=0, highlightthickness=0)
-        self.brand_mark.pack(side="left", padx=(0, 9))
+        self.brand_mark.pack(anchor="w", pady=(0, 14))
         self.brand_mark.create_oval(4, 4, 38, 38, outline=COLORS["line_strong"], width=1)
         self.brand_orbit = self.brand_mark.create_arc(7, 7, 35, 35, start=15, extent=120, outline=COLORS["accent"], width=2, style="arc")
         self.brand_mark.create_polygon(21, 11, 24, 18, 31, 21, 24, 24, 21, 31, 18, 24, 11, 21, 18, 18, fill=COLORS["text"], outline="")
         logo_copy = tk.Frame(brand, bg=COLORS["surface"])
-        logo_copy.pack(side="left", anchor="center")
-        tk.Label(logo_copy, text="AETHERION", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 10, "bold")).pack(anchor="w")
-        tk.Label(logo_copy, text="LOCAL MODEL LAB", bg=COLORS["surface"], fg=COLORS["quiet"], font=("Segoe UI", 7, "bold")).pack(anchor="w", pady=(3, 0))
+        logo_copy.pack(anchor="w")
+        tk.Label(logo_copy, text="AETHERION", bg=COLORS["surface"], fg=COLORS["text"], font=("Segoe UI", 15, "bold")).pack(anchor="w")
+        tk.Label(logo_copy, text="THE MODEL ATELIER", bg=COLORS["surface"], fg=COLORS["accent"], font=("Segoe UI", 8, "bold")).pack(anchor="w", pady=(5, 0))
 
         tk.Label(sidebar, text="WORKSPACE", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["section"], padx=16).pack(anchor="w", pady=(0, 9))
         self.nav_buttons: dict[str, tk.Button] = {}
@@ -1107,7 +1167,7 @@ class AetherionDesktopClient:
                 relief="flat",
                 bd=0,
                 anchor="w",
-                font=("Segoe UI", 9, "bold"),
+                font=("Segoe UI", 10, "bold"),
                 padx=14,
                 pady=11,
                 cursor="hand2",
@@ -1147,7 +1207,7 @@ class AetherionDesktopClient:
 
     def focus_section(self, view: str) -> None:
         labels = {
-            "dashboard": "DASHBOARD",
+            "dashboard": "Workspace",
             "benchmarks": "BENCHMARK LAB",
             "models": "MODEL LIBRARY",
             "results": "RESULTS",
@@ -1157,6 +1217,16 @@ class AetherionDesktopClient:
         }
         self.active_view = view
         self.section_var.set(labels.get(view, "DASHBOARD"))
+        descriptions = {
+            "dashboard": "Find the model that feels at home on your hardware.",
+            "benchmarks": "Put your local models to the test, one task at a time.",
+            "models": "Explore your collection and discover your next model.",
+            "results": "Turn measured performance into a confident choice.",
+            "hardware": "Meet the machine behind every measurement.",
+            "history": "Every experiment leaves a useful trail.",
+            "settings": "A workspace that fits the way you work.",
+        }
+        self.section_description.set(descriptions.get(view, descriptions["dashboard"]))
         for name, button in self.nav_buttons.items():
             active = name == view
             button.configure(
@@ -1169,6 +1239,10 @@ class AetherionDesktopClient:
         for frame in self.views.values():
             frame.pack_forget()
         self.views.get(view, self.dashboard_view).pack(fill="both", expand=True)
+        if view == "dashboard":
+            self.refresh_studio_home()
+        elif view == "models":
+            self.refresh_model_cards()
 
     @staticmethod
     def create_glass_panel(parent: tk.Widget) -> tk.Frame:
@@ -1693,6 +1767,8 @@ class AetherionDesktopClient:
                 self.category_menu.configure(state="readonly")
                 self.refresh_button.configure(state="normal")
                 self.busy = False
+                self.refresh_studio_home()
+                self.refresh_model_cards()
             elif event == "progress":
                 index, total, result = payload
                 self.progress.configure(value=(index / total) * 100 if total else 0)

@@ -84,6 +84,7 @@ def test_focus_section_updates_active_navigation_and_view():
     client.dashboard_view = dashboard
     client.views = {"dashboard": dashboard, "models": models}
     client.section_var = SimpleNamespace(set=lambda value: setattr(client, "section_label", value))
+    client.section_description = SimpleNamespace(set=lambda value: setattr(client, "section_copy", value))
     client.nav_buttons = {"dashboard": _Widget(), "models": _Widget()}
     client.nav_indicators = {"dashboard": _Widget(), "models": _Widget()}
 
@@ -91,6 +92,7 @@ def test_focus_section_updates_active_navigation_and_view():
 
     assert client.active_view == "models"
     assert client.section_label == "MODEL LIBRARY"
+    assert client.section_copy == "Explore your collection and discover your next model."
     assert client.nav_buttons["models"].options["fg"] == desktop.COLORS["text"]
     assert client.nav_buttons["dashboard"].options["fg"] == desktop.COLORS["muted"]
     assert client.nav_indicators["models"].options["bg"] == desktop.COLORS["accent"]
