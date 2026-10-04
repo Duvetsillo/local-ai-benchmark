@@ -1,71 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark light" />
-    <title>AETHERION | BEYOND THE KNOWN.</title>
-    <meta
-      name="description"
-      content="AETHERION builds technology that extends what is possible, from local AI systems to future-ready infrastructure and engineering."
-    />
-    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <link rel="stylesheet" href="styles.css?v=20260928-4" />
-    <link rel="stylesheet" href="monochrome.css" />
-  </head>
-  <body class="intro-active">
-    <a class="skip-link" href="#main-content">Skip to main content</a>
-
-    <div class="intro-overlay" aria-live="polite" aria-label="AETHERION initializing">
-      <div class="intro-stage">
-        <div class="intro-kicker">LOCAL INTELLIGENCE / SYSTEM READY</div>
-        <div class="intro-badge" aria-hidden="true">
-          <span class="intro-trail" aria-hidden="true"></span>
-          <svg class="intro-logo" viewBox="0 0 64 64" role="img" aria-label="AETHERION logo">
-            <defs>
-              <linearGradient id="introBrandGradient" x1="0%" x2="100%" y1="0%" y2="100%">
-                <stop offset="0%" stop-color="#D5D5D5" />
-                <stop offset="55%" stop-color="#B8B8B8" />
-                <stop offset="100%" stop-color="#F4F4F4" />
-              </linearGradient>
-            </defs>
-            <circle class="ring ring-primary" cx="32" cy="32" r="22" fill="none" stroke="url(#introBrandGradient)" stroke-width="2.5" opacity="0.9" />
-            <path class="ring ring-secondary" d="M32 11 C20 11 11 21 11 32 C11 45 20 54 32 54 C44 54 53 45 53 32 C53 21 44 11 32 11 Z" fill="none" stroke="url(#introBrandGradient)" stroke-width="1.8" opacity="0.8" />
-            <path class="cross" d="M32 13 V51 M13 32 H51" stroke="rgba(244,247,251,0.22)" stroke-width="1.5" stroke-linecap="round" />
-            <path class="core-shape" d="M32 18 L36 28 L46 32 L36 36 L32 46 L28 36 L18 32 L28 28 Z" fill="none" stroke="url(#introBrandGradient)" stroke-width="2.1" stroke-linejoin="round" />
-            <circle class="core-halo" cx="32" cy="32" r="8.5" fill="none" stroke="rgba(169,199,255,0.32)" stroke-width="1" />
-            <circle class="core-dot" cx="32" cy="32" r="5.5" fill="url(#introBrandGradient)" />
-          </svg>
-        </div>
-        <div class="intro-lockup">
-          <div class="intro-wordmark" aria-hidden="true">
-            <span class="intro-name" id="introName"></span>
-            <span class="intro-cursor" aria-hidden="true"></span>
-          </div>
-          <div class="intro-tagline" id="introTagline">BEYOND THE KNOWN.</div>
-        </div>
-        <div class="intro-progress" aria-hidden="true"><span></span></div>
-      </div>
-    </div>
-
-    <div class="cookie-banner" id="cookieBanner" aria-live="polite">
-      <div class="cookie-content">
-        <div>
-          <h2>Cookie preferences</h2>
-          <p>
-            This site uses browser storage only to remember your consent choice. We do not run third-party analytics or ad trackers.
-          </p>
-        </div>
-        <div class="cookie-actions">
-          <button type="button" class="button button-secondary" id="rejectCookies">Reject optional cookies</button>
-          <button type="button" class="button button-primary" id="acceptCookies">Accept optional cookies</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="page-shell">
-      <header class="topbar">
-        <a class="brand" href="index.html" aria-label="AETHERION home">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="Find the right local AI model for your hardware. Aetherion measures latency, throughput and task validation on your own machine." />
+  <title>AETHERION | Local intelligence, measured.</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="stylesheet" href="styles.css?v=20261004" />
+  <link rel="stylesheet" href="monochrome.css?v=20261004-4" />
+</head>
+<body class="homepage">
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<div class="page-shell">
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="AETHERION home">
           <div class="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 64 64" role="img" aria-label="AETHERION logo">
               <defs>
@@ -87,250 +36,89 @@
             <small>BEYOND THE KNOWN.</small>
           </div>
         </a>
-        <nav class="nav" id="aetherion-navigation" aria-label="Main navigation">
-          <a href="overview.html">Overview</a>
-          <a href="models.html">Models</a>
-          <a href="#details">Details</a>
-          <a href="compare.html">Compare</a>
-          <a href="#contact">Contact</a>
-          <a href="resources.html">Resources</a>
-          <a href="privacy.html">Privacy</a>
-          <a href="terms.html">Terms</a>
-          <a href="cookies.html">Cookies</a>
-        </nav>
-        <button class="design-menu" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="aetherion-navigation"><span></span><span></span></button>
-      </header>
-
-      <main id="main-content">
-        <section class="hero" id="overview">
-          <div class="hero-copy">
-            <p class="eyebrow">LOCAL INTELLIGENCE. MEASURED.</p>
-            <h1>Beyond<br>the <span class="hero-word-light">known.</span></h1>
-            <p class="lead">
-              Know what your machine can do. Profile your hardware, compare local models and turn every benchmark into a clearer decision.
-            </p>
-            <div class="hero-actions">
-              <a class="primary" href="#benchmarkSection">Get the Windows client <span aria-hidden="true">↗</span></a>
-              <a class="secondary" href="#workflow">Explore the process ↓</a>
-            </div>
-            <div class="hero-meta" aria-label="AETHERION capabilities">
-              <span>Local-first</span>
-              <span>Hardware-aware</span>
-              <span>Results-driven</span>
-            </div>
-
-          </div>
-
-          <div class="engine-visual" aria-label="Interactive overview of the Aetherion workflow">
-            <div class="engine-coordinate coordinate-top">AETH / LOCAL INTELLIGENCE ENGINE</div>
-            <div class="engine-stage">
-              <div class="engine-orbit engine-orbit-one" aria-hidden="true"></div><div class="engine-orbit engine-orbit-two" aria-hidden="true"></div><div class="engine-orbit engine-orbit-three" aria-hidden="true"></div>
-              <svg class="engine-flow" viewBox="0 0 500 450" aria-hidden="true"><g fill="none" stroke="#ffffff20"><path d="M40 225H460M250 40V410"/><circle cx="250" cy="225" r="174" stroke-dasharray="1 12"/></g><g fill="none" stroke="#dadada" stroke-dasharray="9 160" class="flow-trace"><path d="M40 225H460M250 40V410"/></g></svg>
-              <div class="engine-nucleus"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="34" fill="none" stroke="currentColor" stroke-width="1"/><path d="M50 14L61 39L86 50L61 61L50 86L39 61L14 50L39 39Z" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="50" cy="50" r="8" fill="currentColor"/></svg><span>AETHERION</span></div>
-              <span class="engine-token token-north" aria-hidden="true">CPU / GPU</span><span class="engine-token token-west" aria-hidden="true">LOCAL</span><span class="engine-token token-east" aria-hidden="true">MODELS</span><span class="engine-token token-south" aria-hidden="true">EVIDENCE</span>
-            </div>
-            <div class="engine-lens"><div class="engine-tabs" aria-label="Explore the workflow"><button type="button" data-engine-lens="hardware" aria-pressed="true">01 Hardware</button><button type="button" data-engine-lens="models" aria-pressed="false">02 Models</button><button type="button" data-engine-lens="evidence" aria-pressed="false">03 Evidence</button></div><div class="engine-description" aria-live="polite"><strong id="engine-lens-title">Start with your machine.</strong><p id="engine-lens-copy">Profile the hardware before choosing a model. CPU, memory and available acceleration set the context.</p></div></div>
-          </div>
-        </section>
-        <div class="system-rail"><span>DESIGNED FOR YOUR HARDWARE</span><span>OLLAMA / GGUF</span><span>LOCAL EXECUTION</span><a href="#details">FOLLOW THE EVIDENCE ↓</a></div>
-
-        <section class="summary" id="workflow">
-          <div class="section-head">
-            <p>EXECUTION PROFILE</p>
-            <h2>This benchmark runs on</h2>
-          </div>
-
-          <div class="profile-grid">
-            <div class="profile-row"><span>Operating system</span><strong>Your OS</strong></div>
-            <div class="profile-row"><span>Architecture</span><strong>Runtime architecture</strong></div>
-            <div class="profile-row"><span>CPU</span><strong>Detected local CPU</strong><small>Measured at launch</small></div>
-            <div class="profile-row"><span>Memory</span><strong>Available RAM</strong><small>Read from the device</small></div>
-            <div class="profile-row"><span>GPU</span><strong>Local accelerated stack</strong><small>Visible only on your machine</small></div>
-          </div>
-        </section>
-
-        <section class="detail-breakdown" id="details" aria-labelledby="details-title">
-          <div class="section-head">
-            <p>DECISION BREAKDOWN</p>
-            <h2 id="details-title">Every result has a reason.</h2>
-          </div>
-
-          <div class="detail-grid">
-            <article class="detail-card">
-              <span class="detail-index">01 / HARDWARE</span>
-              <h3>Measure the room first</h3>
-              <p>CPU, system memory, GPU model, VRAM, operating system, and architecture establish the limits before a model is judged.</p>
-              <dl>
-                <div><dt>RAM</dt><dd>Available memory for loading and running the model.</dd></div>
-                <div><dt>VRAM</dt><dd>GPU memory available for accelerated inference.</dd></div>
-              </dl>
-            </article>
-            <article class="detail-card">
-              <span class="detail-index">02 / FIT</span>
-              <h3>Explain the recommendation</h3>
-              <p>The client compares estimated model requirements with your hardware and tells you when to use GPU, CPU fallback, or a smaller model.</p>
-              <dl>
-                <div><dt>READY</dt><dd>Runtime and memory are available for a direct run.</dd></div>
-                <div><dt>LIMITED</dt><dd>The model can run, but may fall back to CPU or slower memory.</dd></div>
-              </dl>
-            </article>
-            <article class="detail-card">
-              <span class="detail-index">03 / VALIDATION</span>
-              <h3>Read quality and speed together</h3>
-              <p>Each task suite checks a different behavior instead of reducing a model to one synthetic score.</p>
-              <dl>
-                <div><dt>QUALITY</dt><dd>Pass/fail validation for the requested output format.</dd></div>
-                <div><dt>SPEED</dt><dd>Time to first token, total time, and tokens per second.</dd></div>
-              </dl>
-            </article>
-          </div>
-        </section>
-
-        <section class="models" id="models">
-          <div class="section-head">
-            <p>LOCAL MODELS</p>
-            <h2>Best fit by workload</h2>
-          </div>
-
-          <div class="model-list">
-            <article class="model-card spotlight-card selected" tabindex="0" aria-label="Balanced local model card">
-              <div class="model-top">
-                <span class="tag">BALANCED</span>
-                <span class="status">high fit</span>
-              </div>
-              <h3>Local model profile</h3>
-              <p>Ideal for general-purpose local work when the best fit is determined by your hardware.</p>
-              <ul>
-                <li>Measured locally</li>
-                <li>Selected by workload</li>
-                <li>Compared with evidence</li>
-              </ul>
-            </article>
-
-            <article class="model-card spotlight-card" tabindex="0" aria-label="Lightweight local model card">
-              <div class="model-top">
-                <span class="tag">LIGHTWEIGHT</span>
-                <span class="status">compact</span>
-              </div>
-              <h3>Lean profile</h3>
-              <p>Best for low-memory environments or quick local interactions.</p>
-              <ul>
-                <li>Low resource usage</li>
-                <li>Fast startup</li>
-                <li>Minimal overhead</li>
-              </ul>
-            </article>
-
-            <article class="model-card spotlight-card" tabindex="0" aria-label="General model card">
-              <div class="model-top">
-                <span class="tag">GENERAL USE</span>
-                <span class="status">reliable</span>
-              </div>
-              <h3>General-purpose profile</h3>
-              <p>Well suited for assistant-style tasks that need a stable local baseline.</p>
-              <ul>
-                <li>Broad compatibility</li>
-                <li>Task-aware fit</li>
-                <li>Balanced performance</li>
-              </ul>
-            </article>
-          </div>
-        </section>
-
-        <section class="benchmarks" id="benchmarkSection">
-          <div class="section-head">
-            <p>LOCAL EXECUTION</p>
-            <h2>Run the benchmark on your machine</h2>
-          </div>
-
-          <div class="results-box benchmark-empty-state spotlight-card" id="benchmarkState">
-            <div class="benchmark-empty-copy">
-              <p class="eyebrow dark">NO BROWSER EXECUTION</p>
-              <h3>Start from your local environment.</h3>
-              <p>
-                The benchmark is intentionally designed to run on your hardware, not inside the browser. That keeps
-                the results accurate, private, and representative of your real setup.
-              </p>
-
-              <ol class="local-steps">
-                <li>Download the local client.</li>
-                <li>Run it on your machine.</li>
-                <li>Compare fresh results for your hardware.</li>
-              </ol>
-
-              <div class="hero-actions stacked-actions">
-                <a class="primary download-cta" href="downloads/Aetherion-Client.exe" download>
-                  <span class="download-icon" aria-hidden="true">✦</span>
-                  <span>Download Windows client</span>
-                </a>
-                <a class="secondary" href="README.md" target="_blank" rel="noreferrer">Setup guide</a>
-                <button type="button" class="secondary ghost-button" id="resetBenchmarkBtn">Reset benchmark state</button>
-              </div>
-            </div>
-            <div class="benchmark-metrics">
-              <div class="mini-metric">
-                <span>Execution</span>
-                <strong>Local-only</strong>
-              </div>
-              <div class="mini-metric">
-                <span>Runtime</span>
-                <strong>Windows / Python</strong>
-              </div>
-              <div class="mini-metric">
-                <span>Output</span>
-                <strong>Fresh results</strong>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="feature-showcase">
-          <div class="section-head">
-            <p>WHY IT MATTERS</p>
-            <h2>From curiosity to practical system decisions</h2>
-          </div>
-
-          <div class="feature-grid">
-            <article class="feature-card spotlight-card">
-              <span class="feature-number">01</span>
-              <h3>Measure the real setup</h3>
-              <p>Benchmark the hardware you actually own, not a generic reference box.</p>
-            </article>
-            <article class="feature-card spotlight-card">
-              <span class="feature-number">02</span>
-              <h3>Compare models fairly</h3>
-              <p>Evaluate quality, speed, and fit against the same tasks and constraints.</p>
-            </article>
-            <article class="feature-card spotlight-card">
-              <span class="feature-number">03</span>
-              <h3>Deploy with confidence</h3>
-              <p>Use the evidence to select the model that fits the workload and the hardware.</p>
-            </article>
-          </div>
-        </section>
-
-        <section class="download-panel spotlight-card">
-          <div class="download-copy">
-            <p class="eyebrow">CLIENT DOWNLOAD</p>
-            <h2>Run AETHERION locally</h2>
-            <p>Download the benchmark client and execute it on your local environment to generate fresh results.</p>
-          </div>
-          <div class="download-actions">
-            <a class="primary download-cta" href="downloads/Aetherion-Client.exe" download>
-              <span class="download-icon" aria-hidden="true">✦</span>
-              <span>Download AETHERION client</span>
-            </a>
-            <a class="secondary" href="README.md" target="_blank" rel="noreferrer">View setup guide</a>
-          </div>
-        </section>
-
-        <section class="contact" id="contact" aria-labelledby="contact-title">
-          <div class="section-head">
-            <p>CONTACT</p>
-            <h2 id="contact-title">Request a local benchmark review</h2>
-          </div>
-
-          <form class="contact-form" id="contactForm" novalidate>
+    <nav class="nav" id="aetherion-navigation" aria-label="Main navigation">
+      <a href="#workflow">How it works</a><a href="#details">Benchmarks</a><a href="models.html">Models</a><a href="resources.html">Resources</a>
+    </nav>
+    <a class="header-download" href="#benchmarkSection">Get Aetherion <span aria-hidden="true">↗</span></a>
+    <button class="design-menu" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="aetherion-navigation"><span></span><span></span></button>
+  </header>
+  <main id="main-content">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="product-label"><span aria-hidden="true"></span> A benchmark studio for local AI</p>
+        <h1 id="hero-title">Your machine.<br>Your models.<br>Your evidence.</h1>
+        <p class="lead">Find out what your hardware can really do. Compare local AI models on speed, latency and task validation — before you commit to one.</p>
+        <div class="hero-actions"><a class="primary" href="#benchmarkSection">Get the Windows client <span aria-hidden="true">↗</span></a><a class="text-link" href="#details">Explore the benchmarks</a></div>
+        <p class="hero-footnote">Local inference. Ollama &amp; GGUF support.</p>
+      </div>
+      <div class="machine-scene" role="img" aria-label="Illustration: your hardware, a local model, and a benchmark report. No live measurements are shown.">
+        <div class="scene-caption"><span>Aetherion</span><span>From silicon to insight</span></div>
+        <svg class="silicon-stack" viewBox="0 0 560 440" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="wafer" x1="120" y1="70" x2="440" y2="390" gradientUnits="userSpaceOnUse"><stop stop-color="#536B91"/><stop offset=".47" stop-color="#1C2A3E"/><stop offset="1" stop-color="#111C2B"/></linearGradient>
+            <linearGradient id="glass" x1="280" y1="40" x2="280" y2="340" gradientUnits="userSpaceOnUse"><stop stop-color="#B8D0FB" stop-opacity=".19"/><stop offset="1" stop-color="#8EAFFF" stop-opacity=".03"/></linearGradient>
+            <linearGradient id="edge" x1="60" y1="150" x2="490" y2="290" gradientUnits="userSpaceOnUse"><stop stop-color="#607DA8"/><stop offset=".5" stop-color="#BED4FA"/><stop offset="1" stop-color="#3D5272"/></linearGradient>
+            <pattern id="circuit" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M0 14H28M14 0V28" stroke="#9EB9DF" stroke-opacity=".12"/><circle cx="14" cy="14" r="1.6" fill="#AAC8F1" fill-opacity=".25"/></pattern>
+          </defs>
+          <path d="M280 132L508 264L280 396L52 264Z" fill="#080E18" stroke="#273A55"/>
+          <path d="M52 264V277L280 410L508 277V264L280 396Z" fill="#142033" stroke="#273A55"/>
+          <path d="M280 99L508 231L280 363L52 231Z" fill="url(#wafer)" stroke="url(#edge)"/>
+          <path d="M280 99L508 231L280 363L52 231Z" fill="url(#circuit)"/>
+          <path d="M166 231L280 165L394 231L280 297Z" fill="#0C1421" stroke="#98BDF5" stroke-opacity=".7"/>
+          <path d="M187 231L280 177L373 231L280 285Z" stroke="#8EAFFF" stroke-opacity=".25"/>
+          <path d="M280 197L338 231L280 265L222 231Z" fill="#8EAFFF" fill-opacity=".13" stroke="#AAC9FA"/>
+          <path d="M260 231L280 219L300 231L280 243Z" fill="#D4E4FF"/>
+          <g stroke="#A6C4F2" stroke-opacity=".45"><path d="M166 231L102 268M204 209L141 173M242 187L242 143M394 231L457 268M356 209L418 173M318 187L318 143M204 253L141 290M356 253L418 290"/></g>
+          <g stroke="#6D8AAF" stroke-dasharray="3 7"><path d="M52 231V136M508 231V136M280 363V268M280 99V4"/></g>
+          <path d="M280 4L508 136L280 268L52 136Z" fill="url(#glass)" stroke="#90ADD7" stroke-opacity=".5"/>
+          <path d="M165 136L280 69L395 136L280 203Z" stroke="#90ADD7" stroke-opacity=".35"/>
+          <path d="M242 136L280 114L318 136L280 158Z" stroke="#D4E4FF"/>
+          <g fill="#B6CAE8" font-family="Consolas, monospace" font-size="10"><text x="74" y="216">Hardware</text><text x="386" y="126">Model</text><text x="338" y="363">Evidence</text></g>
+        </svg>
+        <div class="scene-report"><div class="report-icon" aria-hidden="true">⌁</div><div><strong>Performance, in context.</strong><p>Your hardware. The same tasks. A clearer comparison.</p></div><span class="report-arrow" aria-hidden="true">↗</span></div>
+        <div class="scene-base"><span>Hardware → Model → Benchmark</span><span>Concept illustration</span></div>
+      </div>
+    </section>
+    <div class="capability-strip" aria-label="Supported benchmark features"><span>Built for local inference</span><strong>Ollama</strong><strong>GGUF</strong><strong>Hardware profiling</strong><strong>JSON reports</strong></div>
+    <section class="workflow-section" id="workflow" aria-labelledby="workflow-title">
+      <div class="section-intro"><p class="section-label">The workflow</p><h2 id="workflow-title">Stop guessing.<br>Start measuring.</h2><p>Choosing a model starts with the machine it will run on. Aetherion puts the hardware, the workload and the results in one place.</p><a class="text-link" href="overview.html">See the full workflow <span aria-hidden="true">↗</span></a></div>
+      <ol class="workflow-list">
+        <li><span class="step-number" aria-hidden="true">01</span><div><h3>Know your hardware</h3><p>Check CPU, memory and available GPU acceleration before selecting a model.</p></div></li>
+        <li><span class="step-number" aria-hidden="true">02</span><div><h3>Choose the workload</h3><p>Discover your local models and pick the task you actually need them to handle.</p></div></li>
+        <li><span class="step-number" aria-hidden="true">03</span><div><h3>Read the evidence</h3><p>Review latency, throughput and validation together. Keep the report for your next comparison.</p></div></li>
+      </ol>
+    </section>
+    <section class="suite-section" id="details" aria-labelledby="suite-title">
+      <div class="suite-heading"><div><p class="section-label">Inside the benchmark</p><h2 id="suite-title">Real tasks.<br>Visible criteria.</h2></div><p>A fast answer is only part of the story. Explore the five task categories and see what each check looks for.</p></div>
+      <div class="suite-workbench">
+        <div class="suite-selectors" role="group" aria-label="Choose a benchmark category">
+          <button type="button" data-suite="general" aria-pressed="true"><span>General</span><small>Follow a constraint</small><span class="suite-arrow" aria-hidden="true">↗</span></button>
+          <button type="button" data-suite="coding" aria-pressed="false"><span>Coding</span><small>Python output</small><span class="suite-arrow" aria-hidden="true">↗</span></button>
+          <button type="button" data-suite="math" aria-pressed="false"><span>Math</span><small>Check an answer</small><span class="suite-arrow" aria-hidden="true">↗</span></button>
+          <button type="button" data-suite="json" aria-pressed="false"><span>Structured output</span><small>Validate JSON</small><span class="suite-arrow" aria-hidden="true">↗</span></button>
+          <button type="button" data-suite="spanish" aria-pressed="false"><span>Spanish</span><small>Language check</small><span class="suite-arrow" aria-hidden="true">↗</span></button>
+        </div>
+        <div class="suite-preview" aria-live="polite" aria-atomic="true">
+          <div class="preview-top"><span id="suite-name">General / DNS explanation</span><span class="preview-badge">Task preview</span></div>
+          <p class="code-label">Prompt</p><pre id="suite-prompt">Explain DNS in exactly two short sentences.</pre>
+          <div class="validation-preview"><span class="check-icon" aria-hidden="true">✓</span><div><h3 id="suite-check-title">Sentence-count check</h3><p id="suite-check">The validator checks for two sentence segments. It does not judge factual accuracy.</p></div></div>
+          <div class="preview-measures"><span>Time to first token</span><span>Tokens / second</span><span>Validation</span></div>
+          <p class="preview-note">No model runs on this page. Your measurements are generated in the local client.</p>
+        </div>
+      </div>
+      <p class="method-note">These are focused output checks, not a complete measure of model quality. Compare runs with the same task and settings.</p>
+    </section>
+    <section class="download-section" id="benchmarkSection" aria-labelledby="download-title">
+      <div class="download-emblem" aria-hidden="true">A<span>↗</span></div>
+      <div class="download-content"><p class="section-label">Aetherion Studio</p><h2 id="download-title">The next benchmark<br>is yours.</h2><p>Bring the studio to your machine. Discover your models, run a workload and keep the results.</p><div class="hero-actions"><a class="primary download-cta" href="downloads/Aetherion-Studio-03.exe" download>Download for Windows <span aria-hidden="true">↓</span></a><a class="text-link" href="resources.html">Setup &amp; resources</a></div><p class="download-meta">Windows executable · Studio 03 · 15.2 MB</p><p class="download-requirements">An Aetherion account and active license are required. Configure Ollama or a compatible GGUF runtime to run models.</p></div>
+    </section>
+    <section class="faq-section" aria-labelledby="faq-title"><div><p class="section-label">Before you start</p><h2 id="faq-title">A little more clarity.</h2></div><div class="faq-list">
+      <details><summary>Does the benchmark run in my browser?</summary><p>No. The website explains the workflow; the Windows client runs the benchmark against your configured model runtime.</p></details>
+      <details><summary>Which models can I benchmark?</summary><p>Use installed models served by Ollama, or a GGUF model with a configured compatible runtime. Model availability and memory requirements depend on your setup.</p></details>
+      <details><summary>What should I compare in a report?</summary><p>Read time to first token, tokens per second and task validation together. Use the same task, model settings and hardware conditions for a useful comparison.</p></details>
+      <details><summary>Do I need an account or internet access?</summary><p>The client requires an Aetherion account and active license. Model inference can run locally; account sign-in and license verification use the account service.</p></details>
+    </div></section>
+    <section class="contact" id="contact" aria-labelledby="contact-title"><div class="contact-intro"><p class="section-label">Talk about your setup</p><h2 id="contact-title">What are you<br>building?</h2><p>Tell us about your hardware and workload. We can start with the right questions.</p><a class="text-link" href="mailto:dayvermoreta21@gmail.com">dayvermoreta21@gmail.com</a></div><form class="contact-form" id="contactForm" novalidate><p class="form-note">This opens your email app with a draft. Nothing is sent automatically.</p>
             <div class="form-row">
               <div class="field-group">
                 <label for="fullName">Full name</label>
@@ -361,7 +149,7 @@
 
             <div class="field-group">
               <label for="message">Project details</label>
-              <textarea id="message" name="message" rows="5" placeholder="Tell us about your hardware and your workload."></textarea>
+              <textarea id="message" name="message" rows="5" placeholder="Your hardware, your models, and what you want to build."></textarea>
             </div>
 
             <div class="consent-box">
@@ -372,31 +160,27 @@
             </div>
 
             <div class="form-actions">
-              <button type="submit" class="button button-primary">Send request</button>
+              <button type="submit" class="button button-primary">Prepare email</button>
             </div>
             <p class="form-status" id="formStatus" aria-live="polite"></p>
-          </form>
-        </section>
-      </main>
-
-      <footer>
+          </form></section>
+  </main>
+  <footer><div class="footer-identity"><strong>AETHERION</strong><p>Beyond the known.</p></div><nav class="footer-links" aria-label="Footer navigation"><a href="overview.html">Overview</a><a href="compare.html">Compare</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="cookies.html">Cookies</a></nav><p class="footer-credit">An independent project<br>Created by Dayver Moreta</p></footer>
+</div>
+<div class="cookie-banner" id="cookieBanner" aria-live="polite">
+      <div class="cookie-content">
         <div>
-          <p>OFFLINE-FIRST / NO TELEMETRY</p>
-          <span>Local AI Benchmark 0.1</span>
+          <h2>Cookie preferences</h2>
+          <p>
+            This site uses browser storage only to remember your consent choice. We do not run third-party analytics or ad trackers.
+          </p>
         </div>
-        <div class="business-info" aria-label="Business information">
-          <span>AETHERION</span>
-          <span>Business contact and support</span>
-          <span>Private inquiry routing</span>
+        <div class="cookie-actions">
+          <button type="button" class="button button-secondary" id="rejectCookies">Reject optional cookies</button>
+          <button type="button" class="button button-primary" id="acceptCookies">Accept optional cookies</button>
         </div>
-        <div class="project-credit">
-          <span>AN INDEPENDENT LOCAL AI PROJECT</span>
-          <strong>Created by Dayver Moreta</strong>
-        </div>
-      </footer>
+      </div>
     </div>
 
-    <script src="design.js"></script>
-    <script src="app.js?v=20260928-2"></script>
-  </body>
-</html>
+<script src="design.js?v=20261004-2"></script><script src="app.js?v=20261004-3"></script>
+</body></html>

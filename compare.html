@@ -3,18 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Compare local AI models with NexaBench and measure practical fit." />
+    <meta name="description" content="Compare local AI models with Aetherion and measure practical fit." />
     <title>Compare | AETHERION</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="monochrome.css" />
+    <link rel="stylesheet" href="monochrome.css?v=20261004-4" />
   </head>
   <body>
     <div class="subpage-shell">
       <header class="topbar">
-        <div class="brand" aria-label="NexaBench home">
+        <a class="brand" href="index.html" aria-label="Aetherion home">
           <div class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 64 64" role="img" aria-label="NexaBench logo">
+            <svg viewBox="0 0 64 64" role="img" aria-label="Aetherion logo">
               <defs>
                 <linearGradient id="brandGradient4" x1="0%" x2="100%" y1="0%" y2="100%">
                   <stop offset="0%" stop-color="#9fe9ff" />
@@ -28,10 +28,9 @@
             </svg>
           </div>
           <div class="brand-text">
-            <span class="brand-name">NexaBench</span>
+            <span class="brand-name">Aetherion</span>
             <small>Local AI Benchmark</small>
-          </div>
-        </div>
+          </div></a>
         <nav class="nav" aria-label="Main navigation">
           <a href="index.html">Home</a>
           <a href="overview.html">Overview</a>
@@ -49,32 +48,33 @@
         </section>
 
         <article class="compare-card">
-          <table class="compare-table" aria-label="Comparison table">
+          <table class="compare-table" aria-label="Model workload examples">
+            <caption>Example models and workloads. Performance is measured in the client.</caption>
             <thead>
               <tr>
                 <th>Model</th>
-                <th>Speed</th>
-                <th>Memory</th>
+                <th>Speed on your device</th>
+                <th>Memory on your device</th>
                 <th>Best fit</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>qwen2.5-coder:3b</td>
-                <td>High</td>
-                <td>Medium</td>
+                <td>Measure locally</td>
+                <td>Measure locally</td>
                 <td>Coding</td>
               </tr>
               <tr>
                 <td>gemma3:1b</td>
-                <td>Very High</td>
-                <td>Low</td>
+                <td>Measure locally</td>
+                <td>Measure locally</td>
                 <td>Lightweight tasks</td>
               </tr>
               <tr>
                 <td>llama3.2:3b</td>
-                <td>Medium</td>
-                <td>Medium</td>
+                <td>Measure locally</td>
+                <td>Measure locally</td>
                 <td>General use</td>
               </tr>
             </tbody>
@@ -82,5 +82,6 @@
         </article>
       </main>
     </div>
+  <script src="design.js?v=20261004-2"></script>
   </body>
 </html>

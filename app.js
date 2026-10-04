@@ -1,7 +1,10 @@
 "use strict";
 const initializePage = () => {
     const benchmarkKey = 'aetherion-benchmark-cache';
-    localStorage.removeItem(benchmarkKey);
+    try {
+        localStorage.removeItem(benchmarkKey);
+    }
+    catch { /* Storage is optional. */ }
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const introName = document.getElementById('introName');
     const introTagline = document.getElementById('introTagline');
@@ -95,7 +98,10 @@ const initializePage = () => {
     });
     const resetBenchmarkBtn = document.getElementById('resetBenchmarkBtn');
     resetBenchmarkBtn?.addEventListener('click', () => {
-        localStorage.removeItem(benchmarkKey);
+        try {
+            localStorage.removeItem(benchmarkKey);
+        }
+        catch { /* Storage is optional. */ }
         const state = document.getElementById('benchmarkState');
         state?.classList.add('benchmark-empty-state');
     });
@@ -106,11 +112,18 @@ const initializePage = () => {
     const setConsent = (choice) => {
         if (!cookieBanner)
             return;
-        localStorage.setItem(cookieKey, choice);
+        try {
+            localStorage.setItem(cookieKey, choice);
+        }
+        catch { /* Still allow dismissal in private sessions. */ }
         cookieBanner.classList.remove('visible');
     };
     if (cookieBanner) {
-        const storedChoice = localStorage.getItem(cookieKey);
+        let storedChoice = null;
+        try {
+            storedChoice = localStorage.getItem(cookieKey);
+        }
+        catch { /* Storage may be blocked. */ }
         if (!storedChoice) {
             cookieBanner.classList.add('visible');
         }
@@ -133,10 +146,12 @@ const initializePage = () => {
         }
         if (!fullName.value.trim() || !email.value.trim()) {
             formStatus.textContent = 'Please complete your name and email before sending your request.';
+            (!fullName.value.trim() ? fullName : email).focus();
             return;
         }
-        if (!email.value.includes('@')) {
+        if (!email.validity.valid) {
             formStatus.textContent = 'Please enter a valid email address.';
+            email.focus();
             return;
         }
         if (!consent || !consent.checked) {
@@ -155,7 +170,7 @@ const initializePage = () => {
         ].join('\n'));
         window.location.href = `mailto:${recipient}?subject=${subject}&body=${body}`;
         formStatus.textContent = 'Your request is being prepared in your email client.';
-        contactForm.reset();
+        // Keep the draft in the form if no mail application is configured.
     });
 };
 if (document.readyState === 'loading') {

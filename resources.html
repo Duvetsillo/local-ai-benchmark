@@ -3,18 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Resources | Local AI Benchmark</title>
-    <meta name="description" content="Resources and legal considerations for Local AI Benchmark." />
+    <title>Setup & resources | AETHERION</title>
+    <meta name="description" content="Set up Aetherion Studio, connect a local model runtime and run your first benchmark." />
     <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="monochrome.css" />
+    <link rel="stylesheet" href="monochrome.css?v=20261004-4" />
   </head>
   <body>
-    <div class="page-shell legal-page">
+    <div class="subpage-shell">
       <header class="topbar">
-        <div class="brand">
-          <span class="brand-mark" aria-hidden="true">L</span>
-          <span>Local AI Benchmark</span>
-        </div>
+        <a class="brand" href="index.html">
+          <span class="brand-mark" aria-hidden="true">A</span>
+          <span>AETHERION</span>
+        </a>
         <nav class="nav" aria-label="Main navigation">
           <a href="index.html">Home</a>
           <a href="privacy.html">Privacy</a>
@@ -24,26 +24,25 @@
       </header>
 
       <main>
-        <section class="legal-content" aria-labelledby="resources-title">
-          <p class="eyebrow">RESOURCES & CONSENT</p>
-          <h1 id="resources-title">Resources and consent</h1>
-
-          <h2>Consent and minimum data collection</h2>
-          <p>We only request information that is necessary to answer a legitimate inquiry or provide support. No unnecessary personal data is requested.</p>
-
-          <h2>Analytics and third-party integrations</h2>
-          <p>We do not currently use third-party analytics, ad networks, or user tracking scripts. If any third-party service is added in the future, it will be disclosed in this policy and consent will be obtained before activation where required.</p>
-
-          <h2>Accessibility</h2>
-          <p>We aim to provide keyboard access, clear labels, semantic HTML, visible focus states, and sufficient contrast. We also provide alternative text for meaningful non-decorative visual elements.</p>
-
-          <h2>Local legal compliance</h2>
-          <p>Use of local AI tools and benchmark workflows must comply with relevant laws in your country or region, including privacy, data protection, copyright, and software licensing obligations.</p>
-
-          <h2>Important risk notice</h2>
-          <p>Benchmark results are local and contextual. They do not guarantee that a model will perform similarly in a different environment or workload. Results should be interpreted as evidence for your current setup, not as universal rankings.</p>
+        <section class="subpage-hero" aria-labelledby="resources-title">
+          <p class="section-label">Getting started</p>
+          <h1 id="resources-title">Your first local benchmark.</h1>
+          <p class="lead">Set up the client, connect a model runtime and measure your own machine.</p>
+          <a class="primary" href="downloads/Aetherion-Studio-03.exe" download>Download for Windows</a>
+        </section>
+        <section class="timeline" aria-label="Setup steps">
+          <article class="timeline-step"><span>01</span><div><h2>Open Aetherion Studio</h2><p>Download the Windows executable. Sign in with your Aetherion account and active license. New accounts require a signed license key.</p></div></article>
+          <article class="timeline-step"><span>02</span><div><h2>Connect your model runtime</h2><p>Start <a href="https://ollama.com/download" target="_blank" rel="noreferrer">Ollama</a> and install a model that fits your memory. Refresh the model list in the client. For GGUF, configure a compatible runtime and choose your model folder.</p></div></article>
+          <article class="timeline-step"><span>03</span><div><h2>Run one workload</h2><p>Select an installed model and a task category. Start the benchmark in the client, then review latency, throughput and task validation together.</p></div></article>
+          <article class="timeline-step"><span>04</span><div><h2>Keep the comparison useful</h2><p>Save the JSON report. Compare runs using the same category and settings; model speed changes with hardware, context length and runtime configuration.</p></div></article>
+        </section>
+        <section class="resource-grid" aria-label="Further resources">
+          <article class="resource-card"><h2>Detailed setup</h2><p>Runtime options, troubleshooting and command-line usage.</p><a class="text-link" href="README.md">Read the setup guide</a></article>
+          <article class="resource-card"><h2>Benchmark criteria</h2><p>Explore the prompts and what each output check validates.</p><a class="text-link" href="index.html#details">Explore the five tasks</a></article>
+          <article class="resource-card"><h2>Help with your setup</h2><p>Tell us about your hardware, installed models and workload.</p><a class="text-link" href="index.html#contact">Prepare an inquiry</a></article>
         </section>
       </main>
     </div>
+  <script src="design.js?v=20261004-2"></script>
   </body>
 </html>
