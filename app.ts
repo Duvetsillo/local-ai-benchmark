@@ -4,72 +4,6 @@ const initializePage = (): void => {
   const benchmarkKey = 'aetherion-benchmark-cache';
   try { localStorage.removeItem(benchmarkKey); } catch { /* Storage is optional. */ }
 
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const introName = document.getElementById('introName');
-  const introTagline = document.getElementById('introTagline');
-  const introOverlay = document.querySelector('.intro-overlay');
-  const body = document.body;
-  const sequence = 'AETHERION';
-
-  const finishIntro = (): void => {
-    body.classList.remove('intro-active');
-    body.classList.add('intro-complete');
-
-    if (introTagline) {
-      introTagline.style.opacity = '1';
-      introTagline.style.transform = 'translateY(0)';
-      introTagline.style.filter = 'blur(0)';
-    }
-  };
-
-  if (!introName || !introTagline || !introOverlay) {
-    if (introName) {
-      introName.textContent = sequence;
-    }
-
-    if (introTagline) {
-      introTagline.style.opacity = '1';
-      introTagline.style.transform = 'translateY(0)';
-      introTagline.style.filter = 'blur(0)';
-    }
-
-    finishIntro();
-  } else if (prefersReducedMotion) {
-    introName.textContent = sequence;
-    introTagline.style.opacity = '1';
-    introTagline.style.transform = 'translateY(0)';
-    introTagline.style.filter = 'blur(0)';
-    window.setTimeout(finishIntro, 1100);
-  } else {
-    let index = 0;
-    const charDelay = 90;
-
-    const tick = (): void => {
-      if (index <= sequence.length) {
-        introName.textContent = sequence.slice(0, index);
-        index += 1;
-
-        if (index <= sequence.length) {
-          window.setTimeout(tick, charDelay);
-        } else {
-          window.setTimeout(() => {
-            introTagline.style.opacity = '1';
-            introTagline.style.transform = 'translateY(0)';
-            introTagline.style.filter = 'blur(0)';
-            window.setTimeout(finishIntro, 420);
-          }, 420);
-        }
-      }
-    };
-
-    window.setTimeout(tick, 120);
-    window.setTimeout(() => {
-      if (!body.classList.contains('intro-complete')) {
-        finishIntro();
-      }
-    }, 2600);
-  }
-
   document.querySelectorAll<HTMLElement>('.spotlight-card').forEach((card) => {
     card.addEventListener('pointermove', (event: PointerEvent) => {
       const rect = card.getBoundingClientRect();
@@ -93,15 +27,6 @@ const initializePage = (): void => {
         cards.forEach((item) => item.classList.remove('selected'));
         card.classList.add('selected');
       }
-    });
-  });
-
-  document.querySelectorAll<HTMLAnchorElement>('.download-cta').forEach((link) => {
-    link.addEventListener('click', () => {
-      link.classList.remove('is-animating');
-      void link.offsetWidth;
-      link.classList.add('is-animating');
-      window.setTimeout(() => link.classList.remove('is-animating'), 760);
     });
   });
 

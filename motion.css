@@ -1,0 +1,95 @@
+/* Motion follows the action. All movement is finite, composited and optional. */
+:root {
+  --ease-out: cubic-bezier(.23, 1, .32, 1);
+  --ease-move: cubic-bezier(.77, 0, .175, 1);
+}
+.brand-mark { width:44px; height:44px; flex-shrink:0; }
+.brand .aetherion-symbol { width:44px; height:44px; display:block; overflow:visible; }
+.brand-name { font-size:16px; font-weight:620; letter-spacing:1.8px; }
+.brand-text small { margin-top:5px; font-size:8px; letter-spacing:1.1px; }
+.logo-orbit,.logo-meridian,.logo-core { transform-origin:32px 32px; }
+.hero-line { display:block; overflow:hidden; padding-bottom:.08em; margin-bottom:-.08em; }
+.hero-line > span { display:block; }
+.footer-lockup { display:flex; align-items:center; gap:11px; }
+.footer-lockup .aetherion-symbol { width:30px; height:30px; }
+.homepage .footer-identity > p { margin-left:41px; }
+.download-emblem { letter-spacing:0; border-bottom:0; padding-bottom:0; }
+.download-emblem .aetherion-symbol { display:block; width:min(100%,260px); height:auto; opacity:.85; }
+.homepage .hero { padding-top:74px; }
+.homepage .machine-scene { border-color:#354760; }
+.scene-report { background:linear-gradient(110deg,#1a2a42,#131f31); }
+.scene-report .report-icon { font-size:25px; }
+.nav a { position:relative; }
+.nav a { transition:none; }
+.nav a::before { content:''; position:absolute; left:0; bottom:6px; right:0; height:1px; background:#b6c9e8; transform:scaleX(0); transform-origin:left; }
+.nav a[aria-current=page]::before { transform:scaleX(1); }
+.suite-selectors button { position:relative; }
+.suite-selectors button[aria-pressed=true] { border-color:#5677a4; background:#1b2e48; }
+.homepage .field-group input,.homepage .field-group textarea,.homepage .field-group select { caret-color:#c8dcff; }
+.homepage .field-group:focus-within label { color:#edf2f7; }
+.faq-list summary::after { content:'+'; transform:rotate(0); }
+.faq-list details[open] summary::after { content:'+'; transform:rotate(45deg); }
+.design-menu { position:relative; }
+.design-menu span { margin:0; position:absolute; left:12px; top:16px; width:18px; }
+.design-menu span:last-child { top:24px; }
+.navigation-open .design-menu span:first-child { transform:translateY(4px) rotate(45deg); }
+.navigation-open .design-menu span:last-child { transform:translateY(-4px) rotate(-45deg); }
+@media (prefers-reduced-motion:no-preference) {
+  body:not(.keyboard-input) :is(.primary,.secondary,.button,.header-download,.design-menu,.suite-selectors button) {
+    transition:transform 140ms var(--ease-out);
+  }
+  body:not(.keyboard-input) :is(.primary,.secondary,.button,.header-download,.design-menu,.suite-selectors button):active {
+    transform:scale(.975);
+  }
+  body:not(.keyboard-input) .design-menu span { transition:transform 180ms var(--ease-out); }
+  body:not(.keyboard-input) .faq-list summary::after { transition:transform 180ms var(--ease-out); }
+  .entry-motion .brand .logo-orbit { animation:orbit-settle 520ms var(--ease-out) both; }
+  .entry-motion .brand .logo-meridian { animation:meridian-settle 520ms 45ms var(--ease-out) both; }
+  .entry-motion .brand .logo-core { animation:core-settle 400ms 95ms var(--ease-out) both; }
+  .entry-motion .hero-line > span { animation:line-arrive 470ms var(--ease-out) both; }
+  .entry-motion .hero-line:nth-child(2) > span { animation-delay:45ms; }
+  .entry-motion .hero-line:nth-child(3) > span { animation-delay:90ms; }
+  .entry-motion .hero-copy > :is(.product-label,.lead,.hero-actions,.hero-footnote) { animation:content-arrive 450ms 140ms var(--ease-out) both; }
+  .entry-motion .machine-scene { animation:scene-arrive 560ms 70ms var(--ease-out) both; }
+  @media (hover:hover) and (pointer:fine) {
+    body:not(.keyboard-input) .primary span[aria-hidden],body:not(.keyboard-input) .header-download span,
+    body:not(.keyboard-input) .text-link span,body:not(.keyboard-input) .suite-arrow {
+      display:inline-block; transition:transform 180ms var(--ease-out);
+    }
+    body:not(.keyboard-input) .primary:hover span[aria-hidden],body:not(.keyboard-input) .header-download:hover span,
+    body:not(.keyboard-input) .text-link:hover span { transform:translate(2px,-2px); }
+    body:not(.keyboard-input) .download-cta:hover span[aria-hidden] { transform:translateY(3px); }
+    body:not(.keyboard-input) .suite-selectors button:hover .suite-arrow { transform:translate(2px,-2px); }
+    body:not(.keyboard-input) .nav a::before { transition:transform 180ms var(--ease-out); }
+    body:not(.keyboard-input) .nav a:hover::before { transform:scaleX(1); }
+    body:not(.keyboard-input) .silicon-model { transition:transform 240ms var(--ease-out); }
+    body:not(.keyboard-input) .machine-scene:hover .silicon-model { transform:translateY(-8px); }
+    body:not(.keyboard-input) .brand .logo-meridian { transition:transform 220ms var(--ease-out); }
+    body:not(.keyboard-input) .brand:hover .logo-meridian { transform:rotate(12deg); }
+  }
+}
+@keyframes orbit-settle { from { opacity:.15; transform:rotate(-28deg); } to { opacity:1; transform:rotate(0); } }
+@keyframes meridian-settle { from { opacity:0; transform:rotate(28deg); } to { opacity:1; transform:rotate(0); } }
+@keyframes core-settle { from { opacity:0; transform:scale(.88); } to { opacity:1; transform:scale(1); } }
+@keyframes line-arrive { from { opacity:0; transform:translateY(24%); } to { opacity:1; transform:translateY(0); } }
+@keyframes content-arrive { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+@keyframes scene-arrive { from { opacity:0; transform:translateY(10px) scale(.985); } to { opacity:1; transform:translateY(0) scale(1); } }
+@media(max-width:700px) {
+  .brand-mark,.brand .aetherion-symbol { width:38px; height:38px; }
+  .brand-name { font-size:14px; letter-spacing:1.5px; }
+  .brand-text small { font-size:7px; }
+  .homepage .hero { padding-top:46px; }
+  .topbar .nav { transform-origin:top right; }
+  .topbar .nav a::before { display:none; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .hero-line > span,.logo-orbit,.logo-meridian,.logo-core,.silicon-model { transform:none!important; opacity:1!important; }
+}
+.keyboard-input *, .keyboard-input *::before, .keyboard-input *::after {
+  animation:none!important;
+  transition:none!important;
+}
+.keyboard-input .suite-selectors button:not([aria-pressed=true]):hover { background:none; }
+@media(hover:none) {
+  .suite-selectors button:not([aria-pressed=true]):hover { background:none; }
+}

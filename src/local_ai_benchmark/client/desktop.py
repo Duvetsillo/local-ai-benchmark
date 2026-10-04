@@ -196,20 +196,20 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         brand = tk.Frame(story, bg=COLORS["hero"])
         brand.pack(fill="x", padx=36, pady=(30, 0))
         tk.Label(brand, text="A E T H E R I O N", bg=COLORS["hero"], fg=COLORS["text"], font=("Segoe UI", 19, "bold")).pack(anchor="w")
-        tk.Label(brand, text="THE LOCAL MODEL ATELIER", bg=COLORS["hero"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w", pady=(8, 0))
+        tk.Label(brand, text="Beyond the known.", bg=COLORS["hero"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w", pady=(8, 0))
         promise = tk.Frame(story, bg=COLORS["hero"])
         promise.pack(side="bottom", fill="x", padx=36, pady=(0, 30))
-        tk.Label(promise, text="Your machine.\nIts full potential.", bg=COLORS["hero"], fg=COLORS["text"], font=("Segoe UI", 34, "bold"), justify="left", anchor="w").pack(anchor="w")
+        tk.Label(promise, text="Your machine.\nYour models.\nYour evidence.", bg=COLORS["hero"], fg=COLORS["text"], font=("Segoe UI", 30, "bold"), justify="left", anchor="w").pack(anchor="w")
         story_copy = tk.Label(promise, text="Discover the right model. Measure what matters.\nKeep every experiment on your own device.", bg=COLORS["hero"], fg=COLORS["muted"], font=("Segoe UI", 11), justify="left", anchor="w")
         story_copy.pack(fill="x", pady=(14, 22))
         promise.bind("<Configure>", lambda event: story_copy.configure(wraplength=max(160, event.width)))
         tk.Frame(promise, bg=COLORS["line_strong"], height=1).pack(fill="x")
         tk.Label(promise, text="01 / DISCOVER     02 / BENCHMARK     03 / DECIDE", bg=COLORS["hero"], fg=COLORS["accent"], font=("Segoe UI", 8, "bold"), anchor="w").pack(fill="x", pady=(16, 0))
-        self._identity_art(story).pack(fill="both", expand=True, padx=24, pady=10)
+        self._silicon_art(story).pack(fill="both", expand=True, padx=24, pady=10)
 
         card = tk.Frame(gate, bg=COLORS["surface"], highlightbackground=COLORS["line"], highlightthickness=1, bd=0)
         card.grid(row=0, column=1, padx=(0, 24), pady=24, sticky="nsew")
-        tk.Frame(card, bg=COLORS["accent"], height=4).pack(fill="x")
+        tk.Frame(card, bg=COLORS["line"], height=1).pack(fill="x")
         auth_canvas = tk.Canvas(card, bg=COLORS["surface"], bd=0, highlightthickness=0)
         auth_scroll = ttk.Scrollbar(card, orient="vertical", command=auth_canvas.yview, style="Aetherion.Vertical.TScrollbar")
         auth_scroll.pack(side="right", fill="y")
@@ -320,32 +320,67 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         import math
 
         art = tk.Canvas(parent, bg=COLORS["hero"], bd=0, highlightthickness=0,
-                        width=180 if compact else 400, height=100 if compact else 280)
+                        width=40 if compact else 400, height=40 if compact else 280)
         def paint(event: tk.Event) -> None:
             art.delete("all")
             width, height = event.width, event.height
             cx, cy = width * .5, height * .5
             radius = min(width * .40, height * .42)
-            for step in range(24, 0, -1):
-                r = radius * (1 + step / 22)
-                tint = AetherionDesktopClient._blend_hex(COLORS["hero"], COLORS["glow_blue"], (1 - step / 25) * .5)
-                art.create_oval(cx-r, cy-r, cx+r, cy+r, fill=tint, outline="")
-            for factor, color in ((1.15, COLORS["line_strong"]), (.94, COLORS["accent"]), (.72, COLORS["line_strong"])):
-                r = radius * factor
-                art.create_oval(cx-r, cy-r, cx+r, cy+r, outline=color, width=1)
-            art.create_oval(cx-radius*1.48, cy-radius*.36, cx+radius*1.48, cy+radius*.36, outline=COLORS["accent"], width=2)
-            for angle in (35, 155, 275):
-                x = cx + math.cos(math.radians(angle)) * radius * .94
-                y = cy + math.sin(math.radians(angle)) * radius * .94
-                art.create_oval(x-4, y-4, x+4, y+4, fill=COLORS["accent"], outline="")
+            art.create_arc(cx-radius, cy-radius, cx+radius, cy+radius,
+                           start=40, extent=310, outline=COLORS["text_soft"], width=2, style="arc")
+            orbit = []
+            for step in range(73):
+                angle = math.radians(step * 5)
+                x, y = radius * 1.08 * math.cos(angle), radius * .44 * math.sin(angle)
+                tilt = math.radians(-42)
+                orbit.extend((cx+x*math.cos(tilt)-y*math.sin(tilt), cy+x*math.sin(tilt)+y*math.cos(tilt)))
+            art.create_line(orbit, fill=COLORS["accent"], width=1.5, smooth=True)
+            art.create_oval(cx+radius*.72-3, cy-radius*.68-3, cx+radius*.72+3,
+                            cy-radius*.68+3, fill=COLORS["accent"], outline="")
             r = radius * .55
             points = []
             for i in range(8):
                 angle = math.radians(i * 45 - 90)
                 reach = r if i % 2 == 0 else r * .20
                 points.extend((cx + math.cos(angle)*reach, cy + math.sin(angle)*reach))
-            art.create_polygon(points, fill=COLORS["text"], outline="")
-            art.create_oval(cx-4, cy-4, cx+4, cy+4, fill=COLORS["accent"], outline="")
+            art.create_polygon(points, fill=COLORS["hero"], outline=COLORS["text"], width=2)
+            art.create_oval(cx-4, cy-4, cx+4, cy+4, fill=COLORS["text"], outline="")
+        art.bind("<Configure>", paint)
+        return art
+
+    @staticmethod
+    def _silicon_art(parent: tk.Widget) -> tk.Canvas:
+        """Static hardware/model layers echo the website's silicon illustration."""
+        art = tk.Canvas(parent, bg=COLORS["hero"], bd=0, highlightthickness=0, width=400, height=180)
+
+        def paint(event: tk.Event) -> None:
+            art.delete("all")
+            scale = min(event.width / 400, event.height / 220)
+            cx, cy = event.width / 2, event.height / 2
+
+            def diamond(y: float, radius: float, fill: str, edge: str) -> None:
+                art.create_polygon(cx, cy+(y-radius*.5)*scale, cx+radius*scale, cy+y*scale,
+                                   cx, cy+(y+radius*.5)*scale, cx-radius*scale, cy+y*scale,
+                                   fill=fill, outline=edge, width=1)
+
+            diamond(42, 162, COLORS["canvas"], COLORS["line"])
+            diamond(25, 162, COLORS["surface_elevated"], COLORS["line_strong"])
+            for offset in range(-4, 5):
+                x = offset * 26
+                art.create_line(cx+(x-58)*scale, cy+(25+x*.5+29)*scale,
+                                cx+(x+58)*scale, cy+(25+x*.5-29)*scale,
+                                fill=COLORS["line_strong"])
+            diamond(25, 70, COLORS["canvas"], COLORS["accent"])
+            diamond(25, 32, COLORS["surface_interactive"], COLORS["accent"])
+            diamond(25, 12, COLORS["text_soft"], COLORS["text_soft"])
+            for direction in (-1, 1):
+                art.create_line(cx+direction*162*scale, cy+25*scale,
+                                cx+direction*162*scale, cy-45*scale, fill=COLORS["line_strong"], dash=(3, 5))
+            diamond(-45, 162, "", COLORS["line_strong"])
+            diamond(-45, 70, "", COLORS["accent"])
+            art.create_text(cx, cy+100*scale, text="HARDWARE  /  MODEL  /  EVIDENCE",
+                            fill=COLORS["muted"], font=FONTS["mono"])
+
         art.bind("<Configure>", paint)
         return art
 
@@ -555,9 +590,9 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         return card
 
     def _button(self, parent: tk.Widget, text: str, command: Any, *, primary: bool = False) -> tk.Button:
-        bg = COLORS["accent"] if primary else COLORS["surface_interactive"]
+        bg = COLORS["primary"] if primary else COLORS["surface_elevated"]
         fg = COLORS["canvas"] if primary else COLORS["text_soft"]
-        active_bg = COLORS["accent_hover"] if primary else COLORS["line_strong"]
+        active_bg = COLORS["primary_hover"] if primary else COLORS["surface_interactive"]
         active_fg = COLORS["canvas"] if primary else COLORS["text"]
         button = tk.Button(
             parent,
@@ -575,16 +610,20 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
             pady=11,
             cursor="hand2",
             highlightthickness=1,
-            highlightbackground=bg,
+            highlightbackground=bg if primary else COLORS["line_strong"],
             highlightcolor=COLORS["accent"],
         )
 
+        resting_bg = bg
+
         def show_hover(_event: tk.Event) -> None:
+            nonlocal resting_bg
             if str(button["state"]) != "disabled":
+                resting_bg = str(button["bg"])
                 button.configure(bg=active_bg)
 
         def show_default(_event: tk.Event) -> None:
-            button.configure(bg=bg)
+            button.configure(bg=resting_bg)
 
         button.bind("<Enter>", show_hover)
         button.bind("<Leave>", show_default)
@@ -1170,7 +1209,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         self.model_details.configure(
             text=f"{model.provider.upper()}  ·  {size}\n{quantization}{digest_text}\n"
                  f"ESTIMATED FIT: {fit_summary}\n{recommendation}\n{runability}",
-            fg="#C4CFD9",
+            fg=COLORS["text_soft"],
         )
 
     def update_suite_details(self) -> None:
@@ -1260,14 +1299,14 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         )
 
         if not isinstance(available_ram_gb, (int, float)):
-            return f"FIT UNKNOWN · Cannot confirm whether this PC can run the model.\n{ram_text}\n{vram_text}", "#F2C879"
+            return f"FIT UNKNOWN · Cannot confirm whether this PC can run the model.\n{ram_text}\n{vram_text}", COLORS["warning"]
         if available_ram_gb < required_ram_gb:
-            return f"NOT RECOMMENDED · Available RAM is below the estimate.\n{ram_text}\n{vram_text}", "#FF9292"
+            return f"NOT RECOMMENDED · Available RAM is below the estimate.\n{ram_text}\n{vram_text}", COLORS["error"]
         if isinstance(vram_gb, (int, float)) and model_gb <= vram_gb * 0.9:
-            return f"LIKELY COMPATIBLE · Estimated to fit GPU and RAM.\n{ram_text}\n{vram_text}", "#9BE0B5"
+            return f"LIKELY COMPATIBLE · Estimated to fit GPU and RAM.\n{ram_text}\n{vram_text}", COLORS["success"]
         if isinstance(vram_gb, (int, float)):
-            return f"LIKELY TO RUN · RAM appears sufficient; GPU VRAM is too small, so CPU fallback is expected.\n{ram_text}\n{vram_text}", "#F2C879"
-        return f"LIKELY TO RUN ON CPU · RAM appears sufficient; GPU fit is unknown.\n{ram_text}\n{vram_text}", "#F2C879"
+            return f"LIKELY TO RUN · RAM appears sufficient; GPU VRAM is too small, so CPU fallback is expected.\n{ram_text}\n{vram_text}", COLORS["warning"]
+        return f"LIKELY TO RUN ON CPU · RAM appears sufficient; GPU fit is unknown.\n{ram_text}\n{vram_text}", COLORS["warning"]
 
     def browse_model_folder(self) -> None:
         current_path = Path(self.model_path_var.get())
@@ -1293,7 +1332,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
 
     def refresh_dependency_status(self) -> None:
         text, missing = self.dependency_status()
-        self.requirements_label.configure(text=text, fg="#6DE5C1" if not missing else "#C4CFD9")
+        self.requirements_label.configure(text=text, fg=COLORS["accent"] if not missing else COLORS["text_soft"])
         self.install_requirements_button.configure(state="normal" if missing else "disabled")
 
     def download_missing_dependencies(self) -> None:
@@ -1308,7 +1347,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
             installer_path = installer_dir / "OllamaSetup.exe"
             if sys.platform == "win32":
                 self.install_requirements_button.configure(state="disabled")
-                self.requirements_label.configure(text="Downloading Ollama installer...", fg="#6DE5C1")
+                self.requirements_label.configure(text="Downloading Ollama installer...", fg=COLORS["accent"])
 
                 def download() -> None:
                     try:
@@ -1322,7 +1361,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                 webbrowser.open(installer_url)
         if "llama-cpp-python" in missing and not getattr(sys, "frozen", False):
             self.install_requirements_button.configure(state="disabled")
-            self.requirements_label.configure(text="Installing llama-cpp-python...", fg="#6DE5C1")
+            self.requirements_label.configure(text="Installing llama-cpp-python...", fg=COLORS["accent"])
 
             def install() -> None:
                 try:
@@ -1335,7 +1374,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         elif "llama-cpp-python" in missing:
             self.requirements_label.configure(
                 text="GGUF runtime is not bundled in this desktop build.\nInstall the matching runtime package before using GGUF models.",
-                fg="#6DE5C1",
+                fg=COLORS["accent"],
             )
 
     def open_model_downloader(self) -> None:
@@ -1347,38 +1386,38 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         window.title("Download a model")
         window.geometry("600x500")
         window.minsize(540, 450)
-        window.configure(bg="#121C27")
+        window.configure(bg=COLORS["surface"])
         window.transient(self.root)
 
-        content = tk.Frame(window, bg="#121C27")
+        content = tk.Frame(window, bg=COLORS["surface"])
         content.pack(fill="both", expand=True, padx=24, pady=22)
-        tk.Label(content, text="DOWNLOAD A MODEL", bg="#121C27", fg="#6DE5C1", font=("Segoe UI", 11, "bold")).pack(anchor="w")
+        tk.Label(content, text="DOWNLOAD A MODEL", bg=COLORS["surface"], fg=COLORS["accent"], font=("Segoe UI", 11, "bold")).pack(anchor="w")
         tk.Label(
             content,
             text="Choose a catalog model or paste a direct HTTPS link to an external .gguf file. The file is saved into your selected model folder.",
-            bg="#121C27",
-            fg="#94A6B5",
+            bg=COLORS["surface"],
+            fg=COLORS["muted"],
             font=("Segoe UI", 9),
             justify="left",
             wraplength=510,
         ).pack(anchor="w", pady=(5, 16))
 
-        tk.Label(content, text="CATALOG (OPTIONAL)", bg="#121C27", fg="#94A6B5", font=("Segoe UI", 8, "bold")).pack(anchor="w")
+        tk.Label(content, text="CATALOG (OPTIONAL)", bg=COLORS["surface"], fg=COLORS["muted"], font=("Segoe UI", 8, "bold")).pack(anchor="w")
         catalog_var = tk.StringVar(value=next(iter(MODEL_DOWNLOAD_CATALOG)))
         catalog_menu = ttk.Combobox(content, textvariable=catalog_var, values=list(MODEL_DOWNLOAD_CATALOG), state="readonly", style="Aetherion.TCombobox")
         catalog_menu.pack(fill="x", pady=(7, 14))
 
-        tk.Label(content, text="MODEL FILE URL (.GGUF)", bg="#121C27", fg="#94A6B5", font=("Segoe UI", 8, "bold")).pack(anchor="w")
+        tk.Label(content, text="MODEL FILE URL (.GGUF)", bg=COLORS["surface"], fg=COLORS["muted"], font=("Segoe UI", 8, "bold")).pack(anchor="w")
         url_var = tk.StringVar(value=MODEL_DOWNLOAD_CATALOG[catalog_var.get()])
         self.download_url_var = url_var
-        url_entry = tk.Entry(content, textvariable=url_var, bg="#0D141D", fg="#D9E4EE", insertbackground="#F0F0F0", relief="flat", highlightbackground="#344B5D", highlightthickness=1, font=("Segoe UI", 8))
+        url_entry = tk.Entry(content, textvariable=url_var, bg=COLORS["canvas"], fg=COLORS["text_soft"], insertbackground=COLORS["text"], relief="flat", highlightbackground=COLORS["line_strong"], highlightthickness=1, font=("Segoe UI", 8))
         url_entry.pack(fill="x", pady=(7, 14), ipady=7)
 
         def clear_compatibility(_event: tk.Event | None = None) -> None:
             if self.download_compatibility_label is not None:
                 self.download_compatibility_label.configure(
                     text="Check this GGUF link to estimate RAM and GPU fit for this PC.",
-                    fg="#94A6B5",
+                    fg=COLORS["muted"],
                 )
 
         def select_catalog_model(_event: tk.Event) -> None:
@@ -1388,16 +1427,16 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         catalog_menu.bind("<<ComboboxSelected>>", select_catalog_model)
         url_entry.bind("<KeyRelease>", clear_compatibility)
 
-        check_row = tk.Frame(content, bg="#121C27")
+        check_row = tk.Frame(content, bg=COLORS["surface"])
         check_row.pack(fill="x", pady=(0, 6))
         self.download_check_button = tk.Button(
             check_row,
             text="CHECK PC COMPATIBILITY",
             command=self.check_download_compatibility,
-            bg="#263A49",
-            fg="#D9E4EE",
-            activebackground="#344B5D",
-            activeforeground="#F0F0F0",
+            bg=COLORS["surface_interactive"],
+            fg=COLORS["text_soft"],
+            activebackground=COLORS["line_strong"],
+            activeforeground=COLORS["text"],
             relief="flat",
             font=("Segoe UI", 8, "bold"),
             padx=11,
@@ -1408,8 +1447,8 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         self.download_compatibility_label = tk.Label(
             content,
             text="Check this GGUF link to estimate RAM and GPU fit for this PC.",
-            bg="#121C27",
-            fg="#94A6B5",
+            bg=COLORS["surface"],
+            fg=COLORS["muted"],
             font=("Segoe UI", 8),
             justify="left",
             anchor="w",
@@ -1418,12 +1457,12 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         self.download_compatibility_label.pack(fill="x", pady=(4, 10))
 
         destination = str(self.session.gguf_provider.models_dir)
-        tk.Label(content, text=f"SAVED TO  {destination}", bg="#121C27", fg="#728393", font=("Segoe UI", 8), wraplength=510, justify="left").pack(anchor="w")
+        tk.Label(content, text=f"SAVED TO  {destination}", bg=COLORS["surface"], fg=COLORS["quiet"], font=("Segoe UI", 8), wraplength=510, justify="left").pack(anchor="w")
         self.download_progress = ttk.Progressbar(content, mode="determinate", maximum=100, value=0, style="Aetherion.Horizontal.TProgressbar")
         self.download_progress.pack(fill="x", pady=(16, 5))
-        self.download_status = tk.Label(content, text="Ready to download", bg="#121C27", fg="#94A6B5", anchor="w", font=("Segoe UI", 8))
+        self.download_status = tk.Label(content, text="Ready to download", bg=COLORS["surface"], fg=COLORS["muted"], anchor="w", font=("Segoe UI", 8))
         self.download_status.pack(fill="x")
-        download_button = tk.Button(content, text="DOWNLOAD MODEL", command=lambda: self.download_model(url_var.get(), download_button), bg="#6DE5C1", fg="#0D141D", activebackground="#F0F0F0", activeforeground="#0D141D", relief="flat", font=("Segoe UI", 9, "bold"), padx=12, pady=10, cursor="hand2")
+        download_button = tk.Button(content, text="DOWNLOAD MODEL", command=lambda: self.download_model(url_var.get(), download_button), bg=COLORS["accent"], fg=COLORS["canvas"], activebackground=COLORS["text"], activeforeground=COLORS["canvas"], relief="flat", font=("Segoe UI", 9, "bold"), padx=12, pady=10, cursor="hand2")
         download_button.pack(anchor="e", pady=(14, 0))
         self.download_button = download_button
 
@@ -1436,14 +1475,14 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         if parsed.scheme != "https" or not parsed.netloc or not filename.lower().endswith(".gguf"):
             self.download_compatibility_label.configure(
                 text="Enter a direct HTTPS link ending in .gguf.",
-                fg="#FF9292",
+                fg=COLORS["error"],
             )
             return
 
         self.download_check_button.configure(state="disabled")
         self.download_compatibility_label.configure(
             text="Checking the remote file size and comparing it with this PC's RAM and GPU…",
-            fg="#6DE5C1",
+            fg=COLORS["accent"],
         )
 
         def check() -> None:
@@ -1460,14 +1499,14 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         parsed = urlparse(url.strip())
         filename = Path(unquote(parsed.path)).name
         if parsed.scheme != "https" or not filename.lower().endswith(".gguf"):
-            self.download_status.configure(text="Use a valid HTTPS URL ending in .gguf", fg="#FF9292")
+            self.download_status.configure(text="Use a valid HTTPS URL ending in .gguf", fg=COLORS["error"])
             return
         target_dir = self.session.gguf_provider.models_dir
         target_dir.mkdir(parents=True, exist_ok=True)
         target_path = target_dir / filename
         button.configure(state="disabled")
         self.download_progress.configure(value=0)
-        self.download_status.configure(text=f"Downloading {filename}...", fg="#6DE5C1")
+        self.download_status.configure(text=f"Downloading {filename}...", fg=COLORS["accent"])
 
         def run_download() -> None:
             temporary_path = target_path.with_suffix(target_path.suffix + ".part")
@@ -1514,7 +1553,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         self.status_var.set("LOOKING FOR LOCAL MODELS")
         self.update_overview("runtime_metric", "Scanning providers")
         self.update_overview("models_metric", "Discovering models")
-        self.result_status.configure(text="Checking local model runtimes on this computer…", fg="#6DE5C1")
+        self.result_status.configure(text="Checking local model runtimes on this computer…", fg=COLORS["accent"])
         self.progress.configure(value=0)
         self.progress_text.configure(text="Checking local model runtimes")
 
@@ -1542,7 +1581,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         assessment = self.assess_model(model)
         if assessment.startswith("DIRECT RUN: NO"):
             self.status_var.set("MODEL NOT READY")
-            self.result_status.configure(text=assessment, fg="#FF9292")
+            self.result_status.configure(text=assessment, fg=COLORS["error"])
             self.append_output(f"\nModel cannot run on this machine:\n{assessment}\n", "bad")
             return
         category = None if self.category_var.get() == "All tasks" else self.category_var.get()
@@ -1556,7 +1595,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         self.model_menu.configure(state="disabled")
         self.category_menu.configure(state="disabled")
         self.status_var.set("BENCHMARK RUNNING")
-        self.result_status.configure(text=f"Running {category or 'all'} tasks on {model_name}…", fg="#6DE5C1")
+        self.result_status.configure(text=f"Running {category or 'all'} tasks on {model_name}…", fg=COLORS["accent"])
         self.progress.configure(value=0)
         self.progress_text.configure(text="Preparing benchmark tasks")
         self.output.configure(state="normal")
@@ -1626,13 +1665,13 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                     self.status_var.set(f"{runtimes} READY · {len(names)} MODEL(S)")
                     self.update_overview("runtime_metric", runtimes)
                     self.update_overview("models_metric", f"{len(names)} available")
-                    self.result_status.configure(text="Model list refreshed. Select a task suite and run it.", fg="#9BE0B5")
+                    self.result_status.configure(text="Model list refreshed. Select a task suite and run it.", fg=COLORS["success"])
                     self.progress_text.configure(text=f"{len(names)} local model(s) ready")
                     self.run_button.configure(state="normal")
                 elif error:
                     self.model_var.set("")
                     self.status_var.set("LOCAL RUNTIMES UNAVAILABLE")
-                    self.result_status.configure(text="No local model runtime is responding. Check Ollama or the GGUF runtime. " + error, fg="#FF9292")
+                    self.result_status.configure(text="No local model runtime is responding. Check Ollama or the GGUF runtime. " + error, fg=COLORS["error"])
                     self.progress_text.configure(text="Connection unavailable")
                     self.append_output("No local model runtime responded.\n" + error + "\n", "bad")
                 else:
@@ -1640,7 +1679,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                     self.status_var.set("NO LOCAL MODELS")
                     self.update_overview("runtime_metric", "No providers")
                     self.update_overview("models_metric", "0 available")
-                    self.result_status.configure(text="No local models were found. Install an Ollama model or place a GGUF model in the local models folder.", fg="#6DE5C1")
+                    self.result_status.configure(text="No local models were found. Install an Ollama model or place a GGUF model in the local models folder.", fg=COLORS["accent"])
                     self.progress_text.configure(text="No local models detected")
                 self.category_menu.configure(state="readonly")
                 self.refresh_button.configure(state="normal")
@@ -1655,7 +1694,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                 self.show_task_result(index, total, result)
             elif event == "complete":
                 summary, status, record_path, result_path = payload
-                color = "#9BE0B5" if status == "complete" else "#FF9292" if status == "failed" else "#F2C879" if status == "stopped" else "#6DE5C1"
+                color = COLORS["success"] if status == "complete" else COLORS["error"] if status == "failed" else COLORS["warning"] if status == "stopped" else COLORS["accent"]
                 self.status_var.set(f"RUN {status.upper()}")
                 self.update_overview("last_run_metric", f"{status.upper()} · {summary['passed_checks']}/{summary['task_count']}")
                 self.result_status.configure(text=f"{summary['passed_checks']} passed · {summary['failed_checks']} failed · {summary['errors']} errors\nSaved locally: {record_path}", fg=color)
@@ -1671,7 +1710,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                         f"ERRORS      {summary['errors']}\n"
                         f"AVG SPEED   {average_text}"
                     ),
-                    fg="#6DE5C1" if status == "complete" else "#C4CFD9",
+                    fg=COLORS["accent"] if status == "complete" else COLORS["text_soft"],
                 )
                 self.refresh_results_view()
                 self.refresh_history_view()
@@ -1689,9 +1728,9 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                 self.benchmark_stop_event = None
             elif event == "run_error":
                 self.status_var.set("RUN FAILED")
-                self.result_status.configure(text=str(payload), fg="#FF9292")
+                self.result_status.configure(text=str(payload), fg=COLORS["error"])
                 self.progress_text.configure(text="Benchmark stopped with an error")
-                self.run_metrics.configure(text="RUN FAILED\nReview the benchmark trace for details.", fg="#FF9292")
+                self.run_metrics.configure(text="RUN FAILED\nReview the benchmark trace for details.", fg=COLORS["error"])
                 self.append_output(f"\nBenchmark could not finish: {payload}\n", "bad")
                 self.busy = False
                 self.refresh_button.configure(state="normal")
@@ -1702,16 +1741,16 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                 self.stop_button.configure(state="disabled")
                 self.benchmark_stop_event = None
             elif event == "dependencies":
-                self.requirements_label.configure(text=str(payload), fg="#9BE0B5")
+                self.requirements_label.configure(text=str(payload), fg=COLORS["success"])
                 self.refresh_dependency_status()
             elif event == "dependencies_error":
-                self.requirements_label.configure(text=f"Runtime installation failed\n{payload}", fg="#FF9292")
+                self.requirements_label.configure(text=f"Runtime installation failed\n{payload}", fg=COLORS["error"])
                 self.install_requirements_button.configure(state="normal")
             elif event == "installer_downloaded":
                 installer_path = Path(str(payload))
                 self.requirements_label.configure(
                     text=f"Ollama installer downloaded\n{installer_path}",
-                    fg="#9BE0B5",
+                    fg=COLORS["success"],
                 )
                 self.install_requirements_button.configure(state="normal", text="DOWNLOAD AGAIN")
                 self.append_output(f"\nInstaller ready: {installer_path}\nRun it to install Ollama.\n", "good")
@@ -1722,11 +1761,11 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                 ):
                     try:
                         subprocess.Popen([str(installer_path)], shell=False)
-                        self.requirements_label.configure(text=f"Ollama installer launched\n{installer_path}", fg="#9BE0B5")
+                        self.requirements_label.configure(text=f"Ollama installer launched\n{installer_path}", fg=COLORS["success"])
                     except OSError as exc:
-                        self.requirements_label.configure(text=f"Could not launch installer\n{exc}", fg="#FF9292")
+                        self.requirements_label.configure(text=f"Could not launch installer\n{exc}", fg=COLORS["error"])
             elif event == "installer_download_error":
-                self.requirements_label.configure(text=f"Installer download failed\n{payload}", fg="#FF9292")
+                self.requirements_label.configure(text=f"Installer download failed\n{payload}", fg=COLORS["error"])
                 self.install_requirements_button.configure(state="normal", text="RETRY DOWNLOAD")
             elif event == "model_compatibility_result":
                 url, size_bytes, result, color = payload
@@ -1755,7 +1794,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                 ):
                     self.download_compatibility_label.configure(
                         text=f"Could not estimate compatibility: {error}",
-                        fg="#FF9292",
+                        fg=COLORS["error"],
                     )
             elif event == "model_download_progress":
                 downloaded, total, filename = payload
@@ -1768,14 +1807,14 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
             elif event == "model_download_complete":
                 if self.download_progress is not None and self.download_status is not None:
                     self.download_progress.configure(value=100)
-                    self.download_status.configure(text=f"Downloaded: {payload}", fg="#9BE0B5")
+                    self.download_status.configure(text=f"Downloaded: {payload}", fg=COLORS["success"])
                 if self.download_button is not None and self.download_button.winfo_exists():
                     self.download_button.configure(state="normal")
                 self.append_output(f"\nModel downloaded: {payload}\n", "good")
                 self.refresh_models()
             elif event == "model_download_error":
                 if self.download_status is not None:
-                    self.download_status.configure(text=f"Download failed: {payload}", fg="#FF9292")
+                    self.download_status.configure(text=f"Download failed: {payload}", fg=COLORS["error"])
                 if self.download_button is not None and self.download_button.winfo_exists():
                     self.download_button.configure(state="normal")
         self.root.after(100, self.process_events)
@@ -1797,7 +1836,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         self.benchmark_stop_event.set()
         self.stop_button.configure(state="disabled")
         self.status_var.set("STOPPING BENCHMARK")
-        self.result_status.configure(text="Stopping after the active generation responds…", fg="#F2C879")
+        self.result_status.configure(text="Stopping after the active generation responds…", fg=COLORS["warning"])
         self.progress_text.configure(text="Waiting for the current model stream to stop")
         self.append_output("\nStop requested. The active task will be discarded; completed tasks will be saved.\n", "muted")
 
@@ -1807,7 +1846,7 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         try:
             subprocess.Popen([command, str(self.session.results_dir)])
         except OSError as exc:
-            self.result_status.configure(text=f"Could not open results folder: {exc}", fg="#FF9292")
+            self.result_status.configure(text=f"Could not open results folder: {exc}", fg=COLORS["error"])
 
     def close(self) -> None:
         if self.closing:

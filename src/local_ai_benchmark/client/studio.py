@@ -15,9 +15,10 @@ class StudioWorkspaceMixin:
         top.pack(fill="x", padx=16, pady=12)
         brand = tk.Frame(top, bg=COLORS["shell"])
         brand.pack(side="left", padx=(0, 28))
+        self._identity_art(brand, compact=True).pack(side="left", padx=(0, 10))
         tk.Label(brand, text="AETHERION", bg=COLORS["shell"], fg=COLORS["text"],
                  font=("Segoe UI", 16, "bold")).pack(anchor="w")
-        tk.Label(brand, text="S T U D I O   /   0 3", bg=COLORS["shell"],
+        tk.Label(brand, text="Beyond the known.", bg=COLORS["shell"],
                  fg=COLORS["accent"], font=("Consolas", 8)).pack(anchor="w")
         self.nav_buttons = {}
         self.nav_indicators = {}
@@ -78,19 +79,25 @@ class StudioWorkspaceMixin:
         hero.grid_columnconfigure(1, weight=2)
         introduction = tk.Frame(hero, bg=COLORS["canvas"])
         introduction.grid(row=0, column=0, sticky="nsew", padx=(0, 24))
-        tk.Label(introduction, text="BUILT AROUND YOUR MACHINE", bg=COLORS["canvas"],
+        tk.Label(introduction, text="LOCAL INTELLIGENCE, MEASURED", bg=COLORS["canvas"],
                  fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w")
-        tk.Label(introduction, text="Make your next\nmodel a better fit.", bg=COLORS["canvas"],
-                 fg=COLORS["text"], font=("Segoe UI", 34, "bold"), justify="left").pack(anchor="w", pady=(8, 12))
+        tk.Label(introduction, text="Your machine.\nYour models.\nYour evidence.", bg=COLORS["canvas"],
+                 fg=COLORS["text"], font=("Segoe UI", 30, "bold"), justify="left").pack(anchor="w", pady=(8, 12))
         copy = tk.Label(introduction, text="Explore your models. Test their strengths.\nChoose with evidence from your own hardware.",
                         bg=COLORS["canvas"], fg=COLORS["muted"], font=("Segoe UI", 11), justify="left")
         copy.pack(anchor="w", fill="x")
         introduction.bind("<Configure>", lambda event: copy.configure(wraplength=max(160, event.width)))
 
+        actions = tk.Frame(introduction, bg=COLORS["canvas"])
+        actions.pack(anchor="w", pady=(20, 0))
+        self._button(actions, "Start a benchmark", lambda: self.focus_section("benchmarks"), primary=True).pack(side="left", padx=(0, 8))
+        self._button(actions, "Explore models", lambda: self.focus_section("models")).pack(side="left")
+
         featured = self._card(hero, accent=True)
         featured.grid(row=0, column=1, sticky="nsew")
         body = tk.Frame(featured, bg=COLORS["surface"])
         body.pack(fill="both", expand=True, padx=24, pady=20)
+        self._silicon_art(body).pack(fill="x", pady=(0, 12))
         tk.Label(body, text="YOUR STARTING POINT", bg=COLORS["surface"], fg=COLORS["accent"], font=FONTS["section"]).pack(anchor="w")
         self.featured_name = tk.Label(body, text="Discover your models", bg=COLORS["surface"], fg=COLORS["text"],
                                       font=("Segoe UI", 21, "bold"), justify="left", anchor="w")
