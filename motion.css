@@ -6,7 +6,7 @@
 .brand-mark { width:44px; height:44px; flex-shrink:0; }
 .brand .aetherion-symbol { width:44px; height:44px; display:block; overflow:visible; }
 .brand-name { font-size:16px; font-weight:620; letter-spacing:1.8px; }
-.brand-text small { margin-top:5px; font-size:8px; letter-spacing:1.1px; }
+.brand-text small { margin-top:5px; font-size:11px; letter-spacing:.5px; }
 .logo-orbit,.logo-meridian,.logo-core { transform-origin:32px 32px; }
 .hero-line { display:block; overflow:hidden; padding-bottom:.08em; margin-bottom:-.08em; }
 .hero-line > span { display:block; }
@@ -77,7 +77,7 @@
 @media(max-width:700px) {
   .brand-mark,.brand .aetherion-symbol { width:38px; height:38px; }
   .brand-name { font-size:14px; letter-spacing:1.5px; }
-  .brand-text small { font-size:7px; }
+  .brand-text small { font-size:11px; }
   .homepage .hero { padding-top:46px; }
   .topbar .nav { transform-origin:top right; }
   .topbar .nav a::before { display:none; }

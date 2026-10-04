@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-04",
+  "surface": "Aetherion homepage",
+  "gallery_views": 3,
+  "task_categories": 5,
+  "tested_widths": [
+    375,
+    390,
+    768,
+    1024,
+    1440,
+    1920
+  ],
+  "horizontal_overflow": false,
+  "hero_lines_max": 3,
+  "font": "Self-hosted Satoshi 400/500/700",
+  "browser_errors": [],
+  "interaction_issues": [],
+  "motion": {
+    "desktop_scroll_triggers": 4,
+    "desktop_pins": 1,
+    "reduced_motion_scroll_triggers": 0,
+    "keyboard_scroll_triggers": 0,
+    "reduced_motion_marquee": "none"
+  },
+  "download": {
+    "file": "downloads/Aetherion-Studio.exe",
+    "status": 200,
+    "bytes": 55144352,
+    "sha256": "a21be533985b6b93943a6caf3438e18dc5f07af9cc6f7645b3957e8e71f18c32"
+  },
+  "tests": "63 passed",
+  "typescript": "tsc --noEmit passed",
+  "javascript": "node --check studio-web.js passed",
+  "publication": "local preview"
+}

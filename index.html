@@ -10,6 +10,8 @@
   <link rel="stylesheet" href="styles.css?v=20261004" />
   <link rel="stylesheet" href="monochrome.css?v=20261004-4" />
   <link rel="stylesheet" href="motion.css?v=20261004-emil3" />
+  <link rel="preload" href="assets/fonts/satoshi-400.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="studio-web.css?v=20261004-premium1" />
 </head>
 <body class="homepage">
 <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -23,49 +25,27 @@
     <nav class="nav" id="aetherion-navigation" aria-label="Main navigation">
       <a href="#workflow">How it works</a><a href="#details">Benchmarks</a><a href="models.html">Models</a><a href="resources.html">Resources</a>
     </nav>
-    <a class="header-download" href="#benchmarkSection">Get Aetherion <span aria-hidden="true">↗</span></a>
+    <a class="header-download" href="#benchmarkSection">Get Aetherion <span aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
     <button class="design-menu" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="aetherion-navigation"><span></span><span></span></button>
   </header>
   <main id="main-content">
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero-copy">
-        <p class="product-label"><span aria-hidden="true"></span> A benchmark studio for local AI</p>
+
         <h1 id="hero-title"><span class="hero-line"><span>Your machine.</span></span><span class="hero-line"><span>Your models.</span></span><span class="hero-line"><span>Your evidence.</span></span></h1>
         <p class="lead">Find out what your hardware can really do. Compare local AI models on speed, latency and task validation — before you commit to one.</p>
-        <div class="hero-actions"><a class="primary" href="#benchmarkSection">Get the Windows client <span aria-hidden="true">↗</span></a><a class="text-link" href="#details">Explore the benchmarks</a></div>
+        <div class="hero-actions"><a class="primary" href="#benchmarkSection">Get the Windows client <span aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a><a class="text-link" href="#details">Explore the benchmarks</a></div>
         <p class="hero-footnote">Local inference. Ollama &amp; GGUF support.</p>
       </div>
-      <div class="machine-scene" role="img" aria-label="Illustration: your hardware, a local model, and a benchmark report. No live measurements are shown.">
-        <div class="scene-caption"><span>Aetherion</span><span>From silicon to insight</span></div>
-        <svg class="silicon-stack" viewBox="0 0 560 440" fill="none" aria-hidden="true">
-          <defs>
-            <linearGradient id="wafer" x1="120" y1="70" x2="440" y2="390" gradientUnits="userSpaceOnUse"><stop stop-color="#536B91"/><stop offset=".47" stop-color="#1C2A3E"/><stop offset="1" stop-color="#111C2B"/></linearGradient>
-            <linearGradient id="glass" x1="280" y1="40" x2="280" y2="340" gradientUnits="userSpaceOnUse"><stop stop-color="#B8D0FB" stop-opacity=".19"/><stop offset="1" stop-color="#8EAFFF" stop-opacity=".03"/></linearGradient>
-            <linearGradient id="edge" x1="60" y1="150" x2="490" y2="290" gradientUnits="userSpaceOnUse"><stop stop-color="#607DA8"/><stop offset=".5" stop-color="#BED4FA"/><stop offset="1" stop-color="#3D5272"/></linearGradient>
-            <pattern id="circuit" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M0 14H28M14 0V28" stroke="#9EB9DF" stroke-opacity=".12"/><circle cx="14" cy="14" r="1.6" fill="#AAC8F1" fill-opacity=".25"/></pattern>
-          </defs>
-          <path d="M280 132L508 264L280 396L52 264Z" fill="#080E18" stroke="#273A55"/>
-          <path d="M52 264V277L280 410L508 277V264L280 396Z" fill="#142033" stroke="#273A55"/>
-          <path d="M280 99L508 231L280 363L52 231Z" fill="url(#wafer)" stroke="url(#edge)"/>
-          <path d="M280 99L508 231L280 363L52 231Z" fill="url(#circuit)"/>
-          <path d="M166 231L280 165L394 231L280 297Z" fill="#0C1421" stroke="#98BDF5" stroke-opacity=".7"/>
-          <path d="M187 231L280 177L373 231L280 285Z" stroke="#8EAFFF" stroke-opacity=".25"/>
-          <path d="M280 197L338 231L280 265L222 231Z" fill="#8EAFFF" fill-opacity=".13" stroke="#AAC9FA"/>
-          <path d="M260 231L280 219L300 231L280 243Z" fill="#D4E4FF"/>
-          <g stroke="#A6C4F2" stroke-opacity=".45"><path d="M166 231L102 268M204 209L141 173M242 187L242 143M394 231L457 268M356 209L418 173M318 187L318 143M204 253L141 290M356 253L418 290"/></g>
-          <g stroke="#6D8AAF" stroke-dasharray="3 7"><path d="M52 231V136M508 231V136M280 363V268M280 99V4"/></g>
-          <g class="silicon-model"><path d="M280 4L508 136L280 268L52 136Z" fill="url(#glass)" stroke="#90ADD7" stroke-opacity=".5"/>
-          <path d="M165 136L280 69L395 136L280 203Z" stroke="#90ADD7" stroke-opacity=".35"/>
-          <path d="M242 136L280 114L318 136L280 158Z" stroke="#D4E4FF"/></g>
-          <g fill="#B6CAE8" font-family="Consolas, monospace" font-size="10"><text x="74" y="216">Hardware</text><text x="386" y="126">Model</text><text x="338" y="363">Evidence</text></g>
-        </svg>
-        <div class="scene-report"><div class="report-icon" aria-hidden="true">⌁</div><div><strong>Performance, in context.</strong><p>Your hardware. The same tasks. A clearer comparison.</p></div><span class="report-arrow" aria-hidden="true">↗</span></div>
-        <div class="scene-base"><span>Hardware → Model → Benchmark</span><span>Concept illustration</span></div>
-      </div>
+      <figure class="studio-stage" aria-label="Explore the implemented Aetherion Studio client">
+        <div class="studio-stage-top"><span class="stage-lights" aria-hidden="true"><i></i><i></i><i></i></span><span>Aetherion Studio</span><span class="stage-platform">Windows client</span></div>
+        <div class="studio-image-wrap"><img id="studio-image" src="assets/studio/workspace.png" width="1440" height="940" alt="Aetherion Studio Workspace: six real local models and detected hardware" fetchpriority="high" /></div>
+        <figcaption><div class="studio-switches" role="group" aria-label="Choose a client screenshot"><button type="button" data-studio-view="workspace" aria-pressed="true">Workspace</button><button type="button" data-studio-view="models" aria-pressed="false">Models</button><button type="button" data-studio-view="benchmark" aria-pressed="false">Benchmark</button></div><p id="studio-capture-note" aria-live="polite">Implemented client · real hardware and local models</p></figcaption>
+      </figure>
     </section>
-    <div class="capability-strip" aria-label="Supported benchmark features"><span>Built for local inference</span><strong>Ollama</strong><strong>GGUF</strong><strong>Hardware profiling</strong><strong>JSON reports</strong></div>
+    <div class="capability-strip" aria-label="Supported benchmark features"><span class="capability-caption">Built for local inference</span><div class="capability-window"><div class="capability-track"><div><span>Ollama</span><span>GGUF</span><span>Hardware profiling</span><span>JSON reports</span></div><div aria-hidden="true"><span>Ollama</span><span>GGUF</span><span>Hardware profiling</span><span>JSON reports</span></div></div></div><button type="button" class="capability-pause" aria-label="Pause integrations animation" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12" /></svg></button></div>
     <section class="workflow-section" id="workflow" aria-labelledby="workflow-title">
-      <div class="section-intro"><p class="section-label">The workflow</p><h2 id="workflow-title">Stop guessing.<br>Start measuring.</h2><p>Choosing a model starts with the machine it will run on. Aetherion puts the hardware, the workload and the results in one place.</p><a class="text-link" href="overview.html">See the full workflow <span aria-hidden="true">↗</span></a></div>
+      <div class="section-intro"><h2 id="workflow-title">Stop guessing.<br>Start measuring.</h2><p>Choosing a model starts with the machine it will run on. Aetherion puts the hardware, the workload and the results in one place.</p><a class="text-link" href="overview.html">See the full workflow <span aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a></div>
       <ol class="workflow-list">
         <li><span class="step-number" aria-hidden="true">01</span><div><h3>Know your hardware</h3><p>Check CPU, memory and available GPU acceleration before selecting a model.</p></div></li>
         <li><span class="step-number" aria-hidden="true">02</span><div><h3>Choose the workload</h3><p>Discover your local models and pick the task you actually need them to handle.</p></div></li>
@@ -73,19 +53,19 @@
       </ol>
     </section>
     <section class="suite-section" id="details" aria-labelledby="suite-title">
-      <div class="suite-heading"><div><p class="section-label">Inside the benchmark</p><h2 id="suite-title">Real tasks.<br>Visible criteria.</h2></div><p>A fast answer is only part of the story. Explore the five task categories and see what each check looks for.</p></div>
+      <div class="suite-heading"><div><h2 id="suite-title">Real tasks.<br>Visible criteria.</h2></div><p>A fast answer is only part of the story. Explore the five task categories and see what each check looks for.</p></div>
       <div class="suite-workbench">
         <div class="suite-selectors" role="group" aria-label="Choose a benchmark category">
-          <button type="button" data-suite="general" aria-pressed="true"><span>General</span><small>Follow a constraint</small><span class="suite-arrow" aria-hidden="true">↗</span></button>
-          <button type="button" data-suite="coding" aria-pressed="false"><span>Coding</span><small>Python output</small><span class="suite-arrow" aria-hidden="true">↗</span></button>
-          <button type="button" data-suite="math" aria-pressed="false"><span>Math</span><small>Check an answer</small><span class="suite-arrow" aria-hidden="true">↗</span></button>
-          <button type="button" data-suite="json" aria-pressed="false"><span>Structured output</span><small>Validate JSON</small><span class="suite-arrow" aria-hidden="true">↗</span></button>
-          <button type="button" data-suite="spanish" aria-pressed="false"><span>Spanish</span><small>Language check</small><span class="suite-arrow" aria-hidden="true">↗</span></button>
+          <button type="button" data-suite="general" aria-pressed="true"><span>General</span><small>Follow a constraint</small><span class="suite-arrow" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span></button>
+          <button type="button" data-suite="coding" aria-pressed="false"><span>Coding</span><small>Python output</small><span class="suite-arrow" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span></button>
+          <button type="button" data-suite="math" aria-pressed="false"><span>Math</span><small>Check an answer</small><span class="suite-arrow" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span></button>
+          <button type="button" data-suite="json" aria-pressed="false"><span>Structured output</span><small>Validate JSON</small><span class="suite-arrow" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span></button>
+          <button type="button" data-suite="spanish" aria-pressed="false"><span>Spanish</span><small>Language check</small><span class="suite-arrow" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span></button>
         </div>
         <div class="suite-preview" aria-live="polite" aria-atomic="true">
           <div class="preview-top"><span id="suite-name">General / DNS explanation</span><span class="preview-badge">Task preview</span></div>
           <p class="code-label">Prompt</p><pre id="suite-prompt">Explain DNS in exactly two short sentences.</pre>
-          <div class="validation-preview"><span class="check-icon" aria-hidden="true">✓</span><div><h3 id="suite-check-title">Sentence-count check</h3><p id="suite-check">The validator checks for two sentence segments. It does not judge factual accuracy.</p></div></div>
+          <div class="validation-preview"><span class="check-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span><div><h3 id="suite-check-title">Sentence-count check</h3><p id="suite-check">The validator checks for two sentence segments. It does not judge factual accuracy.</p></div></div>
           <div class="preview-measures"><span>Time to first token</span><span>Tokens / second</span><span>Validation</span></div>
           <p class="preview-note">No model runs on this page. Your measurements are generated in the local client.</p>
         </div>
@@ -98,15 +78,15 @@
   <g class="logo-meridian"><ellipse cx="32" cy="32" rx="26" ry="10.5" transform="rotate(-42 32 32)" stroke="#8EAFFF" stroke-width="1.4"/></g>
   <g class="logo-core"><path d="M32 15C34.7 25.8 38.2 29.3 49 32C38.2 34.7 34.7 38.2 32 49C29.3 38.2 25.8 34.7 15 32C25.8 29.3 29.3 25.8 32 15Z" fill="#101823" stroke="#EDF2F7" stroke-width="1.8" stroke-linejoin="round"/><circle cx="32" cy="32" r="3.3" fill="#EDF2F7"/></g>
 </svg></div>
-      <div class="download-content"><p class="section-label">Aetherion Studio</p><h2 id="download-title">The next benchmark<br>is yours.</h2><p>Bring the studio to your machine. Discover your models, run a workload and keep the results.</p><div class="hero-actions"><a class="primary download-cta" href="downloads/Aetherion-Studio-03.exe" download>Download for Windows <span aria-hidden="true">↓</span></a><a class="text-link" href="resources.html">Setup &amp; resources</a></div><p class="download-meta">Windows executable · Studio 03 · 15.2 MB</p><p class="download-requirements">An Aetherion account and active license are required. Configure Ollama or a compatible GGUF runtime to run models.</p></div>
+      <div class="download-content"><h2 id="download-title">The next benchmark<br>is yours.</h2><p>Bring the studio to your machine. Discover your models, run a workload and keep the results.</p><div class="hero-actions"><a class="primary download-cta" href="downloads/Aetherion-Studio.exe" download>Download for Windows <span aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v16m-6-6 6 6 6-6"/></svg></span></a><a class="text-link" href="resources.html">Setup &amp; resources</a></div><p class="download-meta">Windows executable · Qt 6 desktop · 52.6 MB</p><p class="download-requirements">An Aetherion account and active license are required. Configure Ollama or a compatible GGUF runtime to run models.</p></div>
     </section>
-    <section class="faq-section" aria-labelledby="faq-title"><div><p class="section-label">Before you start</p><h2 id="faq-title">A little more clarity.</h2></div><div class="faq-list">
+    <section class="faq-section" aria-labelledby="faq-title"><div><h2 id="faq-title">A little more clarity.</h2></div><div class="faq-list">
       <details><summary>Does the benchmark run in my browser?</summary><p>No. The website explains the workflow; the Windows client runs the benchmark against your configured model runtime.</p></details>
-      <details><summary>Which models can I benchmark?</summary><p>Use installed models served by Ollama, or a GGUF model with a configured compatible runtime. Model availability and memory requirements depend on your setup.</p></details>
+      <details><summary>Which models can I benchmark?</summary><p>The Windows download runs installed models served by Ollama. GGUF requires a source installation with llama-cpp-python, or a build that bundles that runtime. Model availability and memory requirements depend on your setup.</p></details>
       <details><summary>What should I compare in a report?</summary><p>Read time to first token, tokens per second and task validation together. Use the same task, model settings and hardware conditions for a useful comparison.</p></details>
       <details><summary>Do I need an account or internet access?</summary><p>The client requires an Aetherion account and active license. Model inference can run locally; account sign-in and license verification use the account service.</p></details>
     </div></section>
-    <section class="contact" id="contact" aria-labelledby="contact-title"><div class="contact-intro"><p class="section-label">Talk about your setup</p><h2 id="contact-title">What are you<br>building?</h2><p>Tell us about your hardware and workload. We can start with the right questions.</p><a class="text-link" href="mailto:dayvermoreta21@gmail.com">dayvermoreta21@gmail.com</a></div><form class="contact-form" id="contactForm" novalidate><p class="form-note">This opens your email app with a draft. Nothing is sent automatically.</p>
+    <section class="contact" id="contact" aria-labelledby="contact-title"><div class="contact-intro"><h2 id="contact-title">What are you<br>building?</h2><p>Tell us about your hardware and workload. We can start with the right questions.</p><a class="text-link" href="mailto:dayvermoreta21@gmail.com">dayvermoreta21@gmail.com</a></div><form class="contact-form" id="contactForm" novalidate><p class="form-note">This opens your email app with a draft. Nothing is sent automatically.</p>
             <div class="form-row">
               <div class="field-group">
                 <label for="fullName">Full name</label>
@@ -174,5 +154,5 @@
       </div>
     </div>
 
-<script src="design.js?v=20261004-emil1"></script><script src="app.js?v=20261004-emil1"></script>
+<script src="assets/vendor/gsap.min.js" defer></script><script src="assets/vendor/ScrollTrigger.min.js" defer></script><script src="studio-web.js?v=20261004-premium1" defer></script><script src="design.js?v=20261004-emil1"></script><script src="app.js?v=20261004-emil1"></script>
 </body></html>
