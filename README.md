@@ -41,6 +41,8 @@ This is not a chatbot, and it is not a cloud evaluation platform. It is a local 
 
 ### Desktop client (Windows)
 
+The current desktop UI uses native Qt 6 / PySide6 with bundled Inter typography, SVG icons and Windows per-monitor DPI scaling. See [the native Studio redesign](docs/native-studio/README.md) for architecture, verification and build details. To run from source, install `python -m pip install -e ".[desktop]"` and launch `python -m local_ai_benchmark.client`.
+
 1. Install and start [Ollama](https://ollama.com/download).
 2. Download and open `downloads/Aetherion-Client.exe`.
 3. Select an installed model and task suite, then choose **Run Benchmark**.

@@ -5,6 +5,7 @@ __pycache__/
 build/
 dist/
 dist-studio03/
+dist-premium/
 .pytest_cache/
 .venv/
 .test-deps/
@@ -16,6 +17,8 @@ server/data/
 
 # Local benchmark data: may contain hardware details and model responses
 results/
+docs/native-studio/verification/actual-client.png
+docs/native-studio/verification/live-ollama.json
 
 # Editors and OS
 .vscode/

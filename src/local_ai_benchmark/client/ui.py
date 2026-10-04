@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 def main() -> None:
-    from .desktop import launch_desktop_app
+    from .qt.app import launch_desktop_app
 
     launch_desktop_app()
 

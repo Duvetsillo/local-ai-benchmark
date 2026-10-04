@@ -1,0 +1,9 @@
+{
+  "native_window_verified": true,
+  "title": "AETHERION STUDIO \u2014 Beyond the known.",
+  "build_bytes": 55144352,
+  "dpi_manifest": "PerMonitorV2",
+  "qt_version": "6.11.2",
+  "final_source_verified_in_archive": true,
+  "packaging_fix": "Use Windows ICU; exclude conflicting Poppler DLL"
+}

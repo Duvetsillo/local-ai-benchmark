@@ -19,7 +19,8 @@ def _get_if_available(value: Any) -> Any:
 
 def _safe_run(command: list[str]) -> str:
     try:
-        completed = subprocess.run(command, capture_output=True, text=True, shell=False, timeout=5)
+        completed = subprocess.run(command, capture_output=True, text=True, shell=False, timeout=5,
+                                   creationflags=0x08000000 if os.name == "nt" else 0)
         if completed.returncode != 0:
             return ""
         return completed.stdout.strip()

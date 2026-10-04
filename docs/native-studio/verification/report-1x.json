@@ -1,0 +1,395 @@
+{
+  "fixture_data": true,
+  "scale": 1.0,
+  "device_pixel_ratio": 1.0,
+  "font": "Inter",
+  "checks": [
+    {
+      "size": [
+        920,
+        640
+      ],
+      "view": "workspace",
+      "physical_pixels": [
+        920,
+        640
+      ]
+    },
+    {
+      "size": [
+        920,
+        640
+      ],
+      "view": "models",
+      "physical_pixels": [
+        920,
+        640
+      ]
+    },
+    {
+      "size": [
+        920,
+        640
+      ],
+      "view": "benchmarks",
+      "physical_pixels": [
+        920,
+        640
+      ]
+    },
+    {
+      "size": [
+        920,
+        640
+      ],
+      "view": "results",
+      "physical_pixels": [
+        920,
+        640
+      ]
+    },
+    {
+      "size": [
+        920,
+        640
+      ],
+      "view": "history",
+      "physical_pixels": [
+        920,
+        640
+      ]
+    },
+    {
+      "size": [
+        920,
+        640
+      ],
+      "view": "hardware",
+      "physical_pixels": [
+        920,
+        640
+      ]
+    },
+    {
+      "size": [
+        920,
+        640
+      ],
+      "view": "settings",
+      "physical_pixels": [
+        920,
+        640
+      ]
+    },
+    {
+      "size": [
+        1040,
+        740
+      ],
+      "view": "workspace",
+      "physical_pixels": [
+        1040,
+        740
+      ]
+    },
+    {
+      "size": [
+        1040,
+        740
+      ],
+      "view": "models",
+      "physical_pixels": [
+        1040,
+        740
+      ]
+    },
+    {
+      "size": [
+        1040,
+        740
+      ],
+      "view": "benchmarks",
+      "physical_pixels": [
+        1040,
+        740
+      ]
+    },
+    {
+      "size": [
+        1040,
+        740
+      ],
+      "view": "results",
+      "physical_pixels": [
+        1040,
+        740
+      ]
+    },
+    {
+      "size": [
+        1040,
+        740
+      ],
+      "view": "history",
+      "physical_pixels": [
+        1040,
+        740
+      ]
+    },
+    {
+      "size": [
+        1040,
+        740
+      ],
+      "view": "hardware",
+      "physical_pixels": [
+        1040,
+        740
+      ]
+    },
+    {
+      "size": [
+        1040,
+        740
+      ],
+      "view": "settings",
+      "physical_pixels": [
+        1040,
+        740
+      ]
+    },
+    {
+      "size": [
+        1440,
+        940
+      ],
+      "view": "workspace",
+      "physical_pixels": [
+        1440,
+        940
+      ]
+    },
+    {
+      "size": [
+        1440,
+        940
+      ],
+      "view": "models",
+      "physical_pixels": [
+        1440,
+        940
+      ]
+    },
+    {
+      "size": [
+        1440,
+        940
+      ],
+      "view": "benchmarks",
+      "physical_pixels": [
+        1440,
+        940
+      ]
+    },
+    {
+      "size": [
+        1440,
+        940
+      ],
+      "view": "results",
+      "physical_pixels": [
+        1440,
+        940
+      ]
+    },
+    {
+      "size": [
+        1440,
+        940
+      ],
+      "view": "history",
+      "physical_pixels": [
+        1440,
+        940
+      ]
+    },
+    {
+      "size": [
+        1440,
+        940
+      ],
+      "view": "hardware",
+      "physical_pixels": [
+        1440,
+        940
+      ]
+    },
+    {
+      "size": [
+        1440,
+        940
+      ],
+      "view": "settings",
+      "physical_pixels": [
+        1440,
+        940
+      ]
+    },
+    {
+      "size": [
+        1920,
+        1080
+      ],
+      "view": "workspace",
+      "physical_pixels": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "size": [
+        1920,
+        1080
+      ],
+      "view": "models",
+      "physical_pixels": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "size": [
+        1920,
+        1080
+      ],
+      "view": "benchmarks",
+      "physical_pixels": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "size": [
+        1920,
+        1080
+      ],
+      "view": "results",
+      "physical_pixels": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "size": [
+        1920,
+        1080
+      ],
+      "view": "history",
+      "physical_pixels": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "size": [
+        1920,
+        1080
+      ],
+      "view": "hardware",
+      "physical_pixels": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "size": [
+        1920,
+        1080
+      ],
+      "view": "settings",
+      "physical_pixels": [
+        1920,
+        1080
+      ]
+    },
+    {
+      "size": [
+        2560,
+        1440
+      ],
+      "view": "workspace",
+      "physical_pixels": [
+        2560,
+        1440
+      ]
+    },
+    {
+      "size": [
+        2560,
+        1440
+      ],
+      "view": "models",
+      "physical_pixels": [
+        2560,
+        1440
+      ]
+    },
+    {
+      "size": [
+        2560,
+        1440
+      ],
+      "view": "benchmarks",
+      "physical_pixels": [
+        2560,
+        1440
+      ]
+    },
+    {
+      "size": [
+        2560,
+        1440
+      ],
+      "view": "results",
+      "physical_pixels": [
+        2560,
+        1440
+      ]
+    },
+    {
+      "size": [
+        2560,
+        1440
+      ],
+      "view": "history",
+      "physical_pixels": [
+        2560,
+        1440
+      ]
+    },
+    {
+      "size": [
+        2560,
+        1440
+      ],
+      "view": "hardware",
+      "physical_pixels": [
+        2560,
+        1440
+      ]
+    },
+    {
+      "size": [
+        2560,
+        1440
+      ],
+      "view": "settings",
+      "physical_pixels": [
+        2560,
+        1440
+      ]
+    }
+  ],
+  "render_ms_median": 10.75910000145086,
+  "verification_seconds": 3.665
+}

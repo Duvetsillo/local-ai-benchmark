@@ -1,4 +1,5 @@
 import json
+import os
 import platform
 import shutil
 import subprocess
@@ -34,6 +35,7 @@ def _nvidia_gpus() -> list[dict[str, Any]]:
         completed = subprocess.run(
             [executable, f"--query-gpu={query}", "--format=csv,noheader,nounits"],
             capture_output=True, text=True, timeout=3, check=True,
+            creationflags=0x08000000 if os.name == "nt" else 0,
         )
     except (OSError, subprocess.SubprocessError):
         return []

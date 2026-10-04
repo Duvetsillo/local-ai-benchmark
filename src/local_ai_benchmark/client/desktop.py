@@ -1864,9 +1864,10 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
 
 
 def launch_desktop_app() -> None:
-    root = tk.Tk()
-    AetherionDesktopClient(root)
-    root.mainloop()
+    # Keep the historic entrypoint working while the native Qt shell owns the UI.
+    from local_ai_benchmark.client.qt.app import launch_desktop_app as launch_native
+
+    launch_native()
 
 
 if __name__ == "__main__":
