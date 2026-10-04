@@ -1,0 +1,360 @@
+{
+  "python": "3.14.7 (tags/v3.14.7:823f032, Aug  5 2026, 10:51:32) [MSC v.1944 64 bit (AMD64)]",
+  "executable": "C:\\Users\\Dayve\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+  "checks": {
+    "syntax": {
+      "ok": true,
+      "data": {
+        "cliente.py": {
+          "parseable": true,
+          "sha256": "a4d0a35e4193df59c39720f2e7daae91ae423d1f2a18945413976bd5a8cc1b43"
+        },
+        "config.py": {
+          "parseable": true,
+          "sha256": "8134eff0d8b51af141eaf4eab396b64f8c362337a300ee4849c3581eb71e4984"
+        },
+        "diagnose_devices.py": {
+          "parseable": true,
+          "sha256": "4eda5cfe6bfcb49196b778f6367da73314497d2defb41cd24a6006c9fcc57afe"
+        },
+        "diagnose_mic.py": {
+          "parseable": true,
+          "sha256": "155f7d110a77041e81d002c772e6230eff9fc748098efb9327cd024229171c30"
+        }
+      },
+      "seconds": 0.01
+    },
+    "imports": {
+      "ok": true,
+      "data": {
+        "numpy": {
+          "imported": true,
+          "version": "2.5.3"
+        },
+        "requests": {
+          "imported": true,
+          "version": "2.34.2"
+        },
+        "sounddevice": {
+          "imported": true,
+          "version": "0.5.6"
+        },
+        "speech_recognition": {
+          "imported": true,
+          "version": "3.17.0"
+        },
+        "pyaudio": {
+          "imported": false,
+          "error": "ModuleNotFoundError: No module named 'pyaudio'"
+        },
+        "whisper": {
+          "imported": true,
+          "version": "20250625"
+        },
+        "onnxruntime": {
+          "imported": true,
+          "version": "1.30.0"
+        },
+        "openwakeword": {
+          "imported": true,
+          "version": "0.6.0"
+        },
+        "edge_tts": {
+          "imported": true,
+          "version": "7.2.8"
+        },
+        "soundfile": {
+          "imported": true,
+          "version": "0.14.0"
+        },
+        "pyttsx3": {
+          "imported": false,
+          "error": "ModuleNotFoundError: No module named 'pyttsx3'"
+        },
+        "torch": {
+          "imported": true,
+          "version": "2.14.0"
+        },
+        "tkinter": {
+          "imported": true,
+          "version": "9.0"
+        }
+      },
+      "seconds": 13.27
+    },
+    "config": {
+      "ok": true,
+      "data": {
+        "server": "http://192.168.100.66:3000",
+        "model": "qwen2:0.5b",
+        "api_key_present": false,
+        "input_device": null,
+        "whisper_model": "base",
+        "wake_word_enabled": true,
+        "invalid_values_rejected": true,
+        "overrides_work": true,
+        "dotenv_file_present": false,
+        "dotenv_loaded_in_source": false
+      },
+      "seconds": 0.0
+    },
+    "cli_contract": {
+      "ok": true,
+      "data": {
+        "documented_flags": {
+          "accepted": true,
+          "arguments": {
+            "server": "http://127.0.0.1:11434",
+            "model": "audit-test",
+            "api_key": null
+          }
+        },
+        "launcher_flags": {
+          "accepted": false,
+          "exit_code": 2
+        },
+        "manual_activation": {
+          "accepted": false,
+          "exit_code": 2
+        },
+        "device_flag": {
+          "accepted": false,
+          "exit_code": 2
+        }
+      },
+      "seconds": 0.01
+    },
+    "audio_devices": {
+      "ok": true,
+      "data": {
+        "collection_type": "DeviceList",
+        "is_list": false,
+        "inputs": [
+          {
+            "index": 0,
+            "name": "Microsoft Sound Mapper - Input",
+            "input_channels": 2,
+            "sample_rate": 44100.0,
+            "hostapi": 0
+          },
+          {
+            "index": 1,
+            "name": "Microphone (fifine Microphone)",
+            "input_channels": 2,
+            "sample_rate": 44100.0,
+            "hostapi": 0
+          },
+          {
+            "index": 2,
+            "name": "CABLE Output (VB-Audio Virtual ",
+            "input_channels": 16,
+            "sample_rate": 44100.0,
+            "hostapi": 0
+          },
+          {
+            "index": 3,
+            "name": "Microphone (4- High Definition ",
+            "input_channels": 2,
+            "sample_rate": 44100.0,
+            "hostapi": 0
+          },
+          {
+            "index": 10,
+            "name": "Primary Sound Capture Driver",
+            "input_channels": 2,
+            "sample_rate": 44100.0,
+            "hostapi": 1
+          },
+          {
+            "index": 11,
+            "name": "Microphone (fifine Microphone)",
+            "input_channels": 2,
+            "sample_rate": 44100.0,
+            "hostapi": 1
+          },
+          {
+            "index": 12,
+            "name": "CABLE Output (VB-Audio Virtual Cable)",
+            "input_channels": 16,
+            "sample_rate": 44100.0,
+            "hostapi": 1
+          },
+          {
+            "index": 13,
+            "name": "Microphone (4- High Definition Audio Device)",
+            "input_channels": 2,
+            "sample_rate": 44100.0,
+            "hostapi": 1
+          },
+          {
+            "index": 25,
+            "name": "CABLE Output (VB-Audio Virtual Cable)",
+            "input_channels": 2,
+            "sample_rate": 48000.0,
+            "hostapi": 2
+          },
+          {
+            "index": 26,
+            "name": "Microphone (4- High Definition Audio Device)",
+            "input_channels": 2,
+            "sample_rate": 44100.0,
+            "hostapi": 2
+          },
+          {
+            "index": 27,
+            "name": "Microphone (fifine Microphone)",
+            "input_channels": 2,
+            "sample_rate": 48000.0,
+            "hostapi": 2
+          },
+          {
+            "index": 28,
+            "name": "CABLE Output (VB-Audio Point)",
+            "input_channels": 16,
+            "sample_rate": 44100.0,
+            "hostapi": 3
+          },
+          {
+            "index": 30,
+            "name": "Input (VB-Audio Point)",
+            "input_channels": 16,
+            "sample_rate": 44100.0,
+            "hostapi": 3
+          },
+          {
+            "index": 32,
+            "name": "Microphone (HD Audio Microphone)",
+            "input_channels": 2,
+            "sample_rate": 44100.0,
+            "hostapi": 3
+          },
+          {
+            "index": 35,
+            "name": "Microphone (fifine Microphone)",
+            "input_channels": 2,
+            "sample_rate": 44100.0,
+            "hostapi": 3
+          }
+        ],
+        "valid_16khz_inputs": [
+          0,
+          1,
+          2,
+          3,
+          10,
+          11,
+          12,
+          13,
+          28,
+          30
+        ],
+        "detector_selected_index": null,
+        "default_input": 1,
+        "recording_performed": false
+      },
+      "seconds": 0.0
+    },
+    "onnx_model": {
+      "ok": true,
+      "data": {
+        "bytes": 350767,
+        "sha256": "9378bf0706a486bf115b01f6d027b09bae23b90babafedef52f0585fbdde1c27",
+        "providers": [
+          "CPUExecutionProvider"
+        ],
+        "inputs": [
+          {
+            "name": "onnx::Flatten_0",
+            "shape": [
+              1,
+              28,
+              96
+            ],
+            "type": "tensor(float)"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "karen",
+            "shape": [
+              1,
+              1
+            ],
+            "type": "tensor(float)"
+          }
+        ],
+        "synthetic_zero_output": [
+          {
+            "shape": [
+              1,
+              1
+            ],
+            "finite": true,
+            "min": 0.9008907675743103,
+            "max": 0.9008907675743103
+          }
+        ],
+        "real_wake_word_tested": false
+      },
+      "seconds": 0.06
+    },
+    "whisper_cache": {
+      "ok": true,
+      "data": {
+        "C:\\Users\\Dayve\\.cache\\whisper": [
+          {
+            "name": "base.pt",
+            "bytes": 145262807
+          },
+          {
+            "name": "tiny.pt",
+            "bytes": 75572083
+          }
+        ],
+        "C:\\Karen\\models": []
+      },
+      "seconds": 0.0
+    },
+    "binaries": {
+      "ok": true,
+      "data": {
+        "ffmpeg.exe": {
+          "returncode": 0,
+          "version": [
+            "ffmpeg version N-126308-gd411d9e752-20260828 Copyright (c) 2000-2026 the FFmpeg developers"
+          ]
+        },
+        "ffprobe.exe": {
+          "returncode": 0,
+          "version": [
+            "ffprobe version N-126308-gd411d9e752-20260828 Copyright (c) 2007-2026 the FFmpeg developers"
+          ]
+        },
+        "existing_samples": []
+      },
+      "seconds": 0.06
+    },
+    "gui": {
+      "ok": true,
+      "data": {
+        "constructed": true,
+        "title": "KAREN",
+        "mic_index": null,
+        "mic_button_state": "disabled",
+        "fields": [
+          "server",
+          "api_key",
+          "model",
+          "voice"
+        ],
+        "api_key_masked": false,
+        "geometry": "980x760+260+260",
+        "client_target_changes": true,
+        "config_object_updated": true,
+        "original_config_server": "http://127.0.0.1:11434",
+        "listening_started": false
+      },
+      "seconds": 0.2
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "executable": "C:\\Users\\Dayve\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+  "checks": {
+    "generations": {
+      "ok": true,
+      "data": {
+        "current_connection_test": {
+          "reports_ok": true,
+          "label": "version",
+          "payload_keys": [
+            "deployment_id",
+            "version"
+          ]
+        },
+        "current_config": {
+          "base": "http://192.168.100.66:3000",
+          "model": "qwen2:0.5b",
+          "status": 405,
+          "seconds": 0.03,
+          "content_type": "application/json",
+          "valid_response": false,
+          "response": null,
+          "done": null,
+          "error": null
+        },
+        "pc_local": {
+          "base": "http://127.0.0.1:11434",
+          "model": "qwen2:0.5b",
+          "status": 200,
+          "seconds": 2.75,
+          "content_type": "application/json; charset=utf-8",
+          "valid_response": true,
+          "response": "OK",
+          "done": true,
+          "error": null
+        },
+        "homelab_ollama": {
+          "base": "http://192.168.100.66:11434",
+          "model": "llama3.2:3b",
+          "status": 200,
+          "seconds": 21.53,
+          "content_type": "application/json; charset=utf-8",
+          "valid_response": true,
+          "response": "OK.",
+          "done": true,
+          "error": null
+        }
+      },
+      "seconds": 24.81
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "stats": {
+    "notes": 111,
+    "edges": 271,
+    "components": 19,
+    "orphans": 16,
+    "unresolved": 6
+  },
+  "unresolved": [
+    {
+      "path": "Karen Asistant/02_Roadmap/KAREN_MOC.md",
+      "target": "JARVIS_Bitacora",
+      "protected": true
+    },
+    {
+      "path": "Karen Asistant/02_Roadmap/KAREN_MOC.md",
+      "target": "JARVIS_Errores",
+      "protected": true
+    },
+    {
+      "path": "Proyecto FRIDAY/memory/2026-09-16.md",
+      "target": "Proyecto FRIDAY",
+      "protected": true
+    },
+    {
+      "path": "Proyecto FRIDAY/memory/2026-09-18.md",
+      "target": "Proyecto FRIDAY",
+      "protected": true
+    },
+    {
+      "path": "Proyecto FRIDAY/memory/2026-09-18.md",
+      "target": "Infraestructura Homelab",
+      "protected": true
+    },
+    {
+      "path": "Proyecto Ultron/Roadmap/Roadmap_Maestro.md",
+      "target": "Roadmap_Karen_Voz",
+      "protected": false
+    }
+  ],
+  "orphans": [
+    "Karen Asistant/Proyectos futuros.md",
+    "Proyecto FRIDAY/AI-Log-Analyzer.md",
+    "Proyecto FRIDAY/AI-Log-Analyzer_Progress.md",
+    "Proyecto FRIDAY/EVOLUTION_LOG.md",
+    "Proyecto FRIDAY/Integracion_Identidades.md",
+    "Proyecto FRIDAY/MEMORY.md",
+    "Proyecto FRIDAY/MEMORY_PROTOCOL.md",
+    "Proyecto FRIDAY/Portfolio - refinamiento visual.md",
+    "Proyecto FRIDAY/Proyectos_Completados_1909.md",
+    "Proyecto FRIDAY/Tailscale-AutoConfig_Progress.md",
+    "Proyecto FRIDAY/USER.md",
+    "Proyecto FRIDAY/memory/2026-09-16.md",
+    "Proyecto FRIDAY/memory/2026-09-18.md",
+    "Proyecto FRIDAY/memory/2026-09-19.md",
+    "Proyecto Ultron/Ultron_Blueprint.md",
+    "Proyecto Ultron/Memory_Backups/Backup_2026-09-12.md"
+  ],
+  "managed_disconnected": [
+    "Proyecto Ultron/Ultron_Blueprint.md",
+    "Proyecto Ultron/Memory_Backups/Backup_2026-09-12.md",
+    "Proyecto Ultron/Roadmap/Roadmap_Infraestructura.md",
+    "Proyecto Ultron/Roadmap/Roadmap_Inteligencia.md",
+    "Proyecto Ultron/Roadmap/Roadmap_Maestro.md",
+    "Proyecto Ultron/Roadmap/Roadmap_Ultron_Ejecucion.md"
+  ]
+}

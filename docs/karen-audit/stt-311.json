@@ -1,0 +1,21 @@
+{
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "executable": "C:\\Users\\Dayve\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+  "checks": {
+    "local_stt": {
+      "ok": true,
+      "data": {
+        "model": "base",
+        "device": "cpu",
+        "source": "existing_sample_mp3",
+        "download_performed": false,
+        "live_microphone_used": false,
+        "language": "es",
+        "transcribed_characters": 153,
+        "nonempty": true,
+        "segments": 3
+      },
+      "seconds": 5.66
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "root": "C:\\Users\\Dayve\\Desktop\\Carpetas\\Local_AI_Benchmark\\docs\\obsidian-update\\reorganization-20261003\\staging",
+  "files": 99,
+  "markdown_notes": 99,
+  "managed_notes": 99,
+  "errors": [],
+  "warnings": [
+    {
+      "code": "current_note_without_parent",
+      "path": "00_MOC_Obsidian.md"
+    }
+  ],
+  "passed": true
+}

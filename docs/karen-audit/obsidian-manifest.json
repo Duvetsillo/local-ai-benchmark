@@ -1,0 +1,30 @@
+[
+  {
+    "path": "Karen Asistant/07_Diagnostico/00_KAREN_Diagnostico_2026-10-03.md",
+    "sha256": "64449bc2bd4bc71a1003a7a8c067d8fb0be6e23da843fbb4a486c0ea9786d0da"
+  },
+  {
+    "path": "Karen Asistant/07_Diagnostico/01_Inventario_y_Entorno.md",
+    "sha256": "c29096defd2fed7bc7b2a14a596c47825de78d309af442b8f1391fd836b4718d"
+  },
+  {
+    "path": "Karen Asistant/07_Diagnostico/02_Servidor_y_PC.md",
+    "sha256": "ecb78a7fda83f066831f1f554adcce580faebeda940fc8c1b6154936410f3813"
+  },
+  {
+    "path": "Karen Asistant/07_Diagnostico/03_Voz_y_Wakeword.md",
+    "sha256": "7525f9f76ab793f54312d928b121682ebce07c115eecf8011bf9b2e15ec9872f"
+  },
+  {
+    "path": "Karen Asistant/07_Diagnostico/04_Fallos_del_Cliente.md",
+    "sha256": "d189ff3c11b1a4e4a38e8def6759ef0c05032f03027d0eb380e01335b8490f4d"
+  },
+  {
+    "path": "Karen Asistant/07_Diagnostico/05_Plan_Proxima_Sesion.md",
+    "sha256": "39b6b0aa1f2c2764e34e457e8b2b333ead78fd37ea5b5c03c350d4ffbd9707a0"
+  },
+  {
+    "path": "Karen Asistant/07_Diagnostico/06_Fuentes_y_Limites.md",
+    "sha256": "0d571eda87649ea8f30005de2703e78c2efba1cabd8c7ade039039ac228c0aef"
+  }
+]

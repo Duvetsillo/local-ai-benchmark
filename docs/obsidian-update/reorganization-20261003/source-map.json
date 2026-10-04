@@ -1,0 +1,31 @@
+{
+  "Proyecto Aetherion/06_Historial/09_Cuentas_Servicio_Renovacion_2026-09-30.md": [
+    "Proyecto Aetherion/07_Licencias_y_Cuentas/01_Contrato_Cuenta_y_Dispositivo.md",
+    "Proyecto Aetherion/07_Licencias_y_Cuentas/02_Preparar_Servicio.md",
+    "Proyecto Aetherion/07_Licencias_y_Cuentas/03_Emitir_y_Sincronizar.md",
+    "Proyecto Aetherion/07_Licencias_y_Cuentas/04_Alta_y_Acceso.md",
+    "Proyecto Aetherion/07_Licencias_y_Cuentas/05_Renovacion_y_Suspension.md",
+    "Proyecto Aetherion/07_Licencias_y_Cuentas/06_Pase_Offline.md",
+    "Proyecto Aetherion/07_Licencias_y_Cuentas/07_Datos_y_Seguridad.md",
+    "Proyecto Aetherion/07_Licencias_y_Cuentas/08_Despliegue_y_Aceptacion.md"
+  ],
+  "Proyecto Aetherion/06_Historial/08_Generador_Licencias_y_Detener_Benchmark_2026-09-30.md": [
+    "Proyecto Aetherion/07_Licencias_y_Cuentas/09_Autoridad_y_Planes.md",
+    "Proyecto Aetherion/07_Licencias_y_Cuentas/10_Entrega_de_Clave.md",
+    "Proyecto Aetherion/01_Arquitectura/08_Cancelacion_Cooperativa.md"
+  ],
+  "Proyecto Aetherion/01_Arquitectura/04_Proveedores_Locales.md": [
+    "Proyecto Aetherion/01_Arquitectura/Proveedores/01_Ollama.md",
+    "Proyecto Aetherion/01_Arquitectura/Proveedores/02_LlamaCpp_GGUF.md"
+  ],
+  "Proyecto Aetherion/01_Arquitectura/07_Formato_de_Resultados.md": [
+    "Proyecto Aetherion/01_Arquitectura/Resultados/01_JSON_del_Motor.md",
+    "Proyecto Aetherion/03_Datos_y_Operaciones/04_Persistencia_Atomica.md"
+  ],
+  "Proyecto Aetherion/04_Calidad/02_Incidente_Arranque_Cliente.md": [
+    "Proyecto Aetherion/04_Calidad/08_Cierre_Cryptography.md"
+  ],
+  "Proyecto Aetherion/04_Calidad/03_Guia_de_Diagnostico.md": [
+    "Proyecto Aetherion/04_Calidad/09_Diagnostico_por_Runtime.md"
+  ]
+}

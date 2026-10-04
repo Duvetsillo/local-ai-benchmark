@@ -1,0 +1,66 @@
+{
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "executable": "C:\\Users\\Dayve\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+  "checks": {
+    "binaries": {
+      "ok": true,
+      "data": {
+        "ffmpeg.exe": {
+          "returncode": 0,
+          "version": [
+            "ffmpeg version N-126308-gd411d9e752-20260828 Copyright (c) 2000-2026 the FFmpeg developers"
+          ]
+        },
+        "ffprobe.exe": {
+          "returncode": 0,
+          "version": [
+            "ffprobe version N-126308-gd411d9e752-20260828 Copyright (c) 2007-2026 the FFmpeg developers"
+          ]
+        },
+        "existing_samples": [
+          {
+            "name": "muestra_friday_dalia.mp3",
+            "returncode": 0,
+            "metadata": {
+              "programs": [],
+              "stream_groups": [],
+              "streams": [
+                {
+                  "codec_name": "mp3",
+                  "sample_rate": "24000",
+                  "channels": 1
+                }
+              ],
+              "format": {
+                "duration": "13.920000"
+              }
+            }
+          }
+        ]
+      },
+      "seconds": 0.14
+    },
+    "gui": {
+      "ok": true,
+      "data": {
+        "constructed": true,
+        "title": "KAREN",
+        "mic_index": null,
+        "mic_button_state": "disabled",
+        "fields": [
+          "server",
+          "api_key",
+          "model",
+          "voice"
+        ],
+        "api_key_masked": false,
+        "geometry": "980x760+52+52",
+        "client_target_changes": true,
+        "config_object_updated": false,
+        "original_config_server": "http://audit.invalid:11434",
+        "listening_started": false
+      },
+      "seconds": 0.64
+    }
+  }
+}

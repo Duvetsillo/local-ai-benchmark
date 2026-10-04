@@ -1,0 +1,114 @@
+{
+  "collapse-filter": false,
+  "search": "",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "collapse-color-groups": false,
+  "colorGroups": [
+    {
+      "query": "path:\"00_Navegacion\" OR file:\"00_MOC_Obsidian\"",
+      "color": {
+        "a": 1,
+        "rgb": 15790058
+      }
+    },
+    {
+      "query": "path:\"Proyecto Aetherion/00_Gobierno\"",
+      "color": {
+        "a": 1,
+        "rgb": 15252585
+      }
+    },
+    {
+      "query": "path:\"Proyecto Aetherion/01_Arquitectura\"",
+      "color": {
+        "a": 1,
+        "rgb": 7055850
+      }
+    },
+    {
+      "query": "path:\"Proyecto Aetherion/02_Cliente\"",
+      "color": {
+        "a": 1,
+        "rgb": 11045867
+      }
+    },
+    {
+      "query": "path:\"Proyecto Aetherion/03_Datos_y_Operaciones\"",
+      "color": {
+        "a": 1,
+        "rgb": 6211508
+      }
+    },
+    {
+      "query": "path:\"Proyecto Aetherion/04_Calidad\"",
+      "color": {
+        "a": 1,
+        "rgb": 15571568
+      }
+    },
+    {
+      "query": "path:\"Proyecto Aetherion/05_Roadmap\"",
+      "color": {
+        "a": 1,
+        "rgb": 13029237
+      }
+    },
+    {
+      "query": "path:\"Proyecto Aetherion/06_Historial\"",
+      "color": {
+        "a": 1,
+        "rgb": 9214379
+      }
+    },
+    {
+      "query": "path:\"Proyecto Aetherion/07_Licencias_y_Cuentas\"",
+      "color": {
+        "a": 1,
+        "rgb": 15237277
+      }
+    },
+    {
+      "query": "path:\"Proyecto Aetherion/08_Herramientas_Diseno\"",
+      "color": {
+        "a": 1,
+        "rgb": 12822498
+      }
+    },
+    {
+      "query": "path:\"Proyecto Ultron\"",
+      "color": {
+        "a": 1,
+        "rgb": 5291724
+      }
+    },
+    {
+      "query": "path:\"Karen Asistant\"",
+      "color": {
+        "a": 1,
+        "rgb": 8173433
+      }
+    },
+    {
+      "query": "path:\"Proyecto FRIDAY\"",
+      "color": {
+        "a": 1,
+        "rgb": 14319802
+      }
+    }
+  ],
+  "collapse-display": false,
+  "showArrow": false,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1.1,
+  "lineSizeMultiplier": 0.8,
+  "collapse-forces": false,
+  "centerStrength": 0.35,
+  "repelStrength": 16,
+  "linkStrength": 0.65,
+  "linkDistance": 140,
+  "scale": 0.2726859917360046,
+  "close": true
+}

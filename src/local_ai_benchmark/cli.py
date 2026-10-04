@@ -24,11 +24,19 @@ def build_parser() -> argparse.ArgumentParser:
     dashboard.add_argument("--port", type=int, default=8765)
     dashboard.add_argument("--endpoint", default="http://127.0.0.1:11434")
     dashboard.add_argument("--results-dir", default="results")
+    integration = subparsers.add_parser("integration-api", help="start the licensed loopback API for external clients")
+    integration.add_argument("--port", type=int, default=8766)
+    integration.add_argument("--node", action="append", default=[], help="explicit additional Ollama node: name=http://host:11434")
+    integration.add_argument("--results-dir", default=None)
     return parser
 
 
 def main() -> None:
     args = build_parser().parse_args()
+    if args.command == "integration-api":
+        from .integration import serve_integration
+        serve_integration(args.port, args.node, args.results_dir)
+        return
     if args.command == "system":
         print(json.dumps(profile_hardware().to_dict(), indent=2, ensure_ascii=False))
         return

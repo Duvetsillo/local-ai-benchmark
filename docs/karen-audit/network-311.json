@@ -1,0 +1,137 @@
+{
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "executable": "C:\\Users\\Dayve\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+  "checks": {
+    "endpoints": {
+      "ok": true,
+      "data": [
+        {
+          "base": "http://192.168.100.66:3000",
+          "path": "/api/version",
+          "status": 200,
+          "seconds": 0.05,
+          "content_type": "application/json",
+          "json_object": true,
+          "version": "0.9.6",
+          "keys": [
+            "deployment_id",
+            "version"
+          ]
+        },
+        {
+          "base": "http://192.168.100.66:3000",
+          "path": "/api/tags",
+          "status": 200,
+          "seconds": 0.05,
+          "content_type": "text/html; charset=utf-8",
+          "json_object": false
+        },
+        {
+          "base": "http://127.0.0.1:11434",
+          "path": "/api/version",
+          "status": 200,
+          "seconds": 0.0,
+          "content_type": "application/json; charset=utf-8",
+          "json_object": true,
+          "version": "0.35.1",
+          "keys": [
+            "version"
+          ]
+        },
+        {
+          "base": "http://127.0.0.1:11434",
+          "path": "/api/tags",
+          "status": 200,
+          "seconds": 0.0,
+          "content_type": "application/json; charset=utf-8",
+          "json_object": true,
+          "version": null,
+          "keys": [
+            "models"
+          ],
+          "models": [
+            {
+              "name": "gemma3:1b",
+              "bytes": 815319791
+            },
+            {
+              "name": "llama3.2:3b",
+              "bytes": 2019393189
+            },
+            {
+              "name": "qwen2.5-coder:3b",
+              "bytes": 1929912626
+            },
+            {
+              "name": "qwen3:4b",
+              "bytes": 2497293931
+            },
+            {
+              "name": "qwen2:0.5b",
+              "bytes": 352164041
+            }
+          ]
+        },
+        {
+          "base": "http://192.168.100.66:11434",
+          "path": "/api/version",
+          "status": 200,
+          "seconds": 0.05,
+          "content_type": "application/json; charset=utf-8",
+          "json_object": true,
+          "version": "0.30.6",
+          "keys": [
+            "version"
+          ]
+        },
+        {
+          "base": "http://192.168.100.66:11434",
+          "path": "/api/tags",
+          "status": 200,
+          "seconds": 0.05,
+          "content_type": "application/json; charset=utf-8",
+          "json_object": true,
+          "version": null,
+          "keys": [
+            "models"
+          ],
+          "models": [
+            {
+              "name": "llama3.2:3b",
+              "bytes": 2019393189
+            },
+            {
+              "name": "qwen2.5:7b",
+              "bytes": 4683087332
+            },
+            {
+              "name": "gemma3:1b",
+              "bytes": 815319791
+            }
+          ]
+        },
+        {
+          "base": "http://192.168.100.66:5000",
+          "path": "/salud",
+          "status": 200,
+          "seconds": 0.28,
+          "content_type": "application/json",
+          "json_object": true,
+          "version": null,
+          "keys": [
+            "estado"
+          ]
+        },
+        {
+          "base": "http://192.168.100.66:5000",
+          "path": "/health",
+          "status": 404,
+          "seconds": 0.05,
+          "content_type": "text/html; charset=utf-8",
+          "json_object": false
+        }
+      ],
+      "seconds": 0.67
+    }
+  }
+}

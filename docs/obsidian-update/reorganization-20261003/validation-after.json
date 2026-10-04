@@ -1,0 +1,42 @@
+{
+  "stats": {
+    "notes": 168,
+    "edges": 572,
+    "components": 1,
+    "orphans": 0,
+    "unresolved": 5
+  },
+  "unresolved": [
+    {
+      "path": "Karen Asistant/02_Roadmap/KAREN_MOC.md",
+      "target": "JARVIS_Bitacora",
+      "protected": true
+    },
+    {
+      "path": "Karen Asistant/02_Roadmap/KAREN_MOC.md",
+      "target": "JARVIS_Errores",
+      "protected": true
+    },
+    {
+      "path": "Proyecto FRIDAY/memory/2026-09-16.md",
+      "target": "Proyecto FRIDAY",
+      "protected": true
+    },
+    {
+      "path": "Proyecto FRIDAY/memory/2026-09-18.md",
+      "target": "Proyecto FRIDAY",
+      "protected": true
+    },
+    {
+      "path": "Proyecto FRIDAY/memory/2026-09-18.md",
+      "target": "Infraestructura Homelab",
+      "protected": true
+    }
+  ],
+  "orphans": [],
+  "managed_disconnected": [],
+  "protected_files_verified": 71,
+  "creates": 57,
+  "updates": 43,
+  "backup_integrity": "passed"
+}

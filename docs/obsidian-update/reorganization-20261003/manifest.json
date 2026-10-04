@@ -1,0 +1,602 @@
+[
+  {
+    "path": "Proyecto Aetherion/02_Cliente/04_Refinamiento_Visual_2026-10-03.md",
+    "before_sha256": null,
+    "after_sha256": "16101ce24da768bf545df83246186ef757f641c48c307d5e90bda647271f577e",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/04_Calidad/05_Verificacion_Visual_2026-10-03.md",
+    "before_sha256": null,
+    "after_sha256": "69c320a02d5a87e4432b186e5c145069d46bc6332bb734dcaffbe8bcbb1c7cb4",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/06_Sesion_2026-10-03.md",
+    "before_sha256": null,
+    "after_sha256": "5ec60e8f3729d4c744772097c3217ccbfcafa0f43fd032bb06635285eeee1e72",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/02_Cliente/05_Presencia_Atelier_2026-10-03.md",
+    "before_sha256": null,
+    "after_sha256": "67e6e6e2045869f2b2beee8e3cac44f58bdd1f84da2e725fba468f82849c0525",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/04_Calidad/06_Verificacion_Atelier_2026-10-03.md",
+    "before_sha256": null,
+    "after_sha256": "38301ec1552bdb94bda77ef8703283ccb3ab126d261893ef73ea916ad4bac254",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/07_Correccion_Visual_2026-10-03.md",
+    "before_sha256": null,
+    "after_sha256": "f2cbeda73698149b1ebd812b6683a328a3fca9bf516c429e82102dd21753d85b",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/02_Cliente/06_Studio_Estructura_2026-10-03.md",
+    "before_sha256": null,
+    "after_sha256": "f665a8a1c50d5327fc86d4fb6679f527cd825708d7adc1a87b16178ad5e90083",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/04_Calidad/07_Verificacion_Studio_2026-10-03.md",
+    "before_sha256": null,
+    "after_sha256": "1c1d252925318d186087d2fefa8f75225b386ecea4c27c8d9284b9663626bf66",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/08_Skills_y_Studio_2026-10-03.md",
+    "before_sha256": null,
+    "after_sha256": "b0a4fb07bcc732c6ddd2aba90c8edc2d15163135b0e66972252ce9f7229cc39d",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/Archivo_Documental/00_MOC_Aetherion_Corte_Anterior.md",
+    "before_sha256": null,
+    "after_sha256": "b6b1d1d8d4d6d193b89cfef0f08f8a5609a8cbdca535f41c4b2b6b1dd8ef28a9",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/Archivo_Documental/01_Resumen_Ejecutivo_Corte_Anterior.md",
+    "before_sha256": null,
+    "after_sha256": "66b525efe86c7b54554b1914594a7b6145196e16f56659086ea4bbbd146c747f",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/Archivo_Documental/02_Estado_Actual_Corte_Anterior.md",
+    "before_sha256": null,
+    "after_sha256": "b39226238062574512c370006f8882c7b0f9fb7c93d53a09f6b3b1c2932634a9",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/Archivo_Documental/01_Roadmap_Corte_Anterior.md",
+    "before_sha256": null,
+    "after_sha256": "07c79d602e9a98997ea10f397a69170db7a3f90c1e0031d6af05c26c656328fa",
+    "action": "create"
+  },
+  {
+    "path": "00_MOC_Obsidian.md",
+    "before_sha256": "60b23c5e8ef349d5bb637d1a295d638c4c2b56af9c4cfcf2a1c4a6ab1b9dfee3",
+    "after_sha256": "ff18e68c66c61383b5854976577cfeb9167783d313bdb36a895b6cbb91d118b4",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/00_Gobierno/02_Estado_Actual.md",
+    "before_sha256": "fd9d8bd4d3dc837797f33861115c928a6ef3b342fd773b24f81d017e2e5d1588",
+    "after_sha256": "7cfab14839281d22dc903a07558a9e2188c535f8caf8727ca3a00bf66bcb0455",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/00_Gobierno/01_Resumen_Ejecutivo.md",
+    "before_sha256": "441b1807b4289df655ccca885d1e7d3cc224fcc6ee895fe70539d3bb04e45887",
+    "after_sha256": "5f9c23cc9b8d2f40638d3ce2e44f62c33d64bbca71018b267ebc38d18896e31c",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/05_Roadmap/01_Roadmap.md",
+    "before_sha256": "ecc711a609f34914d4e073442c7677cb6314c29755f4fb5a90aab1385593cf2e",
+    "after_sha256": "88d77c2f261f83280ff6f78641eee128bf717ca0fac7305afa97f20e41b2ca68",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/07_Licencias_y_Cuentas/01_Contrato_Cuenta_y_Dispositivo.md",
+    "before_sha256": null,
+    "after_sha256": "25e6f9f7107b35bf02b1e528e602f2027c6daa2ef5cf6ddd697d94ccd5ebf2ae",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/07_Licencias_y_Cuentas/02_Preparar_Servicio.md",
+    "before_sha256": null,
+    "after_sha256": "d6adb7a2db9e86f916baac69b3933d3a497ca64b636a7321824b43d66d1ddbf8",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/07_Licencias_y_Cuentas/03_Emitir_y_Sincronizar.md",
+    "before_sha256": null,
+    "after_sha256": "2e3c4fdbfdf0fdfca8334312451dafbd643daff8b5a60d532a27cfbc64f202f3",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/07_Licencias_y_Cuentas/04_Alta_y_Acceso.md",
+    "before_sha256": null,
+    "after_sha256": "fc2ebdc227ffb4f207e541219f80eb300da84bb40e0f6bec212a1ee6273e3cc6",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/07_Licencias_y_Cuentas/05_Renovacion_y_Suspension.md",
+    "before_sha256": null,
+    "after_sha256": "865401033e5f7651adb5ac9d20fa8aba9bddf7e5cbbed2218a3cdc3eea8230a5",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/07_Licencias_y_Cuentas/06_Pase_Offline.md",
+    "before_sha256": null,
+    "after_sha256": "c8537e927655705ecc7b08bb18f08ae4f153aef17d1cef28ba7fa6947578809f",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/07_Licencias_y_Cuentas/07_Datos_y_Seguridad.md",
+    "before_sha256": null,
+    "after_sha256": "53302a3e40a1c44712aa52b3a0d413381ca3cf54465a489b9513ec2a0b1c2acc",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/07_Licencias_y_Cuentas/08_Despliegue_y_Aceptacion.md",
+    "before_sha256": null,
+    "after_sha256": "ff7b75c698561254eb75397b49e8e2e660818d9cf804bfe0adc8bd0d21fc482e",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/07_Licencias_y_Cuentas/09_Autoridad_y_Planes.md",
+    "before_sha256": null,
+    "after_sha256": "f4cb26d4ddd9ccb1211d864f36c68ef28804d664f3f654255787db27acfc223f",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/07_Licencias_y_Cuentas/10_Entrega_de_Clave.md",
+    "before_sha256": null,
+    "after_sha256": "3dab94cd143b973c0bf5a03c837b81a111ab76e01558f9214b568010d2635ec4",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/01_Arquitectura/08_Cancelacion_Cooperativa.md",
+    "before_sha256": null,
+    "after_sha256": "6768d7000b1afc6ccb1bcfc796292ec90b21f64fdfaa2184f7a89150ff3f0653",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/02_Cliente/Studio/01_Navegacion.md",
+    "before_sha256": null,
+    "after_sha256": "003fc66fd97f5c1b184163c7818e6748d3846dc9ae3fa62c79e6bd0d39d93977",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/02_Cliente/Studio/02_Workspace.md",
+    "before_sha256": null,
+    "after_sha256": "6533b988b8f01bfe10ddec74eeab777a436d415c78f6af2f75ec3ef45f76e954",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/02_Cliente/Studio/03_Biblioteca.md",
+    "before_sha256": null,
+    "after_sha256": "5f7324a1336b90e042464782bcda4f676caed7b9b20cbb8420cad8fb3cfc368c",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/02_Cliente/Studio/04_Laboratorio.md",
+    "before_sha256": null,
+    "after_sha256": "7912c096754e92fb3dbc15cb1d821a12d7a334756f9f97b5fc88c2fb8cc2be4c",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/02_Cliente/Studio/05_Resultados.md",
+    "before_sha256": null,
+    "after_sha256": "798de711f57d50c163ed4b8439d566088860e4502b1771e8712853c150b78154",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/01_Arquitectura/Proveedores/01_Ollama.md",
+    "before_sha256": null,
+    "after_sha256": "14d79c0e6cbeb756d18615158ee38923b4a4f920b3c5e25302ea2a83f4f484f0",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/01_Arquitectura/Proveedores/02_LlamaCpp_GGUF.md",
+    "before_sha256": null,
+    "after_sha256": "03e6a9a407f0ce8d8c6a447f9a012521495f3c72bf2b73922d61a387fd139cd2",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/01_Arquitectura/Resultados/01_JSON_del_Motor.md",
+    "before_sha256": null,
+    "after_sha256": "32adc97adcf52c5351d71ef58f4872b641b8cdb4fdfc47d44e0e88e5b59d2d50",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/03_Datos_y_Operaciones/04_Persistencia_Atomica.md",
+    "before_sha256": null,
+    "after_sha256": "8c3647133f0682fa5f63d95d439def4ce08ab4e363e357865f6549421323264e",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/04_Calidad/08_Cierre_Cryptography.md",
+    "before_sha256": null,
+    "after_sha256": "1c45850f06efee72a17b96e541a412824cfba2938dda7eebe265e80b10028a39",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/04_Calidad/09_Diagnostico_por_Runtime.md",
+    "before_sha256": null,
+    "after_sha256": "f7c2f93f714df221f3531f71989bfc803a8b838abd52b2c3ddc0bd6afc690d70",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/08_Herramientas_Diseno/01_Skills_Instaladas.md",
+    "before_sha256": null,
+    "after_sha256": "2bdc729a084a71de7d245459cdf692d043589ac0e17888c69dc44abc672070cf",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/08_Herramientas_Diseno/02_Caveman_y_UIUX.md",
+    "before_sha256": null,
+    "after_sha256": "8d307477bc4dee50d98219946ac005c62d2e53aebd11dc1937d2037c795f57b4",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Ultron/01_Identidad/01_Carga_y_Recuperacion.md",
+    "before_sha256": null,
+    "after_sha256": "02b7e8cf357f4a32d299955bb4b441c3a326f9f329fb140a68023960060e3d18",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Ultron/01_Identidad/02_Comunicacion.md",
+    "before_sha256": null,
+    "after_sha256": "afd187bcadfb34f7f5545f498e9e5e9529744e99c2e3a65595e92514cc35357d",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Ultron/01_Identidad/03_Ejecucion_y_Limites.md",
+    "before_sha256": null,
+    "after_sha256": "4263e8fcdf1aa8da46bf46336823d14a4622a524c54f67ee9cf3b6c60e32d94a",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Ultron/02_Integracion/01_Obsidian_y_Memoria.md",
+    "before_sha256": null,
+    "after_sha256": "9cb54142b5bf1ff1ea31fa988ad3162317f1e6900c04544272753292df7671a2",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Ultron/Roadmap/Roadmap_Maestro.md",
+    "before_sha256": "e28965ca11a8567913529a5c253bdd660c08420e41f1c2e177e05405f9b8c64e",
+    "after_sha256": "5bb1b1a2e4f9d060df7f6c958d6ceb7905cf2c6061daac7c28a1b55e51ac82f0",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Ultron/README.md",
+    "before_sha256": "c61450b10f2601ec180e7ea1b9ffb55bbad63376f29999e97cfd0a1f3ed27ffb",
+    "after_sha256": "b9e3e886707a3e38e3d2e4015d8a0f9d24053584dd150aab61693daedbf3818f",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Ultron/Ultron_Blueprint.md",
+    "before_sha256": "eb30cf8f4464ea5e6a613d1edd1e5e0ad17991326b155915b0a225228fe8d462",
+    "after_sha256": "9443ab6dafe0c41e76d32ee31190009b9de6d8b6a519ec2c4f22dc4c845a97a1",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Ultron/Memory_Backups/Backup_2026-09-12.md",
+    "before_sha256": "9d33e1901ec6782b24675555fd4db2eb555496a294678d77f864ef1b6a3ee22b",
+    "after_sha256": "9c4c00f725783fe1460f4e076fdb148fcead145ee3bc6b43970ae0de57888d64",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Ultron/Roadmap/Roadmap_Infraestructura.md",
+    "before_sha256": "c148b0ada9313399300b8fb8023f5f20181a5a48358a13e069713a32fd11b2cc",
+    "after_sha256": "0d89caf13887a39880b2c46c636eeecc224768f7b4009d2303a7844e782481ae",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Ultron/Roadmap/Roadmap_Inteligencia.md",
+    "before_sha256": "e19869c04229d4c035f5069fdf835a6b891f850e0d80b6ce2beae88c5dab9d73",
+    "after_sha256": "3af17e772d170d2486dfa8a23cfdeda5259c9f0dc18fa07c568c1b4af2221864",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Ultron/Roadmap/Roadmap_Ultron_Ejecucion.md",
+    "before_sha256": "9c36d86f4525e97bb2308a45dcd6d952f43a856bf09968238f206666623df126",
+    "after_sha256": "55dd847f1235bfdae783d2d83cc4f6051cc7eb9df25e59acbebeff3fd8a675c7",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Ultron/01_Identidad/00_Mapa_Identidad.md",
+    "before_sha256": null,
+    "after_sha256": "c0d018594a456ecb7deed13276367232bd85a8edd222a72c4891adb784ccb21a",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Ultron/02_Integracion/00_Mapa_Integracion.md",
+    "before_sha256": null,
+    "after_sha256": "0b6a0d98fa137da81d32ec15f01ecffc53d3dd25ec44b938d276500807fc57e4",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Ultron/00_Mapa_Ultron.md",
+    "before_sha256": null,
+    "after_sha256": "6b8a6e0722721acb136e02623a43a8fc9d6095792fc278e1dc57bde41a80f23a",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/00_Gobierno/03_Alcance_y_Principios.md",
+    "before_sha256": "17ebb45ab4c7abc0c75345bebe005a764efa3095149265829dfda6519a515f55",
+    "after_sha256": "17af82855553552105d206d2a23ec7e07093b92b7597c17adcddf99c5ac6bc80",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/00_Gobierno/04_Vinculacion_Core.md",
+    "before_sha256": "c553ea2ea101c50d6cea68d0b1fb55d6c21a0fd732df61152d9fff9eb843f2f8",
+    "after_sha256": "7f9c3e28a5cb905bee2745bdb8b0675d4eb00d17e963e11dfcdcdca7bcc8cb3a",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/00_Gobierno/05_Referencias_Rapidas.md",
+    "before_sha256": "dbe5cb15a49a9a309226e0f263e15e20812e2dce6e7a8aac3519bf34c20f60c2",
+    "after_sha256": "2748b0995f7301e2bc44f15268886cfc31a02763b05301142e159f309503b2aa",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/01_Arquitectura/01_Arquitectura_General.md",
+    "before_sha256": "4f3a5b8ce6d979e27f50370f24ca4be4e609120666b3ebeede3fa3b2d21a7535",
+    "after_sha256": "68e5e3c17faca7cbb41f5f728d4eb9b3d5e7bf8149de51576064ce5469d71d8c",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/01_Arquitectura/02_Flujo_del_Cliente.md",
+    "before_sha256": "fbdd5d5ff330107c1db6df53b00d2e93cfc3e51efe3304dd408a253f80ea2342",
+    "after_sha256": "6241e30307e1d8de3b8b26f36c1befc44d56ae74d5c8c645465f0a56d86ddd91",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/01_Arquitectura/03_Mapa_del_Codigo.md",
+    "before_sha256": "5c255625c3750861ef8481547338de15f897c52848cf77e0289529766565d713",
+    "after_sha256": "0d1ea5fdc1cc939d4c5f18d0a78c09b21076448e38b8f38003f64096c7cd725f",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/01_Arquitectura/04_Proveedores_Locales.md",
+    "before_sha256": "c6a937ac711b8c5e1a93f4f4b9cca7d4ada3202d494e09d0d5c7a6acf5fa7afe",
+    "after_sha256": "0567d7628aafabe7796752504f9563ebaee58a7effc274848198f5188b4e4c5c",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/01_Arquitectura/05_Suite_de_Benchmarks.md",
+    "before_sha256": "2f3d2e8fb09fc58c95699b4d2b6c6a5935e9a34c049494238cefc2905145f833",
+    "after_sha256": "d7d11c6fa31ac50b529c396f84ce5f144b77e9e3d7c70a9d65e6371b0f38ecdf",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/01_Arquitectura/06_Perfil_de_Hardware.md",
+    "before_sha256": "828f2d2b1083635cf3672646d3304869bf2c78de33eb0d0bf4acab9e0814b1b9",
+    "after_sha256": "d3ce2666b7d4b3d31aa64cf90604c2fbf625d5ee9c00e596f56a6f3472f8a072",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/01_Arquitectura/07_Formato_de_Resultados.md",
+    "before_sha256": "0c3c08123fed2292aa71243148db49078a58b4587770dd6006963b0bebd4710b",
+    "after_sha256": "920e898c4d061710a81c49a8dd54c66f3c6e8e59385700828a5d6e4022bd8649",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/02_Cliente/01_Experiencia_y_Pantallas.md",
+    "before_sha256": "b69f652b22c1b4c032402480c74ccd38fa3c11a4bc7108b1809808f43298cd13",
+    "after_sha256": "81156e9168201431238adac29cc309b5b7b6e4a4a7746c30e9e935a4459a42c3",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/02_Cliente/02_Sistema_Visual.md",
+    "before_sha256": "443a18b449b67950dfb91c961772c9ee33c383cff1e19672e72192f52480bc66",
+    "after_sha256": "bcdfa75881ac1e43024f4399aa23d8c92a7df8171275efc7a9a11e36a2a00bd7",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/02_Cliente/03_Guia_de_Uso.md",
+    "before_sha256": "5508ed02e671e9cb4e49520460af42c23ae14d8218d54700bbdd68350b911580",
+    "after_sha256": "f5a6136a4aa1d555a8fdf850cdfd7e6fc8a2be62fb4ebc485da850040d098eaa",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/03_Datos_y_Operaciones/01_Privacidad_y_Almacenamiento.md",
+    "before_sha256": "3f52f30d67615920dbc187c6ae965f3f1ce021eaa6d655dd47df8165ec4a7402",
+    "after_sha256": "7775f9a7fd74a098f705d04b1b1234eccd2e954e5d1656324cb7ea72be5276db",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/03_Datos_y_Operaciones/02_Instalacion_y_Uso_Local.md",
+    "before_sha256": "60fb9fb20339cdccae4f01907e5f88ddd157dadbed1abd4e15df8b98c46f73e9",
+    "after_sha256": "df531c7e1b7945c49704b3c64b66ab2e1187d27243408d27de492ccee66e406a",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/03_Datos_y_Operaciones/03_Compilacion_Windows.md",
+    "before_sha256": "d8d77341dd412499c82aaf47cbfbd2b05fd4dbb3e3d3b0c004b12c26caf4b4da",
+    "after_sha256": "aa5e5ddd2734931ffca85abec7ae29eb616855e40b002a93c0de2af4e5c59f32",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/04_Calidad/01_Estrategia_de_Verificacion.md",
+    "before_sha256": "b23a7cae9b0892bf49052b4e2b33c10b536cc366ecbaa1848e1829f4cf1e74b7",
+    "after_sha256": "37f8d25295cf715f01c544fb5ed1572765f77f1a04374fe6398201ce56779815",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/04_Calidad/02_Incidente_Arranque_Cliente.md",
+    "before_sha256": "2e1de648b64ec7692ab431581875a4a47090561e7d8247aa139131c4706c3b8d",
+    "after_sha256": "4afa0a1d91e563ff33473e7fe638638e2df1b48fd1c19d86f869ef1276736f2f",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/04_Calidad/03_Guia_de_Diagnostico.md",
+    "before_sha256": "0e463b37cc0847f86b0a39f0b9b07d3352ef231a62c20630884e8a16f9376eca",
+    "after_sha256": "de7552207716ad42b281cb61aa7dcb42e887d24bd9b2d1a28940c76ed1ae145e",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/04_Calidad/04_Riesgos_y_Controles.md",
+    "before_sha256": "d0c13584073d2ffbcb9cbdce52fe9b364c78012c162a3271d4853940f1a7b440",
+    "after_sha256": "752d03507cde07465f5d4033c7b3db1b94accc47577b18ff4cfac0da44b73881",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/05_Roadmap/02_Decisiones_Tecnicas.md",
+    "before_sha256": "e79912c932a55e154dc183efeff512aba151f72ae9298100524d3b4f0ff53972",
+    "after_sha256": "ee6048a7744ef4592a7b500e4998149d7a1eb51702e1492223e0074a1b8c43ed",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/01_Cronologia.md",
+    "before_sha256": "655fa4e459190452f8ed8360c12a5b630b74c7e093053f2ebef805b6857cf837",
+    "after_sha256": "699c794248da6bd9a52342f0a4d30d502f29f04363ce76c1c88337eb27d1f22b",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/02_Fuentes_y_Certeza.md",
+    "before_sha256": "ae6c9601d2219f8b057f8649365ea0a3d0fa954cd0292a38961df22be8c97b88",
+    "after_sha256": "c6bbdfb4255b55dcf9efb27d0644e820a9abec2902a0e044276c85b7e6f7e7cd",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/03_Glosario.md",
+    "before_sha256": "3d59b98673b2588ecdf5e4fcd43c74ce4edc7d7318160fb67e1cd1709f96a48b",
+    "after_sha256": "78d7bc44db4b79a694cd2e1326ef766b5320b3c3d588bd064064ea53063e57ab",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/04_Mapa_de_Artefactos.md",
+    "before_sha256": "6770f8d3d998b6d72ee2906c1ab842697f114153f6700e36e5ddc8db0e67e8f9",
+    "after_sha256": "3dd9c22b0c56b17b2ea6146511d21a584764661765afbfe29872ce6254bae3d2",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/05_Plantilla_de_Sesion.md",
+    "before_sha256": "91e92906b90207f06b472d157e7e34bc6be7bb4eaf074b3d74a11a0007afa02c",
+    "after_sha256": "03de3fcab7a5cc9b706a7f8b277331e7519d86b6f51aef2e9e332999737cd12b",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/06_Rediseño_Interfaz_2026-09-30.md",
+    "before_sha256": "ed9333c5246f9922e9fde92da4e4aac3cc6863a806b551cb6cdda7bcb3925983",
+    "after_sha256": "ca0a18ed57fca1467a0e9507f5a50ed1d0e63416e7677d9917c7295afc4ba975",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/07_Licenciamiento_Offline_2026-09-30.md",
+    "before_sha256": "70bb9d25ae3950ba0b3e0ebb662726ef0d53b89090bdec4729e682f1f850a78d",
+    "after_sha256": "0c97dd1dddd86f642e17301b15eab83412f32d2f7e409a196ef0bb6fdf2f82a4",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/08_Generador_Licencias_y_Detener_Benchmark_2026-09-30.md",
+    "before_sha256": "b122ac6bebdf4e96288c19e255b3c1c2b6539a1461777b62993f6af049777b49",
+    "after_sha256": "4c5aac2a5d5643ca128693f5031c1c5a9a2cfb7251a56df7c226302433b466f3",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/09_Cuentas_Servicio_Renovacion_2026-09-30.md",
+    "before_sha256": "b947f4859b90fd85d68ade2ff68d16e188f4812ea6c7a3dabc19d1bcb36a3fe0",
+    "after_sha256": "420bec24c31e5aaf27a667fde59fa17c098dbbd5d8975a313f21891542f22498",
+    "action": "update"
+  },
+  {
+    "path": "Proyecto Aetherion/00_Gobierno/00_Mapa_Gobierno.md",
+    "before_sha256": null,
+    "after_sha256": "7edaac261d006fcdd4c2098f6ee5c931b020c1700b920a05cb404267ba4e1fd9",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/01_Arquitectura/00_Mapa_Arquitectura.md",
+    "before_sha256": null,
+    "after_sha256": "4f44137119e9ebffdda9e09bca43fc345025280b5e06c6720c4033624319217c",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/02_Cliente/00_Mapa_Cliente.md",
+    "before_sha256": null,
+    "after_sha256": "8550f1559adba64c002206efa52e5bffffbead110764e0a2d2491a686fb973bd",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/03_Datos_y_Operaciones/00_Mapa_Datos_y_Operaciones.md",
+    "before_sha256": null,
+    "after_sha256": "0f898295d3b9374c9ecc0f53d374717bdfa87a3f12d6333b0f093df761d04ba2",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/04_Calidad/00_Mapa_Calidad.md",
+    "before_sha256": null,
+    "after_sha256": "22c70ae27989049179a9e6dc7688d4a24429f3ffad55d07ec577d20e496e6649",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/05_Roadmap/00_Mapa_Roadmap.md",
+    "before_sha256": null,
+    "after_sha256": "6d0488c7e678daca76b5d215ac91dc60d8ee37cd73b2c96641f06731e54e565f",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/06_Historial/00_Mapa_Historial.md",
+    "before_sha256": null,
+    "after_sha256": "3bbc23e44a62854a651cc3f68c8899fccf9d93bb063d9c6ec93be89c2af232dd",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/07_Licencias_y_Cuentas/00_Mapa_Licencias_y_Cuentas.md",
+    "before_sha256": null,
+    "after_sha256": "d0afef741170da7cea5bf5728156b3cfe4ae56d76244e3cade421a460fd435f5",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/08_Herramientas_Diseno/00_Mapa_Herramientas_Diseno.md",
+    "before_sha256": null,
+    "after_sha256": "247aa9bd799c9069a85c05433a18c15db27231fcb285d3bbc90235eee2178b59",
+    "action": "create"
+  },
+  {
+    "path": "Proyecto Aetherion/00_Gobierno/00_MOC_Aetherion.md",
+    "before_sha256": "2ddf9406e5d17c06b27828d92694749580c42e7c2fe0403fbf910bdb9ed627de",
+    "after_sha256": "9131ebd592f970c3dbb1ba99b38e343eda234de8a98df608b5c30c749be6079c",
+    "action": "update"
+  },
+  {
+    "path": "00_Navegacion/Rutas_de_Lectura.md",
+    "before_sha256": null,
+    "after_sha256": "94bb5a0dadeb1d561d80d5067e2a36c9932485c108a9a27ffee54a925b87fc9e",
+    "action": "create"
+  },
+  {
+    "path": "00_Navegacion/Guia_del_Grafo.md",
+    "before_sha256": null,
+    "after_sha256": "3d41e18dbbc8e71895a7ae5468348d1cd149cb733fbc20d94225a5dcd035e68c",
+    "action": "create"
+  },
+  {
+    "path": "00_Navegacion/Documentos_Preservados.md",
+    "before_sha256": null,
+    "after_sha256": "ed677a18cc56db7799f19880c2e422bfff115c61037617cb5de33faacd1b0acf",
+    "action": "create"
+  },
+  {
+    "path": "00_Navegacion/Registro_de_Organizacion.md",
+    "before_sha256": null,
+    "after_sha256": "1da40643a08728fb34947eb52a3940ada350ab0ccef19f00f96ca4abe2a4e59e",
+    "action": "create"
+  },
+  {
+    "path": ".obsidian/graph.json",
+    "before_sha256": "c278a5641ea2987c10ab521a8edbdb7f5fd611f6bbff946dfe25dd502969dcf6",
+    "after_sha256": "fb15b35eaa57f7b4153d52bebd23e7c3a3cd35487bd3a0cdd9a9a818fceb4ce7",
+    "action": "update"
+  }
+]
