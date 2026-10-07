@@ -12,7 +12,7 @@ import sqlite3
 import uuid
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Iterator, Literal
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
@@ -56,6 +56,11 @@ class LicenseSyncRequest(BaseModel):
 
 class RenewRequest(BaseModel):
     days: int = Field(ge=1, le=3650)
+
+
+class PlanChangeRequest(BaseModel):
+    plan: Literal["trial", "duration", "unlimited"]
+    days: int | None = Field(default=None, ge=1, le=3650)
 
 
 class BaseResponse(BaseModel):
@@ -435,6 +440,30 @@ def renew_user(user_id: int, payload: RenewRequest) -> dict[str, Any]:
         connection.execute("UPDATE users SET active=1 WHERE id=?", (user_id,))
     return {"ok": True, "username": row["username"], "license_id": row["license_id"],
             "expires_at": iso(new_expiry), "days_added": payload.days}
+
+
+@app.patch("/v1/admin/users/{user_id}/plan", dependencies=[Depends(require_admin)])
+def change_user_plan(user_id: int, payload: PlanChangeRequest) -> dict[str, Any]:
+    if payload.plan == "duration" and payload.days is None:
+        raise HTTPException(status_code=422, detail="Duration in days is required for a custom plan")
+
+    now = utc_now()
+    days = 7 if payload.plan == "trial" else payload.days
+    expires = None if payload.plan == "unlimited" else now + dt.timedelta(days=days)
+    with db() as connection:
+        row = connection.execute("""
+            SELECT u.username,l.license_id
+            FROM users u JOIN licenses l ON l.license_id=u.license_id WHERE u.id=?
+        """, (user_id,)).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        connection.execute(
+            "UPDATE licenses SET plan=?,expires_at=? WHERE license_id=?",
+            (payload.plan, iso(expires), row["license_id"]),
+        )
+    return {"ok": True, "username": row["username"], "license_id": row["license_id"],
+            "plan": payload.plan, "starts_at": iso(now), "expires_at": iso(expires),
+            "days": days}
 
 
 @app.post("/v1/admin/users/{user_id}/disable", dependencies=[Depends(require_admin)], response_model=BaseResponse)

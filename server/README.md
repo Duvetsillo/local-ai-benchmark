@@ -7,10 +7,10 @@ Servicio privado para reclamar licencias, crear cuentas, iniciar/cerrar sesiones
 1. El propietario crea una licencia en Aetherion License Manager. La herramienta firma la clave localmente y la registra en esta API con el token de administrador; la clave privada de firma no se sube al VPS.
 2. Una clave sincronizada puede reclamarse una sola vez. El titular elige username y una contraseña de al menos 12 caracteres; el servidor vincula cuenta, licencia e ID del equipo.
 3. Los siguientes inicios de sesión usan username/password en el mismo equipo. El servidor guarda la contraseña con Argon2id y devuelve un token de sesión revocable.
-4. License Manager consulta `GET /v1/admin/users` y ofrece añadir días con `POST /v1/admin/users/{id}/renew`. Los días se suman al vencimiento futuro, o comienzan desde ahora si ya venció. No se emite otra clave.
+4. License Manager consulta `GET /v1/admin/users`, ofrece añadir días con `POST /v1/admin/users/{id}/renew` y cambiar el plan con `PATCH /v1/admin/users/{id}/plan`. Un cambio de plan inicia su nuevo plazo desde hoy: Trial dura 7 días, Custom usa de 1 a 3650 días y Unlimited no vence. El cambio conserva el estado actual de activación/suspensión; no se emite otra clave. Renovar una cuenta deshabilitada la reactiva.
 5. El botón **SIGN OUT** revoca la sesión en el servidor y elimina la sesión cacheada del cliente.
 
-Cada clave permanece ligada a un solo equipo y queda asociada a una sola cuenta. El servidor guarda el hash SHA-256 de la licencia, nunca la contraseña ni la clave completa. Una licencia ilimitada no se puede renovar por días.
+Cada clave permanece ligada a un solo equipo y queda asociada a una sola cuenta. El servidor guarda el hash SHA-256 de la licencia, nunca la contraseña ni la clave completa. Una licencia ilimitada no se puede renovar por días; se puede cambiar a otro plan.
 
 ## Despliegue en el Home Lab con Docker
 
