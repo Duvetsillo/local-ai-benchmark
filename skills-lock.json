@@ -7,11 +7,23 @@
       "skillPath": "skills/accessibility/SKILL.md",
       "computedHash": "88c64dead9bb55925c7b983f5fd95cfecf30bd8c076fd384cdb17019d1becd87"
     },
+    "animation-design": {
+      "source": "dinoudon/udon-collective-skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend/animation-design/SKILL.md",
+      "computedHash": "c67cccf9433623e2a68a1166c43d8c56beb5e130bd6c4d52a3fb2df6ee48d76b"
+    },
     "design-system": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
       "skillPath": ".claude/skills/design-system/SKILL.md",
       "computedHash": "a8d1f1cd0f55979a872a2ce9717d3c33df23b0c378738b8d6adb574bfb266c77"
+    },
+    "desktop-app-design": {
+      "source": "phazurlabs/sumi",
+      "sourceType": "github",
+      "skillPath": "skills/desktop-app-design/SKILL.md",
+      "computedHash": "45ff9c8e74efd62a1ffe6c872c0918412112bc2a1d2a3045b63ae9c144a103d2"
     },
     "frontend-design": {
       "source": "anthropics/skills",
@@ -30,6 +42,12 @@
       "sourceType": "github",
       "skillPath": "tailwind-design-system/SKILL.md",
       "computedHash": "c88178d861802fa836be54e377e82bb67899b6c378807679a1feecd21bf63cb8"
+    },
+    "ui-ux-design": {
+      "source": "arvindand/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ui-ux-design/SKILL.md",
+      "computedHash": "92281f84426b630b3a2f660941eaed4c52400240eb4535923c296cdf75e15ee1"
     },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
