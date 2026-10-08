@@ -1,6 +1,6 @@
 # Aetherion License Service
 
-Servicio privado para reclamar licencias, crear cuentas, iniciar/cerrar sesiones, listar usuarios y ampliar vencimientos sin volver a emitir claves. Aetherion sigue haciendo los benchmarks localmente. La API solo administra identidad y acceso.
+Servicio privado para reclamar licencias, crear cuentas, iniciar/cerrar sesiones, listar usuarios, cambiar planes, restablecer contraseñas y transferir la vinculación de dispositivos sin volver a emitir claves. Aetherion sigue haciendo los benchmarks localmente. La API solo administra identidad y acceso.
 
 ## Recorrido de la licencia y la cuenta
 
@@ -11,6 +11,14 @@ Servicio privado para reclamar licencias, crear cuentas, iniciar/cerrar sesiones
 5. El botón **SIGN OUT** revoca la sesión en el servidor y elimina la sesión cacheada del cliente.
 
 Cada clave permanece ligada a un solo equipo y queda asociada a una sola cuenta. El servidor guarda el hash SHA-256 de la licencia, nunca la contraseña ni la clave completa. Una licencia ilimitada no se puede renovar por días; se puede cambiar a otro plan.
+
+## Gestión de contraseñas y dispositivos
+
+El administrador no puede ver ni recuperar la contraseña existente: solo se almacena su hash Argon2id. Desde License Manager puede establecer una contraseña nueva o generar una temporal de un solo uso. La contraseña temporal solo se devuelve en esa respuesta, sustituye la anterior, revoca las sesiones online y obliga al titular a elegir una contraseña nueva en el siguiente inicio de sesión online. La contraseña elegida debe tener al menos 12 bytes UTF-8; tampoco se entrega una sesión mientras siga pendiente el cambio.
+
+**Unlink device** limpia la asociación del equipo y revoca las sesiones online. El próximo inicio de sesión correcto, después de cualquier cambio de contraseña pendiente, enlaza la cuenta con el nuevo Device ID de forma atómica; el primero en autenticarse gana. La autorización offline ya firmada en el equipo anterior no se puede revocar remotamente y puede seguir funcionando hasta que caduque, como máximo siete días después de la última validación.
+
+Despliega la actualización del servicio y publica también una versión recompilada de Aetherion Client. Las versiones anteriores del cliente no implementan el flujo obligatorio de cambio de contraseña temporal.
 
 ## Despliegue en el Home Lab con Docker
 
@@ -47,6 +55,8 @@ Si se corta internet, la sesión activa puede continuar y volver a abrir Aetheri
 
 - Contraseñas con Argon2id y sal aleatoria individual; nunca se registran en texto claro.
 - Sesiones aleatorias almacenadas como hash SHA-256, vencen a los 30 días y se pueden revocar al cerrar sesión o desactivar una cuenta.
+- Los restablecimientos administrativos guardan solo el nuevo hash Argon2id, revocan sesiones y requieren cambiar la contraseña en el próximo inicio online.
+- La vinculación de dispositivo vacía se asigna al primer inicio válido posterior; las operaciones de desvinculación y autenticación serializan la actualización en SQLite.
 - El ID del equipo se compara en el servidor durante el alta y el inicio de sesión.
 - El administrador usa un bearer token separado del cliente y las peticiones al VPS requieren HTTPS.
 - El cliente conserva un pase de siete días firmado por la clave privada Ed25519 del servidor; el archivo solo vive en el volumen de datos del servicio.

@@ -149,6 +149,9 @@ class StudioWindow(QMainWindow):
         self.controller.changed.connect(self.refresh)
         self.controller.auth_changed.connect(self.on_auth)
         self.controller.notification.connect(self.notify)
+        self.controller.password_change_required.connect(
+            self.auth_page.require_password_change
+        )
         self.controller.download_event.connect(self.on_download)
         self.on_auth()
         for i, (key, _name, _icon) in enumerate(NAVIGATION, 1):
@@ -299,8 +302,9 @@ class StudioWindow(QMainWindow):
                 self.controller.refresh_models()
             self.pages["settings"].refresh()
         else:
-            for key in ("password", "confirm", "license_key"):
+            for key in ("password", "new_password", "confirm", "license_key"):
                 self.auth_page.entries[key][1].clear()
+            self.auth_page.set_mode("login")
 
     def refresh(self, key):
         self.runtime_status.setText(self.controller.status)

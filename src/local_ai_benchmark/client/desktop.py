@@ -14,7 +14,7 @@ from urllib.parse import unquote, urlparse
 from urllib.request import Request, urlopen, urlretrieve
 from dataclasses import dataclass
 from pathlib import Path
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, simpledialog, ttk
 from typing import Any
 
 if __package__ in {None, ""}:
@@ -23,7 +23,7 @@ if __package__ in {None, ""}:
         sys.path.insert(0, str(project_root))
     from local_ai_benchmark.client.core import ClientRunRecord, generate_run_id
     from local_ai_benchmark.client.hardware import detect_hardware
-    from local_ai_benchmark.client.auth import AccountService, AuthError, AuthSession, AuthUnavailable, clear_cached_session, get_service_url, machine_fingerprint, save_service_url
+    from local_ai_benchmark.client.auth import AccountService, AuthError, AuthSession, AuthUnavailable, PasswordChangeRequired, clear_cached_session, get_service_url, machine_fingerprint, save_service_url
     from local_ai_benchmark.client.storage import LocalResultStore
     from local_ai_benchmark.engine import BenchmarkEngine
     from local_ai_benchmark.models import BenchmarkResult, ModelInfo
@@ -34,7 +34,7 @@ if __package__ in {None, ""}:
 else:
     from .core import ClientRunRecord, generate_run_id
     from .hardware import detect_hardware
-    from .auth import AccountService, AuthError, AuthSession, AuthUnavailable, clear_cached_session, get_service_url, machine_fingerprint, save_service_url
+    from .auth import AccountService, AuthError, AuthSession, AuthUnavailable, PasswordChangeRequired, clear_cached_session, get_service_url, machine_fingerprint, save_service_url
     from .storage import LocalResultStore
     from ..engine import BenchmarkEngine
     from ..models import BenchmarkResult, ModelInfo
@@ -269,7 +269,10 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
         actions.pack(fill="x")
         self.auth_submit_button = self._button(actions, "SIGN IN", self.submit_account_form, primary=True)
         self.auth_submit_button.pack(fill="x", pady=(0, 10))
-        self._button(actions, "CONTINUE OFFLINE", self.continue_offline).pack(fill="x")
+        self.offline_button = self._button(
+            actions, "CONTINUE OFFLINE", self.continue_offline
+        )
+        self.offline_button.pack(fill="x")
         privacy = tk.Label(body, text="PRIVATE BY DESIGN\nYour benchmark data stays here. Saved access allows up to 7 days offline on this device and Windows account.", bg=COLORS["surface"], fg=COLORS["quiet"], font=FONTS["small"], wraplength=350, justify="left")
         privacy.pack(anchor="w", fill="x", pady=(24, 0))
         content.bind("<Configure>", lambda event: [label.configure(wraplength=max(160, event.width)) for label in (self.auth_description, self.auth_feedback, privacy)])
@@ -470,9 +473,80 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                 else:
                     session = service.login(username, password, machine_fingerprint())
                 self.account_events.put(("auth_success", (service, session)))
+            except PasswordChangeRequired:
+                self.account_events.put(
+                    ("password_change_required", (service, username, password))
+                )
             except Exception as exc:
                 self.account_events.put(("auth_error", str(exc)))
         threading.Thread(target=authenticate, daemon=True).start()
+
+    def request_temporary_password_change(
+        self, service: AccountService, username: str, temporary_password: str
+    ) -> None:
+        while True:
+            new_password = simpledialog.askstring(
+                "Change temporary password",
+                "Your administrator issued a temporary password. Enter a new password with at least 12 characters:",
+                show="*",
+                parent=self.root,
+            )
+            if new_password is None:
+                if self.auth_feedback is not None and self.auth_feedback.winfo_exists():
+                    self.auth_feedback.configure(
+                        text="Change the temporary password to continue.",
+                        fg=COLORS["warning"],
+                    )
+                return
+            if len(new_password.encode("utf-8")) < 12 or len(new_password) > 128:
+                messagebox.showerror(
+                    "Password requirements",
+                    "Use a password between 12 and 128 characters and at least 12 UTF-8 bytes.",
+                    parent=self.root,
+                )
+                continue
+            if new_password == temporary_password:
+                messagebox.showerror(
+                    "Choose a different password",
+                    "Your new password must be different from the temporary password.",
+                    parent=self.root,
+                )
+                continue
+            confirmation = simpledialog.askstring(
+                "Confirm new password",
+                "Enter the new password again:",
+                show="*",
+                parent=self.root,
+            )
+            if confirmation == new_password:
+                break
+            if confirmation is None:
+                return
+            messagebox.showerror(
+                "Passwords do not match",
+                "Enter the temporary password again and choose matching new passwords.",
+                parent=self.root,
+            )
+
+        self.auth_pending = True
+        if self.auth_feedback is not None and self.auth_feedback.winfo_exists():
+            self.auth_feedback.configure(
+                text="Updating your password securely…", fg=COLORS["accent"]
+            )
+
+        def update_password() -> None:
+            try:
+                service.change_temporary_password(
+                    username, temporary_password, new_password
+                )
+                session = service.login(
+                    username, new_password, machine_fingerprint()
+                )
+                self.account_events.put(("auth_success", (service, session)))
+            except Exception as exc:
+                self.account_events.put(("auth_error", str(exc)))
+
+        threading.Thread(target=update_password, daemon=True).start()
 
     def restore_saved_session(self) -> None:
         try:
@@ -504,6 +578,13 @@ class AetherionDesktopClient(StudioWorkspaceMixin):
                     self.license_gate.destroy()
                 self.license_gate = None
                 self.start_workspace()
+            elif event == "password_change_required":
+                self.auth_pending = False
+                if self.auth_submit_button is not None:
+                    self.auth_submit_button.configure(state="normal")
+                if self.offline_button is not None and self.offline_button.winfo_exists():
+                    self.offline_button.configure(state="disabled")
+                self.request_temporary_password_change(*payload)
             elif event in {"auth_error", "restore_error"}:
                 self.auth_pending = False
                 if self.auth_feedback is not None and self.auth_feedback.winfo_exists():

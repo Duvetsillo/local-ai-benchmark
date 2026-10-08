@@ -63,6 +63,16 @@ class PlanChangeRequest(BaseModel):
     days: int | None = Field(default=None, ge=1, le=3650)
 
 
+class AdminPasswordRequest(BaseModel):
+    password: str = Field(min_length=12, max_length=128)
+
+
+class TemporaryPasswordChangeRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=32)
+    temporary_password: str = Field(min_length=12, max_length=128)
+    new_password: str = Field(min_length=12, max_length=128)
+
+
 class BaseResponse(BaseModel):
     ok: bool = True
 
@@ -218,6 +228,13 @@ def init_db() -> None:
         CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
         CREATE INDEX IF NOT EXISTS idx_users_license ON users(license_id);
         """)
+        user_columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(users)").fetchall()
+        }
+        if "password_change_required" not in user_columns:
+            connection.execute(
+                "ALTER TABLE users ADD COLUMN password_change_required INTEGER NOT NULL DEFAULT 0"
+            )
 
 
 @app.on_event("startup")
@@ -338,6 +355,7 @@ def register(payload: RegisterRequest, request: Request) -> dict[str, Any]:
 def login(payload: LoginRequest, request: Request) -> dict[str, Any]:
     username_norm = payload.username.strip().casefold()
     with db() as connection:
+        connection.execute("BEGIN IMMEDIATE")
         user = connection.execute("SELECT * FROM users WHERE username_norm=?", (username_norm,)).fetchone()
         if user is None:
             try:
@@ -352,13 +370,68 @@ def login(payload: LoginRequest, request: Request) -> dict[str, Any]:
         if not user["active"]:
             raise HTTPException(status_code=403, detail="This account is disabled")
         license_row = connection.execute("SELECT * FROM licenses WHERE license_id=?", (user["license_id"],)).fetchone()
-    if license_row is None or not license_row["enabled"]:
-        raise HTTPException(status_code=403, detail="License is disabled")
-    if license_row["machine_id"] != payload.machine_id.upper():
-        raise HTTPException(status_code=403, detail="This account is bound to another computer")
-    if license_row["expires_at"] and license_row["expires_at"] <= iso(utc_now()):
-        raise HTTPException(status_code=403, detail="Subscription expired")
-    return new_session(user, license_row)
+        if license_row is None or not license_row["enabled"]:
+            raise HTTPException(status_code=403, detail="License is disabled")
+        if license_row["expires_at"] and license_row["expires_at"] <= iso(utc_now()):
+            raise HTTPException(status_code=403, detail="Subscription expired")
+        if user["password_change_required"]:
+            return {"password_change_required": True}
+        machine_id = payload.machine_id.upper()
+        if not license_row["machine_id"]:
+            connection.execute(
+                "UPDATE licenses SET machine_id=? WHERE license_id=? AND machine_id=''",
+                (machine_id, license_row["license_id"]),
+            )
+            license_row = connection.execute(
+                "SELECT * FROM licenses WHERE license_id=?", (license_row["license_id"],)
+            ).fetchone()
+        if license_row["machine_id"] != machine_id:
+            raise HTTPException(status_code=403, detail="This account is bound to another computer")
+        token = secrets.token_urlsafe(48)
+        now = utc_now()
+        session_expiry = now + dt.timedelta(hours=SESSION_HOURS)
+        connection.execute(
+            "INSERT INTO sessions(token_hash,user_id,created_at,expires_at) VALUES(?,?,?,?)",
+            (hashlib.sha256(token.encode()).hexdigest(), user["id"], iso(now), iso(session_expiry)),
+        )
+        connection.execute("UPDATE users SET last_login_at=? WHERE id=?", (iso(now), user["id"]))
+        user = connection.execute("SELECT * FROM users WHERE id=?", (user["id"],)).fetchone()
+    return session_response(user, license_row, token, session_expiry)
+
+
+@app.post("/v1/auth/change-temporary-password", response_model=BaseResponse)
+def change_temporary_password(payload: TemporaryPasswordChangeRequest) -> dict[str, bool]:
+    if len(payload.new_password.encode("utf-8")) < 12:
+        raise HTTPException(status_code=422, detail="Password must contain at least 12 UTF-8 bytes")
+    if hmac.compare_digest(payload.temporary_password, payload.new_password):
+        raise HTTPException(status_code=422, detail="Choose a password different from the temporary password")
+    username_norm = payload.username.strip().casefold()
+    with db() as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        user = connection.execute(
+            "SELECT id,password_hash,password_change_required FROM users WHERE username_norm=?",
+            (username_norm,),
+        ).fetchone()
+        if user is None or not user["password_change_required"]:
+            try:
+                password_hasher.verify(dummy_password_hash, payload.temporary_password)
+            except (VerifyMismatchError, VerificationError, InvalidHashError):
+                pass
+            raise HTTPException(status_code=401, detail="Temporary password is invalid or no longer active")
+        try:
+            password_hasher.verify(user["password_hash"], payload.temporary_password)
+        except (VerifyMismatchError, VerificationError, InvalidHashError):
+            raise HTTPException(status_code=401, detail="Temporary password is invalid or no longer active") from None
+        password_hash = password_hasher.hash(payload.new_password)
+        connection.execute(
+            "UPDATE users SET password_hash=?,password_change_required=0 WHERE id=?",
+            (password_hash, user["id"]),
+        )
+        connection.execute(
+            "UPDATE sessions SET revoked_at=? WHERE user_id=? AND revoked_at IS NULL",
+            (iso(utc_now()), user["id"]),
+        )
+    return {"ok": True}
 
 
 @app.get("/v1/auth/me")
@@ -404,7 +477,7 @@ def list_users() -> dict[str, Any]:
     with db() as connection:
         rows = connection.execute("""
             SELECT u.id,u.username,u.active,u.created_at,u.last_login_at,l.license_id,l.machine_id,
-                   l.plan,l.expires_at,l.enabled AS license_enabled
+                   l.plan,l.expires_at,l.enabled AS license_enabled,u.password_change_required
             FROM users u JOIN licenses l ON l.license_id=u.license_id
             ORDER BY u.created_at DESC
         """).fetchall()
@@ -417,8 +490,68 @@ def list_users() -> dict[str, Any]:
                       "license_id": row["license_id"], "machine_id": row["machine_id"],
                       "plan": row["plan"], "expires_at": row["expires_at"],
                       "days_remaining": max(0, (expiry.date() - now.date()).days) if expiry else None,
-                      "license_enabled": bool(row["license_enabled"])})
+                      "license_enabled": bool(row["license_enabled"]),
+                      "password_change_required": bool(row["password_change_required"])})
     return {"users": users}
+
+
+@app.post("/v1/admin/users/{user_id}/password", dependencies=[Depends(require_admin)], response_model=BaseResponse)
+def set_user_password(user_id: int, payload: AdminPasswordRequest) -> dict[str, bool]:
+    if len(payload.password.encode("utf-8")) < 12:
+        raise HTTPException(status_code=422, detail="Password must contain at least 12 UTF-8 bytes")
+    password_hash = password_hasher.hash(payload.password)
+    with db() as connection:
+        cursor = connection.execute(
+            "UPDATE users SET password_hash=?,password_change_required=1 WHERE id=?",
+            (password_hash, user_id),
+        )
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        connection.execute(
+            "UPDATE sessions SET revoked_at=? WHERE user_id=? AND revoked_at IS NULL",
+            (iso(utc_now()), user_id),
+        )
+    return {"ok": True}
+
+
+@app.post("/v1/admin/users/{user_id}/temporary-password", dependencies=[Depends(require_admin)])
+def create_temporary_password(user_id: int) -> dict[str, Any]:
+    temporary_password = secrets.token_urlsafe(24)
+    password_hash = password_hasher.hash(temporary_password)
+    with db() as connection:
+        cursor = connection.execute(
+            "UPDATE users SET password_hash=?,password_change_required=1 WHERE id=?",
+            (password_hash, user_id),
+        )
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        username = connection.execute(
+            "SELECT username FROM users WHERE id=?", (user_id,)
+        ).fetchone()["username"]
+        connection.execute(
+            "UPDATE sessions SET revoked_at=? WHERE user_id=? AND revoked_at IS NULL",
+            (iso(utc_now()), user_id),
+        )
+    return {"ok": True, "username": username, "temporary_password": temporary_password}
+
+
+@app.post("/v1/admin/users/{user_id}/unlink-device", dependencies=[Depends(require_admin)], response_model=BaseResponse)
+def unlink_user_device(user_id: int) -> dict[str, bool]:
+    with db() as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        row = connection.execute(
+            "SELECT license_id FROM users WHERE id=?", (user_id,)
+        ).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        connection.execute(
+            "UPDATE licenses SET machine_id='' WHERE license_id=?", (row["license_id"],)
+        )
+        connection.execute(
+            "UPDATE sessions SET revoked_at=? WHERE user_id=? AND revoked_at IS NULL",
+            (iso(utc_now()), user_id),
+        )
+    return {"ok": True}
 
 
 @app.post("/v1/admin/users/{user_id}/renew", dependencies=[Depends(require_admin)])

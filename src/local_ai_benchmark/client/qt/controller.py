@@ -24,6 +24,7 @@ from ..auth import (
     AccountService,
     AuthError,
     AuthUnavailable,
+    PasswordChangeRequired,
     clear_cached_session,
     machine_fingerprint,
     save_service_url,
@@ -108,6 +109,7 @@ class StudioController(QObject, AssessmentMixin):
     notification = Signal(str, str)
     auth_changed = Signal()
     auth_feedback = Signal(str, bool)
+    password_change_required = Signal()
     download_event = Signal(str, object)
 
     def __init__(self, base_dir: Path | None = None, parent=None):
@@ -169,8 +171,9 @@ class StudioController(QObject, AssessmentMixin):
             try:
                 self.events.put((key, True, function()))
             except Exception as exc:  # noqa: BLE001 - worker failures must cross the GUI boundary as data
+                error = exc if isinstance(exc, PasswordChangeRequired) else str(exc)
                 self.events.put(
-                    (key, False, (epoch, str(exc)) if epoch is not None else str(exc))
+                    (key, False, (epoch, error) if epoch is not None else str(error))
                 )
 
         threading.Thread(target=execute, daemon=True, name=f"aetherion-{key}").start()
@@ -211,6 +214,16 @@ class StudioController(QObject, AssessmentMixin):
                     raise AuthError("The password confirmation does not match.")
                 if not values.get("license_key", "").strip():
                     raise AuthError("A valid license key is required.")
+            elif mode == "password_change":
+                new_password = values.get("new_password", "")
+                if len(new_password.encode("utf-8")) < 12 or len(new_password) > 128:
+                    raise AuthError(
+                        "Use a new password between 12 and 128 characters and at least 12 UTF-8 bytes."
+                    )
+                if new_password == password:
+                    raise AuthError("Choose a password different from the temporary password.")
+                if new_password != values.get("confirm"):
+                    raise AuthError("The new password confirmation does not match.")
             self.account_service = AccountService(save_service_url(service_url))
         except (AuthError, KeyError) as exc:
             self.auth_feedback.emit(str(exc), True)
@@ -219,16 +232,19 @@ class StudioController(QObject, AssessmentMixin):
         service = self.account_service
 
         def sign_in():
-            session = (
-                service.register(
+            if mode == "password_change":
+                new_password = values["new_password"]
+                service.change_temporary_password(username, password, new_password)
+                session = service.login(username, new_password, machine_fingerprint())
+            elif mode == "register":
+                session = service.register(
                     username,
                     password,
                     values["license_key"].strip(),
                     machine_fingerprint(),
                 )
-                if mode == "register"
-                else service.login(username, password, machine_fingerprint())
-            )
+            else:
+                session = service.login(username, password, machine_fingerprint())
             return epoch, session
 
         self._work("auth", sign_in)
@@ -518,7 +534,11 @@ class StudioController(QObject, AssessmentMixin):
                         self.auth_session = None
                         clear_cached_session()
                         self.auth_changed.emit()
-                    self.auth_feedback.emit(payload[1], True)
+                    if key == "auth" and isinstance(payload[1], PasswordChangeRequired):
+                        self.auth_feedback.emit(str(payload[1]), False)
+                        self.password_change_required.emit()
+                    else:
+                        self.auth_feedback.emit(str(payload[1]), True)
                 elif payload[0] == self.auth_epoch:
                     self.auth_session = payload[1]
                     self.auth_changed.emit()

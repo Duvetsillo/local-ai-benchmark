@@ -402,3 +402,29 @@ def test_no_model_or_access_placeholder_enables_real_benchmark(
     assert window.gate_stack.currentIndex() == 0
     assert not window.pages["benchmarks"].run_button.isEnabled()
     window.close()
+
+
+def test_temporary_password_gate_requires_online_change_and_supports_retry(
+    app, controller
+):
+    from PySide6.QtWidgets import QLineEdit
+
+    window = StudioWindow(controller)
+    page = window.auth_page
+    page.require_password_change()
+    app.processEvents()
+
+    assert page.mode == "password_change"
+    assert not page.offline_button.isEnabled()
+    assert all(button.isHidden() for button in page.mode_buttons)
+    assert not page.password_change_sign_in.isHidden()
+    assert page.entries["password"][1].echoMode() == QLineEdit.EchoMode.Password
+    assert page.entries["new_password"][1].echoMode() == QLineEdit.EchoMode.Password
+
+    page.entries["new_password"][1].setText("replacement-password-123")
+    page.use_new_password_for_sign_in()
+    assert page.mode == "login"
+    assert page.entries["password"][1].text() == "replacement-password-123"
+    assert page.offline_button.isEnabled()
+    window._allow_close = True
+    window.close()

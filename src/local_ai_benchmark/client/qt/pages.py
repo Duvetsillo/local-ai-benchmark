@@ -1144,10 +1144,12 @@ class AuthPage(QWidget):
             )
         )
         tabs = row()
-        tabs.addWidget(Button("Sign in", callback=lambda: self.set_mode("login")))
-        tabs.addWidget(
-            Button("Create account", callback=lambda: self.set_mode("register"))
-        )
+        self.mode_buttons = [
+            Button("Sign in", callback=lambda: self.set_mode("login")),
+            Button("Create account", callback=lambda: self.set_mode("register")),
+        ]
+        for mode_button in self.mode_buttons:
+            tabs.addWidget(mode_button)
         content.addLayout(tabs)
         self.form = column(None, 0, 10)
         content.addLayout(self.form)
@@ -1155,11 +1157,12 @@ class AuthPage(QWidget):
         for key, caption in (
             ("username", "Username"),
             ("password", "Password"),
+            ("new_password", "New password"),
             ("confirm", "Confirm password"),
             ("license_key", "License key"),
         ):
             entry = QLineEdit()
-            if key in {"password", "confirm"}:
+            if key in {"password", "new_password", "confirm"}:
                 entry.setEchoMode(QLineEdit.Password)
             entry.returnPressed.connect(self.submit)
             entry.setAccessibleName(caption)
@@ -1176,6 +1179,10 @@ class AuthPage(QWidget):
             "Use saved offline access", "shield-check", "ghost", self.restore
         )
         content.addWidget(self.offline_button)
+        self.password_change_sign_in = Button(
+            "Back to sign in", "arrow-left", "ghost", self.use_new_password_for_sign_in
+        )
+        content.addWidget(self.password_change_sign_in)
         content.addWidget(
             Button(
                 "Connection settings", "settings-2", "ghost", self.connection_settings
@@ -1197,11 +1204,52 @@ class AuthPage(QWidget):
     def set_mode(self, mode):
         self.mode = mode
         registering = mode == "register"
-        for key in ("confirm", "license_key"):
-            for widget in self.entries[key]:
-                widget.setVisible(registering)
-        self.title.setText("Create your account." if registering else "Welcome back.")
-        self.submit_button.setText("Create account" if registering else "Sign in")
+        changing_password = mode == "password_change"
+        visible_entries = {"username", "password"}
+        if registering:
+            visible_entries.update({"confirm", "license_key"})
+        elif changing_password:
+            visible_entries.update({"new_password", "confirm"})
+        for key, widgets in self.entries.items():
+            for widget in widgets:
+                widget.setVisible(key in visible_entries)
+        self.entries["password"][0].setText(
+            "Temporary password" if changing_password else "Password"
+        )
+        self.entries["confirm"][0].setText(
+            "Confirm new password" if changing_password else "Confirm password"
+        )
+        for mode_button in self.mode_buttons:
+            mode_button.setVisible(not changing_password)
+        self.offline_button.setEnabled(not changing_password)
+        self.password_change_sign_in.setVisible(changing_password)
+        self.title.setText(
+            "Create your account."
+            if registering
+            else "Set a new password."
+            if changing_password
+            else "Welcome back."
+        )
+        self.submit_button.setText(
+            "Update password"
+            if changing_password
+            else "Create account"
+            if registering
+            else "Sign in"
+        )
+
+    def use_new_password_for_sign_in(self):
+        self.entries["password"][1].setText(self.entries["new_password"][1].text())
+        self.set_mode("login")
+        self.feedback.setText("Sign in with the new password.")
+        self.feedback.setStyleSheet(f"color: {COLORS['muted']};")
+
+    def require_password_change(self):
+        self.set_mode("password_change")
+        self.feedback.setText(
+            "Your administrator issued a temporary password. Change it to continue."
+        )
+        self.feedback.setStyleSheet(f"color: {COLORS['muted']};")
 
     def submit(self):
         values = {key: widgets[1].text() for key, widgets in self.entries.items()}

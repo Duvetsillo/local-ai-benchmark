@@ -28,6 +28,10 @@ class AuthUnavailable(ConnectionError):
     """The license service could not be reached."""
 
 
+class PasswordChangeRequired(AuthError):
+    """A temporary password must be replaced before this account can sign in."""
+
+
 @dataclass(frozen=True)
 class AuthSession:
     username: str
@@ -260,11 +264,28 @@ class AccountService:
     def login(self, username: str, password: str, machine_id: str) -> AuthSession:
         value = self._request("POST", "/v1/auth/login", {"username": username, "password": password,
                               "machine_id": machine_id})
+        if value.get("password_change_required") is True:
+            raise PasswordChangeRequired(
+                "This temporary password must be changed before you can continue."
+            )
         session = self._session_from_response(value)
         _write_cache({"session_token": session.session_token, "offline_ticket": session.offline_ticket,
                       "offline_public_key": session.offline_public_key, "username": session.username,
                       "server_url": self.base_url, "last_seen_utc": _utc_now().isoformat()})
         return session
+
+    def change_temporary_password(
+        self, username: str, temporary_password: str, new_password: str
+    ) -> None:
+        self._request(
+            "POST",
+            "/v1/auth/change-temporary-password",
+            {
+                "username": username,
+                "temporary_password": temporary_password,
+                "new_password": new_password,
+            },
+        )
 
     def refresh(self, session: AuthSession) -> AuthSession:
         if not session.session_token:
