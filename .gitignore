@@ -9,6 +9,14 @@ dist-premium/
 .pytest_cache/
 .venv/
 .test-deps/
+tools/Launcher/bin/
+tools/Launcher/obj/
+tools/Launcher/publish/
+tools/*.exe
+tools/*.dll
+tools/*.pdb
+tools/Aetherion-License-Manager.deps.json
+tools/Aetherion-License-Manager.runtimeconfig.json
 venv/
 server/.env
 server/.env.*

@@ -26,6 +26,7 @@ from cryptography.hazmat.primitives.asymmetric import ed25519, padding, rsa
 APP_VERSION = "1.0.0"
 OFFLINE_GRACE_DAYS = 7
 SESSION_HOURS = 24 * 30
+PRESENCE_WINDOW_SECONDS = 360  # Client refreshes every five minutes; allow one minute of jitter.
 DB_PATH = Path(os.environ.get("AETHERION_DATABASE_PATH", "/data/aetherion.sqlite3"))
 LICENSE_PUBLIC_KEY_N = os.environ.get("AETHERION_LICENSE_PUBLIC_KEY_N", "")
 LICENSE_PUBLIC_KEY_E = 65537
@@ -235,6 +236,11 @@ def init_db() -> None:
             connection.execute(
                 "ALTER TABLE users ADD COLUMN password_change_required INTEGER NOT NULL DEFAULT 0"
             )
+        session_columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(sessions)").fetchall()
+        }
+        if "last_seen_at" not in session_columns:
+            connection.execute("ALTER TABLE sessions ADD COLUMN last_seen_at TEXT")
 
 
 @app.on_event("startup")
@@ -272,6 +278,11 @@ def get_session(authorization: str | None = Header(default=None)) -> tuple[sqlit
         raise HTTPException(status_code=403, detail="Account or license is disabled")
     if row["license_expires"] and row["license_expires"] <= now:
         raise HTTPException(status_code=403, detail="Subscription expired")
+    with db() as connection:
+        connection.execute(
+            "UPDATE sessions SET last_seen_at=? WHERE token_hash=? AND revoked_at IS NULL",
+            (now, token_hash),
+        )
     return row, row
 
 
@@ -292,8 +303,8 @@ def new_session(user: sqlite3.Row, license_row: sqlite3.Row) -> dict[str, Any]:
     now = utc_now()
     expires = now + dt.timedelta(hours=SESSION_HOURS)
     with db() as connection:
-        connection.execute("INSERT INTO sessions(token_hash,user_id,created_at,expires_at) VALUES(?,?,?,?)",
-                           (hashlib.sha256(token.encode()).hexdigest(), user["id"], iso(now), iso(expires)))
+        connection.execute("INSERT INTO sessions(token_hash,user_id,created_at,expires_at,last_seen_at) VALUES(?,?,?,?,?)",
+                           (hashlib.sha256(token.encode()).hexdigest(), user["id"], iso(now), iso(expires), iso(now)))
         connection.execute("UPDATE users SET last_login_at=? WHERE id=?", (iso(now), user["id"]))
     return session_response(user, license_row, token, expires)
 
@@ -343,8 +354,8 @@ def register(payload: RegisterRequest, request: Request) -> dict[str, Any]:
             token = secrets.token_urlsafe(48)
             now = utc_now()
             session_expiry = now + dt.timedelta(hours=SESSION_HOURS)
-            connection.execute("INSERT INTO sessions(token_hash,user_id,created_at,expires_at) VALUES(?,?,?,?)",
-                               (hashlib.sha256(token.encode()).hexdigest(), user_id, iso(now), iso(session_expiry)))
+            connection.execute("INSERT INTO sessions(token_hash,user_id,created_at,expires_at,last_seen_at) VALUES(?,?,?,?,?)",
+                               (hashlib.sha256(token.encode()).hexdigest(), user_id, iso(now), iso(session_expiry), iso(now)))
             connection.execute("UPDATE users SET last_login_at=? WHERE id=?", (iso(now), user_id))
             return session_response(user, license_row, token, session_expiry)
     except sqlite3.IntegrityError:
@@ -391,8 +402,8 @@ def login(payload: LoginRequest, request: Request) -> dict[str, Any]:
         now = utc_now()
         session_expiry = now + dt.timedelta(hours=SESSION_HOURS)
         connection.execute(
-            "INSERT INTO sessions(token_hash,user_id,created_at,expires_at) VALUES(?,?,?,?)",
-            (hashlib.sha256(token.encode()).hexdigest(), user["id"], iso(now), iso(session_expiry)),
+            "INSERT INTO sessions(token_hash,user_id,created_at,expires_at,last_seen_at) VALUES(?,?,?,?,?)",
+            (hashlib.sha256(token.encode()).hexdigest(), user["id"], iso(now), iso(session_expiry), iso(now)),
         )
         connection.execute("UPDATE users SET last_login_at=? WHERE id=?", (iso(now), user["id"]))
         user = connection.execute("SELECT * FROM users WHERE id=?", (user["id"],)).fetchone()
@@ -474,25 +485,34 @@ def sync_license(payload: LicenseSyncRequest) -> dict[str, Any]:
 
 @app.get("/v1/admin/users", dependencies=[Depends(require_admin)])
 def list_users() -> dict[str, Any]:
+    now = utc_now()
+    cutoff = iso(now - dt.timedelta(seconds=PRESENCE_WINDOW_SECONDS))
     with db() as connection:
         rows = connection.execute("""
             SELECT u.id,u.username,u.active,u.created_at,u.last_login_at,l.license_id,l.machine_id,
-                   l.plan,l.expires_at,l.enabled AS license_enabled,u.password_change_required
+                   l.plan,l.expires_at,l.enabled AS license_enabled,u.password_change_required,
+                   (SELECT MAX(s.last_seen_at) FROM sessions s WHERE s.user_id=u.id) AS last_seen_at,
+                   EXISTS(SELECT 1 FROM sessions s WHERE s.user_id=u.id
+                          AND s.revoked_at IS NULL AND s.expires_at>?
+                          AND s.last_seen_at>=? AND s.last_seen_at<=?) AS recently_connected
             FROM users u JOIN licenses l ON l.license_id=u.license_id
             ORDER BY u.created_at DESC
-        """).fetchall()
-    now = utc_now()
+        """, (iso(now), cutoff, iso(now))).fetchall()
     users = []
     for row in rows:
         expiry = parse_time(row["expires_at"], "expires_at") if row["expires_at"] else None
+        online = bool(row["recently_connected"] and row["active"] and row["license_enabled"]
+                      and not row["password_change_required"] and (expiry is None or expiry > now))
         users.append({"id": row["id"], "username": row["username"], "active": bool(row["active"]),
                       "created_at": row["created_at"], "last_login_at": row["last_login_at"],
+                      "last_seen_at": row["last_seen_at"], "online": online,
                       "license_id": row["license_id"], "machine_id": row["machine_id"],
                       "plan": row["plan"], "expires_at": row["expires_at"],
                       "days_remaining": max(0, (expiry.date() - now.date()).days) if expiry else None,
                       "license_enabled": bool(row["license_enabled"]),
                       "password_change_required": bool(row["password_change_required"])})
-    return {"users": users}
+    return {"users": users, "presence_window_seconds": PRESENCE_WINDOW_SECONDS,
+            "observed_at": iso(now)}
 
 
 @app.post("/v1/admin/users/{user_id}/password", dependencies=[Depends(require_admin)], response_model=BaseResponse)

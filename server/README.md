@@ -20,6 +20,12 @@ El administrador no puede ver ni recuperar la contraseña existente: solo se alm
 
 Despliega la actualización del servicio y publica también una versión recompilada de Aetherion Client. Las versiones anteriores del cliente no implementan el flujo obligatorio de cambio de contraseña temporal.
 
+### Presencia administrativa
+
+La lista administrativa incluye `online`, `last_seen_at`, `observed_at` y `presence_window_seconds` (360 segundos). Online requiere una sesión vigente sin revocación, contacto autenticado reciente y acceso permitido. Login/registro y las comprobaciones autenticadas registran el contacto; el cliente Qt comprueba acceso cada cinco minutos. Logout y suspensión eliminan la presencia de las sesiones revocadas. Cerrar un cliente sin logout o perder conexión se refleja después de seis minutos. Offline no permite distinguir un cliente cerrado de uno usando su pase local.
+
+La migración añade `sessions.last_seen_at` si falta. Las sesiones antiguas quedan sin presencia confirmada hasta su siguiente contacto, sin alterar sus credenciales ni licencias. El campo se actualiza únicamente tras validar la sesión y su licencia. Los datos de presencia solo se devuelven con autenticación administrativa; no se incluyen tokens ni hashes de contraseñas.
+
 ## Despliegue en el Home Lab con Docker
 
 Requisitos: Linux x64 con Docker Engine y Compose y el subdominio `aetherionlbs.duckdns.org`. El servicio DuckDNS actualiza la IPv4 pública desde Docker. El router/firewall debe permitir TCP 80 y 443 hacia el host Docker con una IP LAN estable; UDP 443 es opcional para HTTP/3.

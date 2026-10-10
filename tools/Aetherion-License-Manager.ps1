@@ -1,4 +1,4 @@
-Add-Type -AssemblyName System.Windows.Forms
+﻿Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.Security
 [System.Windows.Forms.Application]::EnableVisualStyles()
@@ -23,16 +23,22 @@ function Read-ManagerSettings {
         [Array]::Clear($plain, 0, $plain.Length)
         $savedUrl = [string]$settings.server_url
         if ([string]::IsNullOrWhiteSpace($savedUrl)) { $savedUrl = $script:DefaultServiceUrl }
-        return @{ server_url = $savedUrl; admin_token = [string]$settings.admin_token }
+        $savedToken = [string]$settings.admin_token
+        if ($null -ne $savedToken) { $savedToken = $savedToken.Trim() }
+        return @{ server_url = $savedUrl.Trim().TrimEnd('/'); admin_token = $savedToken }
     } catch { throw 'No se pudo descifrar la configuración del administrador. Verifica que la abras con la misma cuenta de Windows.' }
 }
 function Save-ManagerSettings([string]$ServerUrl, [string]$AdminToken) {
+    if ([string]::IsNullOrWhiteSpace($ServerUrl)) { throw 'La URL del servicio no puede quedar vacía.' }
     $url = $ServerUrl.Trim().TrimEnd('/')
-    $parsed = [Uri]$url
+    $parsed = $null
+    if (-not [Uri]::TryCreate($url, [UriKind]::Absolute, [ref]$parsed)) { throw 'La URL del servicio no es válida.' }
     $loopback = $parsed.Host -in @('localhost','127.0.0.1','::1')
     if ($parsed.Scheme -ne 'https' -and -not ($parsed.Scheme -eq 'http' -and $loopback)) { throw 'Usa HTTPS para el servidor; HTTP solo se permite en localhost.' }
-    if ($AdminToken.Length -lt 32) { throw 'El token de administrador debe tener por lo menos 32 caracteres.' }
-    $script:ManagerSettings = @{ server_url = $url; admin_token = $AdminToken }
+    if ([string]::IsNullOrWhiteSpace($AdminToken)) { throw 'El token de administrador no puede quedar vacío.' }
+    $token = $AdminToken.Trim()
+    if ($token.Length -lt 32) { throw 'El token de administrador debe tener por lo menos 32 caracteres.' }
+    $script:ManagerSettings = @{ server_url = $url; admin_token = $token }
     $plain = [Text.Encoding]::UTF8.GetBytes(($script:ManagerSettings | ConvertTo-Json -Compress))
     $protected = [Security.Cryptography.ProtectedData]::Protect($plain, $null, [Security.Cryptography.DataProtectionScope]::CurrentUser)
     $directory = Split-Path -Parent $script:ManagerSettingsPath
@@ -65,7 +71,7 @@ function Show-ServerSettingsDialog {
         try {
             Save-ManagerSettings $urlBox.Text $tokenBox.Text
             $null = Invoke-LicenseService 'GET' '/v1/admin/users'
-            $status.Text = 'Connected; administrator token verified.'; $status.ForeColor = $script:Mint
+            $status.Text = 'Connected; administrator token verified.'; $status.ForeColor = $script:Mint; Update-IssueReadiness
         } catch { $status.Text = $_.Exception.Message; $status.ForeColor = [Drawing.Color]::Salmon }
     })
     [void]$dialog.ShowDialog($form)
@@ -91,49 +97,209 @@ function Show-SyncExistingLicenseDialog {
 }
 function Show-AccountManager {
     $dialog = New-Object System.Windows.Forms.Form
-    $dialog.Text = 'Aetherion Accounts'; $dialog.StartPosition = 'CenterParent'; $dialog.Size = New-Object System.Drawing.Size(1060, 600); $dialog.MinimumSize = New-Object System.Drawing.Size(900, 500); $dialog.BackColor = $script:Canvas; $dialog.ForeColor = $script:TextColor
-    Add-Label $dialog 'CUSTOMER ACCOUNTS' 22 18 380 24 $true | Out-Null
-    $reload = Add-Button $dialog 'Refresh list' 22 54 120
+    $dialog.Text = 'Aetherion Accounts'; $dialog.StartPosition = 'CenterParent'; $dialog.Size = New-Object System.Drawing.Size(1180, 760); $dialog.MinimumSize = New-Object System.Drawing.Size(1060, 680); $dialog.BackColor = $script:Canvas; $dialog.ForeColor = $script:TextColor
+    $heading = Add-Label $dialog 'Customer accounts' 24 18 570 34 $true
+    $heading.Font = New-Object System.Drawing.Font('Segoe UI Semibold', 16)
+    $subtitle = Add-Label $dialog 'Review access, adjust plans, and manage renewals.' 26 51 650 22
+    $subtitle.ForeColor = [Drawing.Color]::FromArgb(172, 189, 207)
+    $reload = Add-Button $dialog 'Refresh list' 1030 22 120
+    $reload.Anchor = 'Top,Right'
+    Add-Label $dialog 'SEARCH' 24 82 80 18 $true | Out-Null
+    $search = Add-TextBox $dialog 24 103 390 ''
+    Add-Label $dialog 'Filter by username or Device ID' 428 107 300 22 | Out-Null
+    $summary = Add-Label $dialog 'Loading accounts...' 735 106 415 22
+    $summary.Anchor = 'Top,Right'
+    $summary.TextAlign = 'MiddleRight'
     $grid = New-Object System.Windows.Forms.DataGridView
-    $grid.Location = New-Object Drawing.Point(22, 100); $grid.Size = New-Object Drawing.Size(1000, 390); $grid.Anchor = 'Top,Bottom,Left,Right'
+    $grid.Location = New-Object Drawing.Point(24, 140); $grid.Size = New-Object Drawing.Size(1126, 322); $grid.Anchor = 'Top,Bottom,Left,Right'
     $grid.ReadOnly = $true; $grid.AllowUserToAddRows = $false; $grid.AllowUserToDeleteRows = $false; $grid.MultiSelect = $false; $grid.SelectionMode = 'FullRowSelect'; $grid.AutoSizeColumnsMode = 'Fill'; $grid.BackgroundColor = $script:Surface; $grid.GridColor = [Drawing.Color]::FromArgb(54,72,91); $grid.BorderStyle = 'None'; $grid.RowHeadersVisible = $false
     $grid.EnableHeadersVisualStyles = $false; $grid.ColumnHeadersDefaultCellStyle.BackColor = $script:Surface; $grid.ColumnHeadersDefaultCellStyle.ForeColor = $script:Mint; $grid.DefaultCellStyle.BackColor = $script:Canvas; $grid.DefaultCellStyle.ForeColor = $script:TextColor; $grid.DefaultCellStyle.SelectionBackColor = [Drawing.Color]::FromArgb(42,61,77); $grid.DefaultCellStyle.SelectionForeColor = $script:TextColor
-    foreach($col in @(@('id','ID'),@('username','USERNAME'),@('active','ACTIVE'),@('plan','PLAN'),@('expires_at','EXPIRES'),@('days_remaining','DAYS LEFT'),@('machine_id','DEVICE ID'),@('last_login_at','LAST SIGN-IN'))){
+    $grid.ColumnHeadersHeight = 34
+    $grid.RowTemplate.Height = 30
+    foreach($col in @(@('id','ID'),@('username','USERNAME'),@('active','STATUS'),@('plan','PLAN'),@('plan_key','PLAN KEY'),@('expires_at','EXPIRES'),@('days_remaining','DAYS LEFT'),@('machine_id','DEVICE ID'),@('last_login_at','LAST SIGN-IN'))){
         $column = New-Object System.Windows.Forms.DataGridViewTextBoxColumn; $column.Name=$col[0]; $column.HeaderText=$col[1]; $column.SortMode='NotSortable'; [void]$grid.Columns.Add($column)
     }
-    $grid.Columns['id'].Visible = $false; $dialog.Controls.Add($grid)
-    Add-Label $dialog 'DAYS TO ADD' 22 508 115 22 | Out-Null
-    $amount = New-Object System.Windows.Forms.NumericUpDown; $amount.Location=New-Object Drawing.Point(22,532); $amount.Size=New-Object Drawing.Size(100,28); $amount.Minimum=1; $amount.Maximum=3650; $amount.Value=30; Set-Style $amount; $dialog.Controls.Add($amount)
-    $renew = Add-Button $dialog 'Extend selected account' 142 529 190
-    $toggle = Add-Button $dialog 'Disable / enable' 343 529 145
-    $status = Add-Label $dialog 'Select an account to renew after confirming payment.' 505 535 510 28
+    $grid.Columns['id'].Visible = $false
+    $grid.Columns['plan_key'].Visible = $false
+    $grid.Columns['username'].FillWeight = 140
+    $grid.Columns['active'].FillWeight = 85
+    $grid.Columns['plan'].FillWeight = 100
+    $grid.Columns['expires_at'].FillWeight = 105
+    $grid.Columns['days_remaining'].FillWeight = 75
+    $grid.Columns['machine_id'].FillWeight = 190
+    $grid.Columns['last_login_at'].FillWeight = 140
+    $dialog.Controls.Add($grid)
+    $emptyState = Add-Label $dialog 'No accounts yet. Sync a license before the first client registers.' 80 267 1014 48
+    $emptyState.TextAlign = 'MiddleCenter'
+    $emptyState.ForeColor = [Drawing.Color]::FromArgb(172, 189, 207)
+    $emptyState.BackColor = $script:Surface
+    $emptyState.Visible = $false
+    $selectionPanel = New-Object System.Windows.Forms.Panel
+    $selectionPanel.Location = New-Object Drawing.Point(24, 478); $selectionPanel.Size = New-Object Drawing.Size(1126, 54); $selectionPanel.Anchor = 'Bottom,Left,Right'; $selectionPanel.BackColor = $script:Surface
+    $dialog.Controls.Add($selectionPanel)
+    $selectionTitle = Add-Label $selectionPanel 'SELECT AN ACCOUNT' 14 6 230 18 $true
+    $selectionDetail = Add-Label $selectionPanel 'Choose a row above to see account details and enable actions.' 14 25 1080 22
+    $selectionDetail.ForeColor = [Drawing.Color]::FromArgb(172, 189, 207)
+
+    $planHeading = Add-Label $dialog 'CHANGE PLAN' 24 546 210 19 $true
+    $planHeading.Anchor = 'Bottom,Left'
+    $newPlan = New-Object System.Windows.Forms.ComboBox
+    $newPlan.Location = New-Object Drawing.Point(24, 569); $newPlan.Size = New-Object Drawing.Size(220, 30); $newPlan.DropDownStyle = 'DropDownList'; Set-Style $newPlan
+    $newPlan.Anchor = 'Bottom,Left'
+    [void]$newPlan.Items.Add('Trial · 7 days')
+    [void]$newPlan.Items.Add('Custom duration')
+    [void]$newPlan.Items.Add('Unlimited')
+    $newPlan.SelectedIndex = 1
+    $dialog.Controls.Add($newPlan)
+    $planDaysHeading = Add-Label $dialog 'DAYS' 262 546 90 19 $true
+    $planDaysHeading.Anchor = 'Bottom,Left'
+    $planDays = New-Object System.Windows.Forms.NumericUpDown
+    $planDays.Location = New-Object Drawing.Point(262, 569); $planDays.Size = New-Object Drawing.Size(100, 30); $planDays.Minimum = 1; $planDays.Maximum = 3650; $planDays.Value = 30; Set-Style $planDays
+    $planDays.Anchor = 'Bottom,Left'
+    $dialog.Controls.Add($planDays)
+    $planHint = Add-Label $dialog 'The new term starts today. Changing the plan does not lift a suspension.' 380 573 490 25
+    $planHint.ForeColor = [Drawing.Color]::FromArgb(172, 189, 207)
+    $planHint.Anchor = 'Bottom,Left'
+    $applyPlan = Add-Button $dialog 'Apply plan' 960 567 190
+    $applyPlan.Anchor = 'Bottom,Right'
+    $applyPlan.Enabled = $false
+    $applyPlan.BackColor = $script:Surface
+    $applyPlan.ForeColor = [Drawing.Color]::FromArgb(145, 160, 176)
+
+    $line = New-Object System.Windows.Forms.Label
+    $line.BackColor = [Drawing.Color]::FromArgb(54,72,91); $line.Location = New-Object Drawing.Point(24, 615); $line.Size = New-Object Drawing.Size(1126, 1); $line.Anchor = 'Bottom,Left,Right'
+    $dialog.Controls.Add($line)
+    $renewalHeading = Add-Label $dialog 'RENEWAL' 24 627 120 18 $true
+    $renewalHeading.Anchor = 'Bottom,Left'
+    $renewalDaysHeading = Add-Label $dialog 'ADD DAYS' 24 649 90 18
+    $renewalDaysHeading.Anchor = 'Bottom,Left'
+    $amount = New-Object System.Windows.Forms.NumericUpDown
+    $amount.Location=New-Object Drawing.Point(24, 670); $amount.Size=New-Object Drawing.Size(100, 30); $amount.Minimum=1; $amount.Maximum=3650; $amount.Value=30; $amount.Anchor='Bottom,Left'; Set-Style $amount; $dialog.Controls.Add($amount)
+    $renew = Add-Button $dialog 'Extend & reactivate' 142 668 180
+    $renew.Anchor = 'Bottom,Left'
+    $renew.Enabled = $false
+    $toggle = Add-Button $dialog 'Disable account' 338 668 155
+    $toggle.Anchor = 'Bottom,Left'
+    $toggle.Enabled = $false
+    $status = Add-Label $dialog 'Select an account to manage its plan or access.' 520 672 630 28
+    $status.Anchor = 'Bottom,Left,Right'
+    $currentUsers = @()
+    $newPlan.Add_SelectedIndexChanged({
+        $planDays.Enabled = ($newPlan.SelectedIndex -eq 1)
+        switch ($newPlan.SelectedIndex) {
+            0 { $planHint.Text = 'Replace the current term with 7 days starting today.' }
+            1 { $planHint.Text = 'Replace the current term with the selected number of days from today.' }
+            2 { $planHint.Text = 'Remove the expiration date. The account suspension state is unchanged.' }
+        }
+    })
+    $search.Add_TextChanged({
+        $needle = $search.Text.Trim()
+        $visibleCount = 0
+        foreach ($row in $grid.Rows) {
+            $matchesSearch = -not $needle -or
+                ([string]$row.Cells['username'].Value).IndexOf($needle, [StringComparison]::OrdinalIgnoreCase) -ge 0 -or
+                ([string]$row.Cells['machine_id'].Value).IndexOf($needle, [StringComparison]::OrdinalIgnoreCase) -ge 0
+            $row.Visible = $matchesSearch
+            if ($matchesSearch) { $visibleCount++ }
+        }
+        $emptyState.Visible = ($visibleCount -eq 0)
+        if ($emptyState.Visible -and $grid.Rows.Count -gt 0) { $emptyState.Text = 'No accounts match that username or Device ID.' }
+        elseif ($grid.Rows.Count -eq 0) { $emptyState.Text = 'No accounts yet. Sync a license before the first client registers.' }
+    })
+    $grid.Add_SelectionChanged({
+        if ($grid.SelectedRows.Count -eq 0) {
+            $selectionTitle.Text = 'SELECT AN ACCOUNT'
+            $selectionDetail.Text = 'Choose a row above to see account details and enable actions.'
+            $applyPlan.Enabled = $false; $renew.Enabled = $false; $toggle.Enabled = $false
+            $applyPlan.BackColor = $script:Surface
+            $applyPlan.ForeColor = [Drawing.Color]::FromArgb(145, 160, 176)
+            return
+        }
+        $row = $grid.SelectedRows[0]
+        $username = [string]$row.Cells['username'].Value
+        $statusValue = [string]$row.Cells['active'].Value
+        $planValue = [string]$row.Cells['plan_key'].Value
+        $planName = [string]$row.Cells['plan'].Value
+        $expiryValue = [string]$row.Cells['expires_at'].Value
+        $selectionTitle.Text = "SELECTED  /  $username"
+        $selectionDetail.Text = "$statusValue  ·  Current plan: $planName  ·  Expires: $expiryValue"
+        switch ($planValue) {
+            'trial' { $newPlan.SelectedIndex = 0 }
+            'duration' { $newPlan.SelectedIndex = 1 }
+            'unlimited' { $newPlan.SelectedIndex = 2 }
+        }
+        $applyPlan.Enabled = $true
+        $applyPlan.BackColor = $script:Mint
+        $applyPlan.ForeColor = $script:Canvas
+        $renew.Enabled = ($planValue -ne 'unlimited')
+        $toggle.Text = if ($statusValue -eq 'ACTIVE') { 'Disable account' } else { 'Enable account' }
+        $toggle.Enabled = $true
+    })
     $refreshGrid = {
         try {
-            $grid.Rows.Clear()
             $result = Invoke-LicenseService 'GET' '/v1/admin/users'
-            foreach($user in $result.users){
+            $currentUsers = @($result.users)
+            $grid.Rows.Clear()
+            foreach($user in $currentUsers){
                 $active = if($user.active -and $user.license_enabled){'ACTIVE'}else{'DISABLED'}
+                $planName = switch ($user.plan) { 'trial' { 'Trial' } 'duration' { 'Custom duration' } 'unlimited' { 'Unlimited' } default { [string]$user.plan } }
                 $expiry = if($user.expires_at){([DateTime]::Parse($user.expires_at)).ToLocalTime().ToString('yyyy-MM-dd')}else{'Unlimited'}
                 $daysLeft = if($null -eq $user.days_remaining){'∞'}else{[string]$user.days_remaining}
                 $last = if($user.last_login_at){([DateTime]::Parse($user.last_login_at)).ToLocalTime().ToString('yyyy-MM-dd HH:mm')}else{'Never'}
-                [void]$grid.Rows.Add([string]$user.id,$user.username,$active,$user.plan,$expiry,$daysLeft,$user.machine_id,$last)
+                [void]$grid.Rows.Add([string]$user.id,$user.username,$active,$planName,$user.plan,$expiry,$daysLeft,$user.machine_id,$last)
             }
-            $status.Text = "$($result.users.Count) account(s) loaded from server."; $status.ForeColor = $script:Mint
+            $grid.ClearSelection()
+            $grid.CurrentCell = $null
+            $total = $currentUsers.Count
+            $activeCount = @($currentUsers | Where-Object { $_.active -and $_.license_enabled }).Count
+            $summary.Text = "$total accounts   ·   $activeCount active   ·   $($total - $activeCount) disabled"
+            $emptyState.Visible = ($total -eq 0)
+            $emptyState.Text = 'No accounts yet. Sync a license before the first client registers.'
+            $status.Text = 'Select an account to manage its plan or access.'; $status.ForeColor = $script:TextColor
         } catch { $status.Text=$_.Exception.Message; $status.ForeColor=[Drawing.Color]::Salmon }
     }
     $reload.Add_Click($refreshGrid)
+    $applyPlan.Add_Click({
+        if ($grid.SelectedRows.Count -eq 0) { $status.Text = 'Select an account first.'; return }
+        $selected = @('trial','duration','unlimited')[$newPlan.SelectedIndex]
+        $username = [string]$grid.SelectedRows[0].Cells['username'].Value
+        $termText = if ($selected -eq 'trial') { '7 days from today' } elseif ($selected -eq 'duration') { "$($planDays.Value) days from today" } else { 'no expiration date (Unlimited)' }
+        $confirm = [System.Windows.Forms.MessageBox]::Show(
+            $dialog,
+            "Change $username to $($newPlan.SelectedItem)?`r`nThe new term will be $termText.`r`nThis does not change whether the account is enabled.",
+            'Confirm plan change',
+            [System.Windows.Forms.MessageBoxButtons]::OKCancel,
+            [System.Windows.Forms.MessageBoxIcon]::Question
+        )
+        if ($confirm -ne [System.Windows.Forms.DialogResult]::OK) { return }
+        try {
+            $id = [int]$grid.SelectedRows[0].Cells['id'].Value
+            $body = @{ plan = $selected }
+            if ($selected -eq 'duration') { $body.days = [int]$planDays.Value }
+            $changed = Invoke-LicenseService 'PATCH' "/v1/admin/users/$id/plan" $body
+            & $refreshGrid
+            $expiryText = if ($changed.expires_at) { ([DateTime]::Parse($changed.expires_at)).ToLocalTime().ToString('yyyy-MM-dd') } else { 'no expiration' }
+            $status.Text = "$username changed to $($changed.plan). New expiration: $expiryText. Account enabled state was not changed."
+            $status.ForeColor = $script:Mint
+        } catch { $status.Text=$_.Exception.Message; $status.ForeColor=[Drawing.Color]::Salmon }
+    })
     $renew.Add_Click({
         if($grid.SelectedRows.Count -eq 0){$status.Text='Select an account first.';return}
-        try{$id=[int]$grid.SelectedRows[0].Cells['id'].Value;$result=Invoke-LicenseService 'POST' "/v1/admin/users/$id/renew" @{days=[int]$amount.Value};$status.Text="Added $($result.days_added) day(s). Expires $($result.expires_at). No new key was needed.";$status.ForeColor=$script:Mint;& $refreshGrid}catch{$status.Text=$_.Exception.Message;$status.ForeColor=[Drawing.Color]::Salmon}
+        try{$id=[int]$grid.SelectedRows[0].Cells['id'].Value;$result=Invoke-LicenseService 'POST' "/v1/admin/users/$id/renew" @{days=[int]$amount.Value};& $refreshGrid;$status.Text="Added $($result.days_added) day(s) to $($result.username). Expires $($result.expires_at).";$status.ForeColor=$script:Mint}catch{$status.Text=$_.Exception.Message;$status.ForeColor=[Drawing.Color]::Salmon}
     })
     $toggle.Add_Click({
         if($grid.SelectedRows.Count -eq 0){$status.Text='Select an account first.';return}
-        try{$row=$grid.SelectedRows[0];$id=[int]$row.Cells['id'].Value;$path=if($row.Cells['active'].Value -eq 'ACTIVE'){"/v1/admin/users/$id/disable"}else{"/v1/admin/users/$id/enable"};$null=Invoke-LicenseService 'POST' $path @{};& $refreshGrid}catch{$status.Text=$_.Exception.Message;$status.ForeColor=[Drawing.Color]::Salmon}
+        try{$row=$grid.SelectedRows[0];$id=[int]$row.Cells['id'].Value;$path=if($row.Cells['active'].Value -eq 'ACTIVE'){"/v1/admin/users/$id/disable"}else{"/v1/admin/users/$id/enable"};$null=Invoke-LicenseService 'POST' $path @{};& $refreshGrid;$status.Text=if($path -like '*/disable'){'Account disabled; active sessions revoked.'}else{'Account enabled.'};$status.ForeColor=$script:Mint}catch{$status.Text=$_.Exception.Message;$status.ForeColor=[Drawing.Color]::Salmon}
     })
     $dialog.Add_Shown($refreshGrid)
     [void]$dialog.ShowDialog($form)
 }
-try { $script:ManagerSettings = Read-ManagerSettings } catch { }
+try {
+    $script:ManagerSettings = Read-ManagerSettings
+    $script:SettingsLoadError = $null
+} catch {
+    $script:SettingsLoadError = $_.Exception.Message
+}
 
 function Set-Style($control, [bool]$isButton = $false) {
     $control.BackColor = $script:Surface
@@ -215,43 +381,52 @@ function New-AetherionKey([string]$MachineId, [string]$Plan, [int]$Days, [string
     return 'AETH1.' + (ConvertTo-Base64Url $payloadBytes) + '.' + (ConvertTo-Base64Url $signature)
 }
 
-$form = New-Object System.Windows.Forms.Form
-$form.Text = 'Aetherion License Manager'; $form.StartPosition = 'CenterScreen'; $form.Size = New-Object System.Drawing.Size(760, 720)
-$form.MinimumSize = New-Object System.Drawing.Size(760, 720); $form.BackColor = $script:Canvas; $form.ForeColor = $script:TextColor
-$form.Font = New-Object System.Drawing.Font('Segoe UI', 9)
-Add-Label $form 'AETHERION' 28 22 300 36 $true | Out-Null
-$title = Add-Label $form 'LICENSE MANAGER  /  OFFLINE SIGNING AUTHORITY' 28 56 650 24 $false
-$title.ForeColor = [System.Drawing.Color]::FromArgb(153, 176, 198)
-$rootBox = Add-TextBox $form 28 105 585 $script:Root
-$rootBox.Add_TextChanged({ $script:Root = $rootBox.Text; $script:LicenseSource = Join-Path $script:Root 'src\local_ai_benchmark\client\licensing.py' })
-$browse = Add-Button $form 'Browse project' 625 103 105
-$browse.Add_Click({ $dialog = New-Object System.Windows.Forms.FolderBrowserDialog; $dialog.SelectedPath = $rootBox.Text; if ($dialog.ShowDialog() -eq 'OK') { $rootBox.Text = $dialog.SelectedPath; $script:Root = $rootBox.Text; $script:LicenseSource = Join-Path $script:Root 'src\local_ai_benchmark\client\licensing.py' } })
-$setup = Add-Button $form 'Create authority' 28 148 145
-$setup.Add_Click({ try { $message.Text = Initialize-Authority; $message.ForeColor = $script:Mint } catch { $message.Text = $_.Exception.Message; $message.ForeColor = [Drawing.Color]::Salmon } })
-$serverSettings = Add-Button $form 'Server settings' 560 148 168
-$serverSettings.Add_Click({ Show-ServerSettingsDialog })
-$message = Add-Label $form 'Private signing key is protected by Windows for this account.' 187 151 355 38
-$line = New-Object System.Windows.Forms.Label; $line.BackColor = [System.Drawing.Color]::FromArgb(54,72,91); $line.Location = New-Object Drawing.Point(28,200); $line.Size = New-Object Drawing.Size(700,1); $form.Controls.Add($line)
-Add-Label $form 'ISSUE A DEVICE-BOUND LICENSE' 28 220 500 24 $true | Out-Null
-Add-Label $form 'DEVICE ID' 28 258 200 20 | Out-Null
-$device = Add-TextBox $form 28 281 700 ''
-Add-Label $form 'LICENSED TO (OPTIONAL)' 28 324 250 20 | Out-Null
-$licensedTo = Add-TextBox $form 28 347 700 ''
-Add-Label $form 'PLAN' 28 390 100 20 | Out-Null
-$plan = New-Object System.Windows.Forms.ComboBox; $plan.Location = New-Object Drawing.Point(28,413); $plan.Size = New-Object Drawing.Size(235,28); $plan.DropDownStyle = 'DropDownList'; Set-Style $plan
-[void]$plan.Items.Add('Trial · 7 days'); [void]$plan.Items.Add('Custom duration'); [void]$plan.Items.Add('Unlimited'); $plan.SelectedIndex = 0; $form.Controls.Add($plan)
-Add-Label $form 'DAYS' 287 390 100 20 | Out-Null
-$days = New-Object System.Windows.Forms.NumericUpDown; $days.Location = New-Object Drawing.Point(287,413); $days.Size = New-Object Drawing.Size(120,28); $days.Minimum = 1; $days.Maximum = 3650; $days.Value = 3; Set-Style $days; $form.Controls.Add($days)
-$plan.Add_SelectedIndexChanged({ $days.Enabled = ($plan.SelectedIndex -eq 1) })
-$generate = Add-Button $form 'Generate license key' 28 462 190
-$copy = Add-Button $form 'Copy key' 228 462 120
-$accounts = Add-Button $form 'Manage accounts' 358 462 160
-$accounts.Add_Click({ Show-AccountManager })
-$syncExisting = Add-Button $form 'Sync existing key' 528 462 200
-$syncExisting.Add_Click({ Show-SyncExistingLicenseDialog })
-$key = New-Object System.Windows.Forms.TextBox; $key.Location = New-Object Drawing.Point(28,508); $key.Size = New-Object Drawing.Size(700,100); $key.Multiline = $true; $key.ScrollBars = 'Vertical'; $key.ReadOnly = $true; $key.Font = New-Object System.Drawing.Font('Consolas', 9); Set-Style $key; $form.Controls.Add($key)
-$generate.Add_Click({ try { $selected = @('trial','duration','unlimited')[$plan.SelectedIndex]; $generated = New-AetherionKey $device.Text $selected ([int]$days.Value) $licensedTo.Text; $result = Invoke-LicenseService 'POST' '/v1/admin/licenses' @{license_key=$generated}; $key.Text = $generated; $message.Text = 'License issued and synced. Create one account with this key; renew it later in Manage accounts.'; $message.ForeColor = $script:Mint } catch { $key.Clear(); $message.Text = $_.Exception.Message; $message.ForeColor = [Drawing.Color]::Salmon } })
-$copy.Add_Click({ if ($key.Text) { [Windows.Forms.Clipboard]::SetText($key.Text); $message.Text = 'Clave copiada al portapapeles.'; $message.ForeColor = $script:Mint } })
-$foot = Add-Label $form 'La clave privada nunca se incluye en el cliente Aetherion. Trial: 7 días. El modo ilimitado no tiene caducidad.' 28 625 700 38
-$form.Add_Shown({ $days.Enabled = $false })
-[void]$form.ShowDialog()
+$script:AuthorityReady = $false
+function Update-IssueReadiness {
+    $deviceReady = $script:IssueDevice.Text.Trim() -match '^[A-Fa-f0-9]{32}$'
+    $serviceReady = -not [string]::IsNullOrWhiteSpace($script:ManagerSettings.server_url) -and
+        -not [string]::IsNullOrWhiteSpace($script:ManagerSettings.admin_token)
+    $authorityText = if ($script:AuthorityReady) { 'Signing authority: ready' } else { 'Signing authority: create or verify' }
+    $serviceText = if ($serviceReady) { 'Service: configured' } else { 'Service: configure settings' }
+    $deviceText = if ($deviceReady) { 'Device ID: valid' } else { 'Device ID: 32 hex characters required' }
+    $script:IssueReadiness.Text = "$authorityText  |  $serviceText  |  $deviceText"
+    $script:IssueReadiness.ForeColor = if ($script:AuthorityReady -and $serviceReady -and $deviceReady) {
+        $script:Mint
+    } else {
+        [System.Drawing.Color]::FromArgb(242, 190, 105)
+    }
+    $issuanceReady = $script:AuthorityReady -and $serviceReady -and $deviceReady
+    $script:IssueGenerate.Enabled = $issuanceReady
+    if ($issuanceReady) {
+        $script:IssueGenerate.BackColor = $script:Mint
+        $script:IssueGenerate.ForeColor = $script:Canvas
+    } else {
+        $script:IssueGenerate.BackColor = [System.Drawing.Color]::FromArgb(43, 55, 68)
+        $script:IssueGenerate.ForeColor = [System.Drawing.Color]::FromArgb(145, 160, 176)
+    }
+    $hasKey = -not [string]::IsNullOrWhiteSpace($script:IssueOutput.Text)
+    $script:IssueCopy.Enabled = $hasKey
+    $script:IssueCopy.ForeColor = if ($hasKey) { $script:TextColor } else { [System.Drawing.Color]::FromArgb(145, 160, 176) }
+}
+function Refresh-IssueAuthority {
+    $script:AuthorityReady = $false
+    if (Test-Path -LiteralPath $script:KeyPath) {
+        try {
+            $rsa = Get-PrivateRsa
+            $rsa.Dispose()
+            $script:AuthorityReady = $true
+        } catch {
+            $script:AuthorityReady = $false
+        }
+    }
+    Update-IssueReadiness
+}
+function Clear-IssuedKey {
+    if (-not [string]::IsNullOrWhiteSpace($script:IssueOutput.Text)) {
+        $script:IssueOutput.Clear()
+        $script:IssueMessage.Text = 'Issuance details changed. Generate a new key before copying.'
+        $script:IssueMessage.ForeColor = $script:TextColor
+    }
+    Update-IssueReadiness
+}
+. (Join-Path $PSScriptRoot 'Aetherion-License-Manager.UI.ps1')
