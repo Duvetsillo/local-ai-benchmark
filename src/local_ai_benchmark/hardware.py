@@ -65,7 +65,13 @@ def profile_hardware() -> HardwareProfile:
 
         cpu_count = psutil.cpu_count(logical=False)
         logical_count = psutil.cpu_count(logical=True)
-        frequency = psutil.cpu_freq().current if psutil.cpu_freq() else None
+        read_frequency = getattr(psutil, "cpu_freq", None)
+        if read_frequency is not None:
+            try:
+                cpu_frequency = read_frequency()
+            except (NotImplementedError, OSError):
+                cpu_frequency = None
+            frequency = cpu_frequency.current if cpu_frequency is not None else None
     except ImportError:
         logical_count = __import__("os").cpu_count()
     return HardwareProfile(
