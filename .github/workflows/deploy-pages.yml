@@ -29,9 +29,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p site
-          cp *.html site/
-          cp app.js styles.css favicon.svg site/
-          cp -R downloads site/
+          cp *.html *.css *.js *.svg README.md site/
+          cp -R assets downloads site/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
